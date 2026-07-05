@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { StatementDemo } from "@/components/phase1/StatementDemo";
 
 const PHASE_INFO: Record<
   number,
@@ -46,13 +48,36 @@ export default async function PhasePage({
 }: {
   params: Promise<{ id: string; n: string }>;
 }) {
-  const { n } = await params;
+  const { id, n } = await params;
   const phaseNumber = Number(n);
   const phase = PHASE_INFO[phaseNumber];
 
   if (!phase || !Number.isInteger(phaseNumber)) {
     notFound();
   }
+
+  // M2: demo view in phase 1 to test the statement core components.
+  const statements =
+    phaseNumber === 1
+      ? await prisma.statement.findMany({
+          where: { projectId: id, phase: 1 },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            projectId: true,
+            phase: true,
+            category: true,
+            content: true,
+            evidenceStatus: true,
+            origin: true,
+            justification: true,
+            sourceRef: true,
+            uncertainty: true,
+            isCritical: true,
+            adopted: true,
+          },
+        })
+      : null;
 
   return (
     <div>
@@ -63,9 +88,13 @@ export default async function PhasePage({
         <p className="mt-1 text-sm text-text-muted">{phase.description}</p>
       </header>
 
-      <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
-        {phase.emptyState}
-      </div>
+      {statements ? (
+        <StatementDemo projectId={id} initialStatements={statements} />
+      ) : (
+        <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
+          {phase.emptyState}
+        </div>
+      )}
     </div>
   );
 }
