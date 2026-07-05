@@ -1,0 +1,56 @@
+# Projekt: KI-gestütztes Marketingstrategie-System für Start-ups (Bachelorarbeit-Prototyp)
+
+## Kontext
+Prototyp eines prozessgeführten Unterstützungssystems, das Start-ups durch einen 5-phasigen,
+hypothesen- und evidenzbasierten Marketingstrategieprozess führt. Kein Chatbot, sondern ein
+Wizard mit strukturierten Eingaben, KI-generierten Entwürfen und bewusster Übernahme durch
+den Nutzer. WICHTIG: Alle "Recherche"-Daten sind SIMULIERT (LLM erzeugt plausible, fiktive
+Marktdaten mit fiktiven Quellen) — das System kennzeichnet das transparent im UI.
+
+Referenzdokumente (IMMER beachten):
+- docs/IMPLEMENTIERUNGSPLAN.md — Projektstruktur und Meilensteine
+- docs/UI_KONZEPT.md — Layout, Komponenten, Design-Tokens
+- docs/PROMPTS.md — Systemprompts und JSON-Ausgabeformate je Phase
+- prisma/schema.prisma — Datenmodell (NICHT eigenmächtig ändern; Änderungen vorschlagen und begründen)
+
+## Tech-Stack (fest)
+- Next.js (App Router, TypeScript), Tailwind CSS
+- Prisma + PostgreSQL (Supabase); Verbindung über DATABASE_URL (Pooler) und DIRECT_URL
+- OpenAI SDK, Modell: gpt-4o (JSON-Mode / response_format json_object)
+- Zod für Validierung aller LLM-Ausgaben und Formulareingaben
+- lucide-react für Icons. KEINE weiteren UI-Bibliotheken ohne Rückfrage.
+
+## Architekturregeln
+1. OpenAI-Aufrufe NUR serverseitig in app/api/ai/[phase]/route.ts. OPENAI_API_KEY nie im Client.
+2. Jeder LLM-Aufruf: Systemprompt aus lib/prompts/*.ts + Projektkontext aus der DB
+   (inkl. Ressourcenangaben des Start-ups) + JSON-Schema-Anweisung. Antwort mit Zod parsen;
+   bei Parse-Fehler genau 1 Retry mit Fehlerhinweis, danach saubere Fehlermeldung ans UI.
+3. KI-Entwürfe werden als Statements mit adopted=false gespeichert. Erst der Nutzer-Klick
+   "In Projektstand übernehmen" setzt adopted=true. Nachfolgende Phasen verwenden NUR
+   adopted=true Statements als Kontext.
+4. Evidenzstatus (FACT / ASSUMPTION / OPEN_QUESTION) und Herkunft (USER_INPUT /
+   SIMULATED_RESEARCH / AI_DERIVATION) sind Pflichtfelder jedes Statements und im UI
+   immer sichtbar (Badge + Herkunfts-Icon). Nutzer kann den Evidenzstatus jederzeit ändern.
+5. Rücksprünge: Jede abgeschlossene Phase bleibt über den Stepper erreichbar und editierbar.
+   Es gibt genau EINEN Projektstand (keine Versionszweige) — Prototyp-Vereinfachung.
+6. Keine Authentifizierung, keine Nutzerverwaltung (Prototyp-Vereinfachung).
+
+## Sprachkonventionen
+- UI-Texte, Labels, Fehlermeldungen: DEUTSCH (Sie-Form vermeiden, neutrale Formulierungen
+  oder Du-Form; Buttons als klare Verben: "Analyse erstellen", "In Projektstand übernehmen").
+- Code, Bezeichner, Kommentare, DB-Felder: ENGLISCH.
+- Begriffszuordnung (Thesis-Deutsch → Code-Englisch):
+  Aussage → Statement | Evidenzstatus → evidenceStatus | Fakt → FACT |
+  plausible Annahme → ASSUMPTION | offene Frage → OPEN_QUESTION |
+  Herkunft → origin | Strategieoption → StrategyOption | Hypothesenbündel → (Option mit
+  verknüpften Statements über OptionStatement) | Bewertung → Evaluation |
+  Priorisierung → prioritization (Feld status=PRIORITIZED + rationale) |
+  kritische Annahme → critical assumption (Statement mit isCritical=true) |
+  Umsetzungsschritt → ValidationStep | Messpunkt → Metric |
+  Marktrückmeldung → MarketFeedback | Anpassungsentscheidung → AdaptationDecision
+
+## Arbeitsweise
+- Meilensteine aus docs/IMPLEMENTIERUNGSPLAN.md strikt einzeln umsetzen; nie vorgreifen.
+- Bei Unklarheiten oder nötigen Abweichungen: erst fragen, dann bauen.
+- Komponenten klein halten; Wiederverwendung von StatementCard/EvidenceBadge in allen Phasen.
+- Nach jedem Meilenstein: kurzer Selbsttest-Hinweis, was der Nutzer im Browser prüfen soll.

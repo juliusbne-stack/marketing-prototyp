@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Design tokens from docs/UI_KONZEPT.md */
+  --background: #fafaf7;
+  --surface: #ffffff;
+  --border: #e4e2dc;
+  --text: #1f2421;
+  --text-muted: #6b7069;
+  --accent: #0e5a63;
+  --accent-soft: #e3f0f1;
+
+  /* Evidence colors — reserved exclusively for evidence badges */
+  --evidence-fact-text: #0f6e56;
+  --evidence-fact-bg: #e1f5ee;
+  --evidence-fact-border: #1d9e75;
+  --evidence-assumption-text: #854f0b;
+  --evidence-assumption-bg: #faeeda;
+  --evidence-assumption-border: #ba7517;
+  --evidence-question-text: #3c3489;
+  --evidence-question-bg: #eeedfe;
+  --evidence-question-border: #7f77dd;
+
+  /* Danger / refuted (phase 5 only) */
+  --danger-text: #a32d2d;
+  --danger-bg: #fcebeb;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-evidence-fact-text: var(--evidence-fact-text);
+  --color-evidence-fact-bg: var(--evidence-fact-bg);
+  --color-evidence-fact-border: var(--evidence-fact-border);
+  --color-evidence-assumption-text: var(--evidence-assumption-text);
+  --color-evidence-assumption-bg: var(--evidence-assumption-bg);
+  --color-evidence-assumption-border: var(--evidence-assumption-border);
+  --color-evidence-question-text: var(--evidence-question-text);
+  --color-evidence-question-bg: var(--evidence-question-bg);
+  --color-evidence-question-border: var(--evidence-question-border);
+
+  --color-danger-text: var(--danger-text);
+  --color-danger-bg: var(--danger-bg);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+}
+
+/* Visible keyboard focus: petrol ring (UI_KONZEPT §6) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

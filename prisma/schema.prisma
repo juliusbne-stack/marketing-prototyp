@@ -1,0 +1,251 @@
+// Datenmodell des Prototyps — direkt abgeleitet aus Kapitel 5.2 der Thesis.
+// Zentrale Idee: Die "Aussage" (Statement) ist das Kerndatenobjekt mit Evidenzstatus
+// und Herkunft. Eine Strategieoption ist ein Bündel referenzierter Statements
+// (Hypothesenbündel). Der Evidenzstatus wird über alle Phasen fortgeschrieben.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")   // Supabase Transaction Pooler (Port 6543)
+  directUrl = env("DIRECT_URL")     // Supabase Direct Connection (Port 5432, für Migrationen)
+}
+
+// ----------------------------------------------------------------------------
+// Projekt: ein Strategiedurchlauf eines Start-ups
+// ----------------------------------------------------------------------------
+model Project {
+  id           String   @id @default(cuid())
+  name         String
+  currentPhase Int      @default(1) // 1..5, höchste freigeschaltete Phase
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Start-up-Profil (Eingaben aus Phase 1, F2/NF8):
+  businessIdea     String? @db.Text // Geschäftsidee / Angebot
+  productStatus    String? // z.B. "Idee", "MVP", "am Markt"
+  assumedTarget    String? @db.Text // vermutete Zielgruppe(n), optional
+  assumedProblem   String? @db.Text // vermutetes Kundenproblem
+  valuePropDraft   String? @db.Text // Nutzenversprechen (Entwurf)
+  revenueIdea      String? @db.Text // Erlösidee
+  region           String? // geplanter Markt / Region
+  teamSize         Int?
+  budgetMonthly    String? // z.B. "unter 500 €", "500–2000 €", ">2000 €"
+  timePerWeek      String? // verfügbare Zeit fürs Marketing
+  skills           String? @db.Text // vorhandene Fähigkeiten/Kanäle/Netzwerk
+  existingInsights String? @db.Text // bisherige Kundenerkenntnisse/Rückmeldungen
+
+  statements  Statement[]
+  options     StrategyOption[]
+  steps       ValidationStep[]
+  feedbacks   MarketFeedback[]
+  adaptations AdaptationDecision[]
+}
+
+// ----------------------------------------------------------------------------
+// Aussage: zentrales Datenobjekt (Kapitel 5.2, F5/NF2)
+// ----------------------------------------------------------------------------
+enum EvidenceStatus {
+  FACT           // Fakt (belegt)
+  ASSUMPTION     // plausible Annahme
+  OPEN_QUESTION  // offene Frage
+}
+
+enum Origin {
+  USER_INPUT         // Nutzereingabe
+  SIMULATED_RESEARCH // simulierte Recherche (fiktive Quelle!)
+  AI_DERIVATION      // KI-Ableitung aus vorhandenem Kontext
+}
+
+// Fachliche Verortung einer Aussage innerhalb der Phasenergebnisse
+enum StatementCategory {
+  // Phase 1 — Analyse
+  PESTEL_POLITICAL
+  PESTEL_ECONOMIC
+  PESTEL_SOCIAL
+  PESTEL_TECHNOLOGICAL
+  PESTEL_ECOLOGICAL
+  PESTEL_LEGAL
+  TARGET_SEGMENT     // Zielgruppen-/Segmenthypothese
+  CUSTOMER_PROBLEM
+  COMPETITOR         // Wettbewerber / Alternative / Ersatzlösung
+  RESOURCE           // interne Ressource/Fähigkeit
+  SWOT_STRENGTH
+  SWOT_WEAKNESS
+  SWOT_OPPORTUNITY
+  SWOT_THREAT
+  MARKET_PATH        // erkennbarer Marktpfad
+  // Phase 2 — Dimensionen einer Strategieoption
+  OPT_TARGET_GROUP
+  OPT_CUSTOMER_PROBLEM
+  OPT_VALUE_PROPOSITION
+  OPT_POSITIONING
+  OPT_MARKET_ACCESS
+  OPT_REVENUE_GROWTH
+  // Phase 5
+  LEARNING           // neu gewonnene Erkenntnis / neue offene Frage
+  OTHER
+}
+
+model Statement {
+  id             String            @id @default(cuid())
+  projectId      String
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase          Int               // Phase, in der die Aussage entstand (1..5)
+  category       StatementCategory @default(OTHER)
+  content        String            @db.Text
+  evidenceStatus EvidenceStatus
+  origin         Origin
+  justification  String?           @db.Text // Begründung der KI (NF1)
+  sourceRef      String?           // fiktive Quellenangabe bei SIMULATED_RESEARCH (NF9)
+  uncertainty    String?           @db.Text // Unsicherheitshinweis (NF2)
+  isCritical     Boolean           @default(false) // kritische Annahme (Phase 4)
+  adopted        Boolean           @default(false) // Übernahme-Prinzip (F10/NF3/NF5)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  optionLinks     OptionStatement[]
+  validationSteps ValidationStep[]  @relation("StepAssumption")
+  feedbacks       MarketFeedback[]
+}
+
+// ----------------------------------------------------------------------------
+// Strategieoption = Hypothesenbündel (Kapitel 4.3.2 / 5.2, F6)
+// ----------------------------------------------------------------------------
+enum OptionStatus {
+  DRAFT       // Entwurf
+  ADOPTED     // übernommen, noch nicht bewertet/priorisiert
+  PRIORITIZED // begründet priorisiert (Phase 3)
+  DEFERRED    // zurückgestellt
+  DISCARDED   // verworfen
+}
+
+model StrategyOption {
+  id                     String       @id @default(cuid())
+  projectId              String
+  project                Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title                  String
+  summary                String?      @db.Text
+  status                 OptionStatus @default(DRAFT)
+  prioritizationRationale String?     @db.Text // Begründung der Priorisierung (F7, nutzerbestätigt)
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  statements  OptionStatement[]
+  evaluations Evaluation[]
+  steps       ValidationStep[]
+  adaptations AdaptationDecision[]
+}
+
+// Verknüpfung Option ↔ Statement je Dimension (das "Bündel")
+model OptionStatement {
+  optionId    String
+  statementId String
+  option      StrategyOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  statement   Statement      @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  @@id([optionId, statementId])
+}
+
+// ----------------------------------------------------------------------------
+// Bewertung (Phase 3, F7) — Kriterien aus Kapitel 4.3.3
+// ----------------------------------------------------------------------------
+enum Criterion {
+  ATTRACTIVENESS    // strategische Attraktivität & inhaltliche Stimmigkeit
+  RESOURCE_FIT      // Ressourcenpassung
+  RISK              // tragbares Risiko (hoher Score = tragbar)
+  VALIDATION_EFFORT // Prüfaufwand (hoher Score = gering)
+  LEARNING_VALUE    // erwartbarer Lernwert
+  EVIDENCE          // Evidenzstatus der zugrunde liegenden Annahmen
+}
+
+model Evaluation {
+  id        String         @id @default(cuid())
+  optionId  String
+  option    StrategyOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  criterion Criterion
+  score     Int            // 1..5
+  rationale String         @db.Text // Begründung (NF1)
+  createdAt DateTime       @default(now())
+
+  @@unique([optionId, criterion])
+}
+
+// ----------------------------------------------------------------------------
+// Validierende Umsetzung (Phase 4, F8)
+// ----------------------------------------------------------------------------
+model ValidationStep {
+  id           String         @id @default(cuid())
+  projectId    String
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  optionId     String
+  option       StrategyOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  assumptionId String         // geprüfte kritische Annahme
+  assumption   Statement      @relation("StepAssumption", fields: [assumptionId], references: [id], onDelete: Cascade)
+  title        String
+  description  String         @db.Text // Maßnahme/Experiment/MVP-Schritt
+  channel      String?        // z.B. Landingpage, Instagram, Interviews
+  adopted      Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+
+  metrics   Metric[]
+  feedbacks MarketFeedback[]
+}
+
+model Metric {
+  id               String         @id @default(cuid())
+  stepId           String
+  step             ValidationStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  name             String         // z.B. "Registrierungen in 2 Wochen"
+  successCriterion String         // gilt als stützend, wenn ...
+  failureCriterion String         // gilt als widerlegend, wenn ...
+}
+
+// ----------------------------------------------------------------------------
+// Lernen & Anpassung (Phase 5, F9)
+// ----------------------------------------------------------------------------
+enum FeedbackResult {
+  SUPPORTED           // Annahme gestützt
+  PARTIALLY_SUPPORTED // teilweise gestützt
+  REFUTED             // widerlegt
+  AMBIGUOUS           // mehrdeutig
+}
+
+model MarketFeedback {
+  id                String          @id @default(cuid())
+  projectId         String
+  project           Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stepId            String?
+  step              ValidationStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  statementId       String          // geprüfte Annahme
+  statement         Statement       @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  content           String          @db.Text // die (fiktive) Marktrückmeldung
+  result            FeedbackResult
+  interpretation    String?         @db.Text // KI-Interpretation (NF1)
+  proposedNewStatus EvidenceStatus? // vorgeschlagener neuer Evidenzstatus
+  statusApplied     Boolean         @default(false) // Nutzer hat Statusänderung bestätigt
+  createdAt         DateTime        @default(now())
+}
+
+enum AdaptationType {
+  CONTINUE  // fortführen / breiter umsetzen
+  ADAPT     // einzelne Bestandteile anpassen
+  DEFER     // Option zurückstellen
+  DISCARD   // Option verwerfen
+  LOOP_BACK // Rückkopplung in frühere Phase
+}
+
+model AdaptationDecision {
+  id              String         @id @default(cuid())
+  projectId       String
+  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  optionId        String
+  option          StrategyOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  decision        AdaptationType
+  rationale       String         @db.Text
+  loopBackToPhase Int?           // bei LOOP_BACK: Zielphase 1..3
+  userConfirmed   Boolean        @default(false) // Entscheidung liegt beim Nutzer (NF3)
+  createdAt       DateTime       @default(now())
+}
