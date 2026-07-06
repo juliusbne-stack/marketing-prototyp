@@ -99,6 +99,39 @@ export async function POST(request: Request) {
   return NextResponse.json(statement, { status: 201 });
 }
 
+const adoptAllSchema = z.object({
+  projectId: z.string().min(1),
+  phase: z.number().int().min(1).max(5),
+});
+
+// Bulk action "Alle Entwürfe übernehmen": adopts every draft of a phase.
+export async function PUT(request: Request) {
+  const body = await request.json().catch(() => null);
+  const parsed = adoptAllSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Die Übernahme konnte nicht verarbeitet werden." },
+      { status: 400 }
+    );
+  }
+
+  const { projectId, phase } = parsed.data;
+
+  await prisma.statement.updateMany({
+    where: { projectId, phase, adopted: false },
+    data: { adopted: true },
+  });
+
+  const statements = await prisma.statement.findMany({
+    where: { projectId, phase },
+    orderBy: { createdAt: "asc" },
+    select: statementSelect,
+  });
+
+  return NextResponse.json(statements);
+}
+
 export async function PATCH(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = updateStatementSchema.safeParse(body);

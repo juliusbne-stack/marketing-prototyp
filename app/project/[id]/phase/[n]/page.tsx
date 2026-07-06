@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { StatementDemo } from "@/components/phase1/StatementDemo";
+import { Phase1View } from "@/components/phase1/Phase1View";
 
 const PHASE_INFO: Record<
   number,
@@ -11,7 +11,7 @@ const PHASE_INFO: Record<
     description:
       "Aus deinem Start-up-Profil entsteht ein evidenzbewertetes Analysebild mit simulierten Recherchedaten.",
     emptyState:
-      "In dieser Phase beschreibst du dein Start-up und erhältst ein Analysebild aus PESTEL, Zielgruppen, Wettbewerb und SWOT. Das Eingabeformular folgt in einem späteren Ausbauschritt des Prototyps.",
+      "In dieser Phase beschreibst du dein Start-up und erhältst ein Analysebild aus PESTEL, Zielgruppen, Wettbewerb und SWOT.",
   },
   2: {
     title: "Strategieoptionen",
@@ -56,28 +56,56 @@ export default async function PhasePage({
     notFound();
   }
 
-  // M2: demo view in phase 1 to test the statement core components.
-  const statements =
-    phaseNumber === 1
-      ? await prisma.statement.findMany({
-          where: { projectId: id, phase: 1 },
-          orderBy: { createdAt: "asc" },
-          select: {
-            id: true,
-            projectId: true,
-            phase: true,
-            category: true,
-            content: true,
-            evidenceStatus: true,
-            origin: true,
-            justification: true,
-            sourceRef: true,
-            uncertainty: true,
-            isCritical: true,
-            adopted: true,
-          },
-        })
-      : null;
+  // M3: phase 1 is fully implemented — profile inputs, AI analysis, result grids.
+  let phase1Content: React.ReactNode = null;
+  if (phaseNumber === 1) {
+    const [project, statements] = await Promise.all([
+      prisma.project.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          businessIdea: true,
+          productStatus: true,
+          assumedTarget: true,
+          assumedProblem: true,
+          valuePropDraft: true,
+          revenueIdea: true,
+          region: true,
+          teamSize: true,
+          budgetMonthly: true,
+          timePerWeek: true,
+          skills: true,
+          existingInsights: true,
+        },
+      }),
+      prisma.statement.findMany({
+        where: { projectId: id, phase: 1 },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          projectId: true,
+          phase: true,
+          category: true,
+          content: true,
+          evidenceStatus: true,
+          origin: true,
+          justification: true,
+          sourceRef: true,
+          uncertainty: true,
+          isCritical: true,
+          adopted: true,
+        },
+      }),
+    ]);
+
+    if (!project) {
+      notFound();
+    }
+
+    phase1Content = (
+      <Phase1View project={project} initialStatements={statements} />
+    );
+  }
 
   return (
     <div>
@@ -88,9 +116,7 @@ export default async function PhasePage({
         <p className="mt-1 text-sm text-text-muted">{phase.description}</p>
       </header>
 
-      {statements ? (
-        <StatementDemo projectId={id} initialStatements={statements} />
-      ) : (
+      {phase1Content ?? (
         <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
           {phase.emptyState}
         </div>
