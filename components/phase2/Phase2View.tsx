@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
+import {
+  PhaseEmptyState,
+  PhaseErrorState,
+  PhaseLoadingState,
+} from "@/components/wizard/phaseStates";
 import { OptionCard } from "./OptionCard";
 import type { OptionData } from "./types";
 
@@ -73,11 +78,11 @@ export function Phase2View({
   if (!hasAdoptedAnalysis) {
     return (
       <div className="flex flex-col gap-6">
-        <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
+        <PhaseEmptyState>
           In dieser Phase entstehen aus deinem Analysebild 2–3 vergleichbare
           Strategieoptionen. Übernimm zuerst in Phase 1 Aussagen in den
           Projektstand.
-        </div>
+        </PhaseEmptyState>
         {advanceButton}
       </div>
     );
@@ -106,32 +111,9 @@ export function Phase2View({
         </button>
       </div>
 
-      {error && (
-        <div className="rounded-[10px] border border-danger-text/30 bg-danger-bg p-4 text-sm text-danger-text">
-          {error}
-        </div>
-      )}
+      {error && <PhaseErrorState message={error} />}
 
-      {isGenerating && (
-        <div aria-live="polite" className="flex flex-col gap-3">
-          <p className="text-sm text-text-muted">
-            Die KI entwickelt aus deinem Analysebild 2–3 Strategieoptionen als
-            Hypothesenbündel …
-          </p>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {[0, 1, 2].map((index) => (
-              <div
-                key={index}
-                className="h-72 animate-pulse rounded-[10px] border border-border bg-surface"
-              >
-                <div className="m-4 h-3 w-2/3 rounded bg-border" />
-                <div className="mx-4 h-3 w-full rounded bg-border/60" />
-                <div className="m-4 h-20 rounded bg-border/40" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {isGenerating && <PhaseLoadingState phase={2} variant="option" />}
 
       {hasOptions && !isGenerating && (
         <>
@@ -155,10 +137,10 @@ export function Phase2View({
       )}
 
       {!hasOptions && !isGenerating && (
-        <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
+        <PhaseEmptyState>
           In dieser Phase entstehen aus deinem Analysebild 2–3 vergleichbare
           Strategieoptionen. Starte mit „Optionen entwickeln“.
-        </div>
+        </PhaseEmptyState>
       )}
 
       {advanceButton}

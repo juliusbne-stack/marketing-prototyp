@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Phase1View } from "@/components/phase1/Phase1View";
 import { Phase2View } from "@/components/phase2/Phase2View";
 import { Phase3View } from "@/components/phase3/Phase3View";
-import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
+import { Phase4View } from "@/components/phase4/Phase4View";
+import { Phase5View } from "@/components/phase5/Phase5View";
 
 const statementSelect = {
   id: true,
@@ -74,7 +75,6 @@ export default async function PhasePage({
     notFound();
   }
 
-  // M3/M4: phases 1–3 are implemented.
   let phaseContent: React.ReactNode = null;
   if (phaseNumber === 1) {
     const [project, statements] = await Promise.all([
@@ -178,6 +178,125 @@ export default async function PhasePage({
     );
   }
 
+  if (phaseNumber === 4) {
+    // Phase 4 works exclusively on the prioritized option (M5).
+    const option = await prisma.strategyOption.findFirst({
+      where: { projectId: id, status: "PRIORITIZED" },
+      select: {
+        id: true,
+        title: true,
+        summary: true,
+        prioritizationRationale: true,
+      },
+    });
+    const steps = option
+      ? await prisma.validationStep.findMany({
+          where: { optionId: option.id },
+          orderBy: { createdAt: "asc" },
+          include: {
+            metrics: {
+              select: {
+                id: true,
+                name: true,
+                successCriterion: true,
+                failureCriterion: true,
+              },
+            },
+            assumption: { select: statementSelect },
+          },
+        })
+      : [];
+
+    phaseContent = (
+      <Phase4View projectId={id} option={option} initialSteps={steps} />
+    );
+  }
+
+  if (phaseNumber === 5) {
+    // After a confirmed DEFER/DISCARD the option is no longer PRIORITIZED —
+    // the latest adaptation decision keeps the phase 5 view addressable.
+    const adaptation = await prisma.adaptationDecision.findFirst({
+      where: { projectId: id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        optionId: true,
+        decision: true,
+        rationale: true,
+        loopBackToPhase: true,
+        userConfirmed: true,
+      },
+    });
+    const optionSelect = {
+      id: true,
+      title: true,
+      summary: true,
+      prioritizationRationale: true,
+    } as const;
+    const option = adaptation
+      ? await prisma.strategyOption.findUnique({
+          where: { id: adaptation.optionId },
+          select: optionSelect,
+        })
+      : await prisma.strategyOption.findFirst({
+          where: { projectId: id, status: "PRIORITIZED" },
+          select: optionSelect,
+        });
+
+    // Only adopted validation steps take part in the learning loop.
+    const steps = option
+      ? await prisma.validationStep.findMany({
+          where: { optionId: option.id, adopted: true },
+          orderBy: { createdAt: "asc" },
+          include: {
+            metrics: {
+              select: {
+                id: true,
+                name: true,
+                successCriterion: true,
+                failureCriterion: true,
+              },
+            },
+            assumption: { select: statementSelect },
+          },
+        })
+      : [];
+
+    const [feedbacks, learnings] = await Promise.all([
+      prisma.marketFeedback.findMany({
+        where: { stepId: { in: steps.map((step) => step.id) } },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          projectId: true,
+          stepId: true,
+          statementId: true,
+          content: true,
+          result: true,
+          interpretation: true,
+          proposedNewStatus: true,
+          statusApplied: true,
+        },
+      }),
+      prisma.statement.findMany({
+        where: { projectId: id, phase: 5, category: "LEARNING" },
+        orderBy: { createdAt: "asc" },
+        select: statementSelect,
+      }),
+    ]);
+
+    phaseContent = (
+      <Phase5View
+        projectId={id}
+        option={option}
+        initialSteps={steps}
+        initialFeedbacks={feedbacks}
+        initialLearnings={learnings}
+        initialDecision={adaptation}
+      />
+    );
+  }
+
   return (
     <div>
       <header className="mb-8">
@@ -191,12 +310,6 @@ export default async function PhasePage({
         <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
           {phase.emptyState}
         </div>
-      )}
-
-      {/* Phase 4 is not built yet (M5); until then the transition to phase 5
-          has no additional precondition. */}
-      {phaseNumber === 4 && (
-        <PhaseAdvanceButton projectId={id} nextPhase={5} enabled />
       )}
     </div>
   );

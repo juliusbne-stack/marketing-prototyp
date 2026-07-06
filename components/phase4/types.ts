@@ -1,0 +1,33 @@
+import type { StatementData } from "@/components/statements/types";
+
+// Client-side shape of a validation step, matching app/api/ai/4/route.ts
+// and app/api/steps/route.ts.
+export type MetricData = {
+  id: string;
+  name: string;
+  successCriterion: string;
+  failureCriterion: string;
+};
+
+export type StepData = {
+  id: string;
+  projectId: string;
+  optionId: string;
+  assumptionId: string;
+  title: string;
+  description: string;
+  channel: string | null;
+  adopted: boolean;
+  metrics: MetricData[];
+};
+
+// Phase 4 groups steps under their tested critical assumption.
+export type StepWithAssumption = StepData & { assumption: StatementData };
+
+// Slim shape of the prioritized option shown in the phase 4/5 header.
+export type PrioritizedOptionData = {
+  id: string;
+  title: string;
+  summary: string | null;
+  prioritizationRationale: string | null;
+};

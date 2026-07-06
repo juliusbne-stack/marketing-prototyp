@@ -5,6 +5,12 @@ import { CheckCheck } from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
 import type { StatementData } from "@/components/statements/types";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
+import {
+  AI_ERROR_FALLBACK,
+  PhaseEmptyState,
+  PhaseErrorState,
+  PhaseLoadingState,
+} from "@/components/wizard/phaseStates";
 import { ProfileForm, type ProfileData } from "./ProfileForm";
 import { AddStatementForm } from "./AddStatementForm";
 import { PestelGrid } from "./PestelGrid";
@@ -43,18 +49,11 @@ export function Phase1View({
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(
-          body?.error ??
-            "Die KI-Antwort konnte nicht verarbeitet werden. Erneut versuchen — deine Eingaben bleiben erhalten."
-        );
+        throw new Error(body?.error ?? AI_ERROR_FALLBACK);
       }
       setStatements(body.statements);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Die KI-Antwort konnte nicht verarbeitet werden. Erneut versuchen — deine Eingaben bleiben erhalten."
-      );
+      setError(err instanceof Error ? err.message : AI_ERROR_FALLBACK);
     } finally {
       setIsGenerating(false);
     }
@@ -139,29 +138,9 @@ export function Phase1View({
         onAnalyze={handleAnalyze}
       />
 
-      {error && (
-        <div className="rounded-[10px] border border-danger-text/30 bg-danger-bg p-4 text-sm text-danger-text">
-          {error}
-        </div>
-      )}
+      {error && <PhaseErrorState message={error} />}
 
-      {isGenerating && (
-        <div aria-live="polite" className="flex flex-col gap-3">
-          <p className="text-sm text-text-muted">
-            Die KI erstellt einen Analyse-Entwurf mit simulierten
-            Recherchedaten …
-          </p>
-          {[0, 1, 2, 3].map((index) => (
-            <div
-              key={index}
-              className="h-24 animate-pulse rounded-[10px] border border-border bg-surface"
-            >
-              <div className="m-4 h-3 w-1/4 rounded bg-border" />
-              <div className="mx-4 h-3 w-3/4 rounded bg-border/60" />
-            </div>
-          ))}
-        </div>
-      )}
+      {isGenerating && <PhaseLoadingState phase={1} />}
 
       {hasResults && !isGenerating && (
         <>
@@ -273,12 +252,11 @@ export function Phase1View({
       )}
 
       {!hasResults && !isGenerating && (
-        <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
-          Fülle das Start-up-Profil aus und starte mit „Analyse erstellen“.
-          Die KI erzeugt daraus ein evidenzbewertetes Analysebild aus PESTEL,
-          Zielgruppen, Wettbewerb und SWOT — mit simulierten, fiktiven
-          Recherchedaten.
-        </div>
+        <PhaseEmptyState>
+          In dieser Phase beschreibst du dein Start-up und erhältst ein
+          Analysebild aus PESTEL, Zielgruppen, Wettbewerb und SWOT. Starte mit
+          „Analyse erstellen“.
+        </PhaseEmptyState>
       )}
 
       <PhaseAdvanceButton

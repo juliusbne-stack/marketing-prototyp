@@ -32,22 +32,25 @@ export function PhaseStepper({
           const isActive = phase.number === activePhase;
           const isUnlocked = phase.number <= currentPhase;
           const isCompleted = phase.number < currentPhase;
+          const isLocked = !isUnlocked;
 
           const rowClasses = `flex items-center gap-2.5 rounded-md px-3 py-2 text-sm ${
             isActive
               ? "bg-accent-soft font-medium text-accent"
-              : "text-text-muted"
+              : isLocked
+                ? "text-text-muted/70"
+                : "text-text-muted"
           }`;
 
           const marker = (
             <span
               aria-hidden
-              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] ${
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-medium ${
                 isActive
                   ? "border-accent bg-accent text-white"
                   : isCompleted
                     ? "border-evidence-fact-border bg-evidence-fact-bg text-evidence-fact-text"
-                    : "border-border bg-surface"
+                    : "border-border bg-background text-text-muted"
               }`}
             >
               {isCompleted && !isActive ? (
@@ -73,9 +76,9 @@ export function PhaseStepper({
                 </Link>
               ) : (
                 <div
-                  aria-disabled
-                  title="Noch gesperrt — schließe zuerst die vorherige Phase ab."
-                  className={`${rowClasses} cursor-not-allowed opacity-60`}
+                  aria-disabled="true"
+                  title="Noch gesperrt — schließe zuerst die vorherige Phase über „Weiter zu Phase …“ ab."
+                  className={`${rowClasses} cursor-not-allowed opacity-50`}
                 >
                   {marker}
                   <span className="whitespace-nowrap">{phase.title}</span>

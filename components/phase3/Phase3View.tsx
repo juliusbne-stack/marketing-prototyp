@@ -4,6 +4,11 @@ import { useState } from "react";
 import { Scale } from "lucide-react";
 import type { OptionData } from "@/components/phase2/types";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
+import {
+  PhaseEmptyState,
+  PhaseErrorState,
+  PhaseLoadingState,
+} from "@/components/wizard/phaseStates";
 import { EvaluationMatrix } from "./EvaluationMatrix";
 import { PrioritizationPanel } from "./PrioritizationPanel";
 import type {
@@ -89,11 +94,11 @@ export function Phase3View({
   if (options.length < 2) {
     return (
       <div className="flex flex-col gap-6">
-        <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
+        <PhaseEmptyState>
           In dieser Phase vergleichst du die Strategieoptionen anhand von
           sechs Kriterien und priorisierst begründet eine davon. Übernimm
           zuerst in Phase 2 mindestens zwei Optionen in den Projektstand.
-        </div>
+        </PhaseEmptyState>
         {advanceButton}
       </div>
     );
@@ -122,24 +127,9 @@ export function Phase3View({
         </button>
       </div>
 
-      {error && (
-        <div className="rounded-[10px] border border-danger-text/30 bg-danger-bg p-4 text-sm text-danger-text">
-          {error}
-        </div>
-      )}
+      {error && <PhaseErrorState message={error} />}
 
-      {isEvaluating && (
-        <div aria-live="polite" className="flex flex-col gap-3">
-          <p className="text-sm text-text-muted">
-            Die KI vergleicht die Optionen anhand der sechs Kriterien …
-          </p>
-          <div className="h-64 animate-pulse rounded-[10px] border border-border bg-surface">
-            <div className="m-4 h-3 w-1/3 rounded bg-border" />
-            <div className="mx-4 h-3 w-3/4 rounded bg-border/60" />
-            <div className="m-4 h-40 rounded bg-border/40" />
-          </div>
-        </div>
-      )}
+      {isEvaluating && <PhaseLoadingState phase={3} variant="matrix" />}
 
       {hasEvaluations && !isEvaluating && (
         <>
@@ -154,11 +144,11 @@ export function Phase3View({
       )}
 
       {!hasEvaluations && !isEvaluating && (
-        <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
+        <PhaseEmptyState>
           In dieser Phase vergleichst du deine Strategieoptionen anhand von
           sechs Kriterien. Starte mit „Bewertung starten“ — die Priorisierung
           entscheidest anschließend du.
-        </div>
+        </PhaseEmptyState>
       )}
 
       {advanceButton}
