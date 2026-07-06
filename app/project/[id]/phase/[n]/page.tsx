@@ -1,6 +1,24 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Phase1View } from "@/components/phase1/Phase1View";
+import { Phase2View } from "@/components/phase2/Phase2View";
+import { Phase3View } from "@/components/phase3/Phase3View";
+import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
+
+const statementSelect = {
+  id: true,
+  projectId: true,
+  phase: true,
+  category: true,
+  content: true,
+  evidenceStatus: true,
+  origin: true,
+  justification: true,
+  sourceRef: true,
+  uncertainty: true,
+  isCritical: true,
+  adopted: true,
+} as const;
 
 const PHASE_INFO: Record<
   number,
@@ -56,8 +74,8 @@ export default async function PhasePage({
     notFound();
   }
 
-  // M3: phase 1 is fully implemented — profile inputs, AI analysis, result grids.
-  let phase1Content: React.ReactNode = null;
+  // M3/M4: phases 1–3 are implemented.
+  let phaseContent: React.ReactNode = null;
   if (phaseNumber === 1) {
     const [project, statements] = await Promise.all([
       prisma.project.findUnique({
@@ -81,20 +99,7 @@ export default async function PhasePage({
       prisma.statement.findMany({
         where: { projectId: id, phase: 1 },
         orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          projectId: true,
-          phase: true,
-          category: true,
-          content: true,
-          evidenceStatus: true,
-          origin: true,
-          justification: true,
-          sourceRef: true,
-          uncertainty: true,
-          isCritical: true,
-          adopted: true,
-        },
+        select: statementSelect,
       }),
     ]);
 
@@ -102,8 +107,74 @@ export default async function PhasePage({
       notFound();
     }
 
-    phase1Content = (
+    phaseContent = (
       <Phase1View project={project} initialStatements={statements} />
+    );
+  }
+
+  if (phaseNumber === 2) {
+    const [options, adoptedAnalysisCount] = await Promise.all([
+      prisma.strategyOption.findMany({
+        where: { projectId: id },
+        orderBy: { createdAt: "asc" },
+        include: {
+          statements: { include: { statement: { select: statementSelect } } },
+        },
+      }),
+      prisma.statement.count({
+        where: { projectId: id, phase: 1, adopted: true },
+      }),
+    ]);
+
+    phaseContent = (
+      <Phase2View
+        projectId={id}
+        initialOptions={options.map((option) => ({
+          id: option.id,
+          title: option.title,
+          summary: option.summary,
+          status: option.status,
+          prioritizationRationale: option.prioritizationRationale,
+          statements: option.statements.map((link) => link.statement),
+        }))}
+        hasAdoptedAnalysis={adoptedAnalysisCount > 0}
+      />
+    );
+  }
+
+  if (phaseNumber === 3) {
+    // Only adopted options (hypothesis bundles) can be evaluated and prioritized.
+    const options = await prisma.strategyOption.findMany({
+      where: {
+        projectId: id,
+        status: { in: ["ADOPTED", "PRIORITIZED", "DEFERRED"] },
+      },
+      orderBy: { createdAt: "asc" },
+      include: {
+        evaluations: {
+          select: {
+            id: true,
+            optionId: true,
+            criterion: true,
+            score: true,
+            rationale: true,
+          },
+        },
+      },
+    });
+
+    phaseContent = (
+      <Phase3View
+        projectId={id}
+        initialOptions={options.map((option) => ({
+          id: option.id,
+          title: option.title,
+          summary: option.summary,
+          status: option.status,
+          prioritizationRationale: option.prioritizationRationale,
+        }))}
+        initialEvaluations={options.flatMap((option) => option.evaluations)}
+      />
     );
   }
 
@@ -116,10 +187,16 @@ export default async function PhasePage({
         <p className="mt-1 text-sm text-text-muted">{phase.description}</p>
       </header>
 
-      {phase1Content ?? (
+      {phaseContent ?? (
         <div className="rounded-[10px] border border-dashed border-border bg-surface p-8 text-center text-sm text-text-muted">
           {phase.emptyState}
         </div>
+      )}
+
+      {/* Phase 4 is not built yet (M5); until then the transition to phase 5
+          has no additional precondition. */}
+      {phaseNumber === 4 && (
+        <PhaseAdvanceButton projectId={id} nextPhase={5} enabled />
       )}
     </div>
   );

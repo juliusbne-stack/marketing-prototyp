@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCheck } from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
 import type { StatementData } from "@/components/statements/types";
+import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
 import { ProfileForm, type ProfileData } from "./ProfileForm";
 import { AddStatementForm } from "./AddStatementForm";
 import { PestelGrid } from "./PestelGrid";
@@ -127,6 +128,7 @@ export function Phase1View({
 
   const hasResults = statements.length > 0;
   const resources = byCategory("RESOURCE");
+  const hasAdopted = statements.some((statement) => statement.adopted);
 
   return (
     <div className="flex flex-col gap-8">
@@ -278,6 +280,13 @@ export function Phase1View({
           Recherchedaten.
         </div>
       )}
+
+      <PhaseAdvanceButton
+        projectId={project.id}
+        nextPhase={2}
+        enabled={hasAdopted}
+        disabledHint="Übernimm zuerst mindestens eine Aussage in den Projektstand."
+      />
     </div>
   );
 }

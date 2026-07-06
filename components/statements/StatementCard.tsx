@@ -14,10 +14,16 @@ export function StatementCard({
   statement,
   onChanged,
   onDeleted,
+  showAdoptAction = true,
+  compact = false,
 }: {
   statement: StatementData;
   onChanged: (statement: StatementData) => void;
-  onDeleted: (id: string) => void;
+  /** Without a handler the delete action is hidden (e.g. option dimensions, which must stay complete). */
+  onDeleted?: (id: string) => void;
+  /** Phase 2 adopts whole options (hypothesis bundles), not single dimensions. */
+  showAdoptAction?: boolean;
+  compact?: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftContent, setDraftContent] = useState(statement.content);
@@ -66,7 +72,7 @@ export function StatementCard({
       if (!response.ok) {
         throw new Error("Die Aussage konnte nicht gelöscht werden. Erneut versuchen.");
       }
-      onDeleted(statement.id);
+      onDeleted?.(statement.id);
     } catch (err) {
       setError(
         err instanceof Error
@@ -112,7 +118,7 @@ export function StatementCard({
 
   return (
     <div
-      className={`rounded-[10px] p-4 transition-colors ${cardClasses} ${
+      className={`rounded-[10px] transition-colors ${compact ? "p-3" : "p-4"} ${cardClasses} ${
         isBusy ? "opacity-60" : ""
       }`}
     >
@@ -136,15 +142,17 @@ export function StatementCard({
           >
             <Pencil className="h-3.5 w-3.5" aria-hidden />
           </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={isBusy}
-            aria-label="Aussage löschen"
-            className="rounded p-1 text-text-muted transition-colors hover:text-danger-text disabled:opacity-50"
-          >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden />
-          </button>
+          {onDeleted && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isBusy}
+              aria-label="Aussage löschen"
+              className="rounded p-1 text-text-muted transition-colors hover:text-danger-text disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          )}
         </div>
       </div>
 
@@ -210,7 +218,7 @@ export function StatementCard({
         </div>
       )}
 
-      {!statement.adopted && (
+      {!statement.adopted && showAdoptAction && (
         <div className="mt-3 flex items-center justify-between gap-2 border-t border-accent/20 pt-2.5">
           <span className="text-xs font-medium uppercase tracking-wide text-accent">
             Entwurf

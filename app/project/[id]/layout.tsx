@@ -15,7 +15,7 @@ export default async function ProjectLayout({
   const { id } = await params;
   const project = await prisma.project.findUnique({
     where: { id },
-    select: { id: true, name: true },
+    select: { id: true, name: true, currentPhase: true },
   });
 
   if (!project) {
@@ -41,7 +41,10 @@ export default async function ProjectLayout({
       </header>
 
       <div className="mx-auto flex w-full max-w-[1240px] flex-1 flex-col gap-6 px-6 py-6 md:flex-row">
-        <PhaseStepper />
+        <PhaseStepper
+          projectId={project.id}
+          currentPhase={project.currentPhase}
+        />
         <main className="w-full max-w-[960px] flex-1">{children}</main>
       </div>
     </div>
