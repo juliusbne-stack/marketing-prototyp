@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import {
   TIMEFRAME_ENDPOINT_TOOLTIP,
 } from "@/lib/cockpitPeriod";
 import { StepReadinessChip } from "./StepReadinessChip";
+import { CockpitTaskRow } from "./CockpitTaskRow";
 import { RESULT_CONFIG } from "@/components/phase5/types";
 import type { KpiScenario } from "@/lib/schemas/kpiSimulation";
 import {
@@ -26,6 +27,7 @@ import {
   type KpiDataPointData,
   type TaskData,
 } from "./types";
+import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
 
 const SCENARIOS: {
   value: KpiScenario;
@@ -75,7 +77,15 @@ export function CockpitStepCard({
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [isBridging, setIsBridging] = useState(false);
+  const [expandedElaborationTaskId, setExpandedElaborationTaskId] = useState<
+    string | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
+
+  const statementMap = useMemo(
+    () => new Map(step.adoptedStatements.map((statement) => [statement.id, statement])),
+    [step.adoptedStatements]
+  );
 
   const doneCount = tasks.filter((task) => task.done).length;
   const hasDataPoints = metrics.some((metric) => metric.dataPoints.length > 0);
@@ -132,7 +142,22 @@ export function CockpitStepCard({
             "Die Aufgaben konnten nicht erstellt werden. Erneut versuchen."
         );
       }
-      setTasks(body.tasks);
+      setTasks(
+        body.tasks.map(
+          (task: TaskData & { annahmenBezug?: unknown }) => ({
+            id: task.id,
+            stepId: task.stepId,
+            title: task.title,
+            hint: task.hint,
+            sortOrder: task.sortOrder,
+            done: task.done,
+            annahmenBezugId: task.annahmenBezugId ?? null,
+            erfolgskriterium: task.erfolgskriterium ?? null,
+            elaboration: null,
+            elaborationGeneratedAt: null,
+          })
+        )
+      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -142,6 +167,20 @@ export function CockpitStepCard({
     } finally {
       setIsGeneratingTasks(false);
     }
+  }
+
+  function handleElaborationSaved(taskId: string, elaboration: TaskElaborationResponse) {
+    setTasks((current) =>
+      current.map((entry) =>
+        entry.id === taskId
+          ? {
+              ...entry,
+              elaboration,
+              elaborationGeneratedAt: new Date().toISOString(),
+            }
+          : entry
+      )
+    );
   }
 
   async function handleToggleTask(task: TaskData) {
@@ -318,65 +357,26 @@ export function CockpitStepCard({
           )
         ) : (
           <ul className="mt-2 flex flex-col gap-1.5">
-            {tasks.map((task, index) => {
-              const isNext = index === nextTaskIndex;
-              const titleClass = task.done
-                ? "text-text-muted line-through"
-                : isNext
-                  ? "font-semibold text-text"
-                  : "text-text";
-
-              if (readOnly) {
-                return (
-                  <li
-                    key={task.id}
-                    className="rounded-md px-2 py-1.5"
-                  >
-                    <span className={`block text-sm ${titleClass}`}>
-                      {isNext && (
-                        <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-accent">
-                          Als Nächstes:
-                        </span>
-                      )}
-                      {task.title}
-                    </span>
-                    {task.hint && (
-                      <span className="mt-0.5 block text-xs text-text-muted">
-                        {task.hint}
-                      </span>
-                    )}
-                  </li>
-                );
-              }
-
-              return (
-                <li key={task.id}>
-                  <label className="flex cursor-pointer items-start gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-background">
-                    <input
-                      type="checkbox"
-                      checked={task.done}
-                      onChange={() => handleToggleTask(task)}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#0e5a63]"
-                    />
-                    <span>
-                      <span className={`block text-sm ${titleClass}`}>
-                        {isNext && (
-                          <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-accent">
-                            Als Nächstes:
-                          </span>
-                        )}
-                        {task.title}
-                      </span>
-                      {task.hint && (
-                        <span className="mt-0.5 block text-xs text-text-muted">
-                          {task.hint}
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                </li>
-              );
-            })}
+            {tasks.map((task, index) => (
+              <CockpitTaskRow
+                key={task.id}
+                task={task}
+                isNext={index === nextTaskIndex}
+                readOnly={readOnly}
+                statementMap={statementMap}
+                isExpanded={expandedElaborationTaskId === task.id}
+                onExpand={() => setExpandedElaborationTaskId(task.id)}
+                onToggleExpanded={() =>
+                  setExpandedElaborationTaskId((current) =>
+                    current === task.id ? null : task.id
+                  )
+                }
+                onElaborationSaved={(elaboration) =>
+                  handleElaborationSaved(task.id, elaboration)
+                }
+                onToggleDone={() => handleToggleTask(task)}
+              />
+            ))}
           </ul>
         )}
       </section>

@@ -15,6 +15,9 @@ import {
   getLongestActiveTimeframe,
 } from "@/lib/cockpitPeriod";
 import { prisma } from "@/lib/prisma";
+import { taskSelect } from "@/lib/tasks";
+import { buildImplementationStatements } from "@/lib/implementationStatements";
+import { taskElaborationResponseSchema } from "@/lib/schemas/taskElaboration";
 
 // Implementation cockpit — companion view for the implementation period
 // between phase 4 (adopted steps) and phase 5 (market feedback).
@@ -43,7 +46,15 @@ export default async function CockpitPage({
   const optionInclude = {
     statements: {
       include: {
-        statement: { select: { adopted: true, evidenceStatus: true } },
+        statement: {
+          select: {
+            id: true,
+            category: true,
+            content: true,
+            adopted: true,
+            evidenceStatus: true,
+          },
+        },
       },
     },
   } as const;
@@ -82,14 +93,7 @@ export default async function CockpitPage({
           },
           tasks: {
             orderBy: { sortOrder: "asc" },
-            select: {
-              id: true,
-              stepId: true,
-              title: true,
-              hint: true,
-              sortOrder: true,
-              done: true,
-            },
+            select: taskSelect,
           },
           feedbacks: {
             orderBy: { createdAt: "desc" },
@@ -102,6 +106,33 @@ export default async function CockpitPage({
           },
         },
       })
+    : [];
+
+  const adoptedAnalysis = option
+    ? await prisma.statement.findMany({
+        where: { projectId: id, phase: 1, adopted: true },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          category: true,
+          content: true,
+          evidenceStatus: true,
+        },
+      })
+    : [];
+
+  const adoptedStatements = option
+    ? buildImplementationStatements(option.statements, adoptedAnalysis).map(
+        (statement) => ({
+          id: statement.id,
+          content: statement.content,
+          evidenceStatus: statement.evidenceStatus as
+            | "FACT"
+            | "ASSUMPTION"
+            | "OPEN_QUESTION",
+          displayNumber: statement.displayNumber,
+        })
+      )
     : [];
 
   // Evidence balance of the option's adopted dimensions for the header.
@@ -136,7 +167,26 @@ export default async function CockpitPage({
         failureCriterion: metric.failureCriterion,
         dataPoints: metric.dataPoints,
       })),
-      tasks: step.tasks,
+      tasks: step.tasks.map((task) => {
+        const parsedElaboration = task.elaboration
+          ? taskElaborationResponseSchema.safeParse(task.elaboration)
+          : null;
+        return {
+          id: task.id,
+          stepId: task.stepId,
+          title: task.title,
+          hint: task.hint,
+          sortOrder: task.sortOrder,
+          done: task.done,
+          annahmenBezugId: task.annahmenBezugId,
+          erfolgskriterium: task.erfolgskriterium,
+          elaboration:
+            parsedElaboration?.success ? parsedElaboration.data : null,
+          elaborationGeneratedAt:
+            task.elaborationGeneratedAt?.toISOString() ?? null,
+        };
+      }),
+      adoptedStatements,
       hasFeedback: feedback !== null,
       feedbackEvaluated: feedback?.interpretation !== null,
       feedbackResult: feedback?.result ?? null,

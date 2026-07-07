@@ -23,13 +23,22 @@ REGELN:
 - hint: GENAU 1 Satz Praxistipp zur Umsetzung der Aufgabe (Werkzeug, Abkürzung,
   typischer Fehler). Kein Marketing-Ton.
 - Jede Aufgabe ist in wenigen Stunden bis maximal wenigen Tagen erledigbar.
+- annahmenBezugId: Referenz auf die Aussage (id) aus adoptedStatements, zu deren
+  Prüfung diese Aufgabe primär beiträgt. Wähle die passendste Aussage pro
+  Aufgabe. Ist keine sinnvoll zuordenbar, setze null.
+- erfolgskriterium: GENAU 1 vollständiger Satz, der beschreibt, woran der Nutzer
+  erkennt, dass diese Aufgabe ihren Zweck erfüllt hat. Muss inhaltlich zu den
+  Kennzahlen (metrics) der Maßnahmenkarte passen — keine neuen, nicht messbaren
+  Metriken einführen.
 
 AUSGABEFORMAT (JSON, exakt dieses Schema):
 {
   "tasks": [
     {
       "title": "string (Verb-Form, konkret, mit Parametern)",
-      "hint": "string (1 Satz Praxistipp)"
+      "hint": "string (1 Satz Praxistipp)",
+      "annahmenBezugId": "string | null",
+      "erfolgskriterium": "string (1 vollständiger Satz)"
     }
   ]
 }`;

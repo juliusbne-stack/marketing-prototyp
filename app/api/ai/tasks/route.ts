@@ -3,20 +3,17 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { TASKS_PROMPT } from "@/lib/prompts/tasks";
-import { tasksResponseSchema } from "@/lib/schemas/tasks";
+import { tasksResponseSchemaWithValidIds } from "@/lib/schemas/tasks";
+import {
+  buildImplementationStatements,
+  implementationStatementsById,
+} from "@/lib/implementationStatements";
+import { buildStartupProfile } from "@/lib/implementationContext";
+import { taskSelect } from "@/lib/tasks";
 
 const requestSchema = z.object({
   stepId: z.string().min(1),
 });
-
-const taskSelect = {
-  id: true,
-  stepId: true,
-  title: true,
-  hint: true,
-  sortOrder: true,
-  done: true,
-} as const;
 
 // Decomposes ONE adopted validation step into 3–7 small, chronologically
 // ordered tasks for the implementation period (Umsetzungs-Cockpit).
@@ -35,7 +32,23 @@ export async function POST(request: Request) {
     where: { id: parsed.data.stepId },
     include: {
       project: true,
-      option: { select: { title: true, summary: true } },
+      option: {
+        include: {
+          statements: {
+            include: {
+              statement: {
+                select: {
+                  id: true,
+                  category: true,
+                  content: true,
+                  evidenceStatus: true,
+                  adopted: true,
+                },
+              },
+            },
+          },
+        },
+      },
       assumption: { select: { content: true, evidenceStatus: true } },
       metrics: {
         select: { name: true, successCriterion: true, failureCriterion: true },
@@ -68,26 +81,37 @@ export async function POST(request: Request) {
     );
   }
 
+  const adoptedAnalysis = await prisma.statement.findMany({
+    where: { projectId: step.projectId, phase: 1, adopted: true },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      category: true,
+      content: true,
+      evidenceStatus: true,
+    },
+  });
+
+  const adoptedStatements = buildImplementationStatements(
+    step.option.statements,
+    adoptedAnalysis
+  );
+  const validIds = new Set(adoptedStatements.map((statement) => statement.id));
+  const statementMap = implementationStatementsById(adoptedStatements);
+
   const project = step.project;
   const context = {
-    startupProfile: {
-      businessIdea: project.businessIdea,
-      productStatus: project.productStatus,
-      assumedTarget: project.assumedTarget,
-      assumedProblem: project.assumedProblem,
-      valueProposition: project.valuePropDraft,
-      revenueIdea: project.revenueIdea,
-      region: project.region,
-      teamSize: project.teamSize,
-      budgetMonthly: project.budgetMonthly,
-      timePerWeek: project.timePerWeek,
-      skillsAndChannels: project.skills,
-      existingCustomerInsights: project.existingInsights,
-    },
+    startupProfile: buildStartupProfile(project),
     prioritizedOption: {
       title: step.option.title,
       summary: step.option.summary,
     },
+    adoptedStatements: adoptedStatements.map((statement) => ({
+      id: statement.id,
+      category: statement.category,
+      text: statement.content,
+      evidenceStatus: statement.evidenceStatus,
+    })),
     step: {
       title: step.title,
       description: step.description,
@@ -101,7 +125,11 @@ export async function POST(request: Request) {
 
   let result;
   try {
-    result = await callLLM(TASKS_PROMPT, context, tasksResponseSchema);
+    result = await callLLM(
+      TASKS_PROMPT,
+      context,
+      tasksResponseSchemaWithValidIds(validIds)
+    );
   } catch (error) {
     if (error instanceof LlmValidationError) {
       return NextResponse.json(
@@ -132,6 +160,8 @@ export async function POST(request: Request) {
         stepId: step.id,
         title: task.title,
         hint: task.hint,
+        annahmenBezugId: task.annahmenBezugId,
+        erfolgskriterium: task.erfolgskriterium,
         sortOrder: index,
       })),
     });
@@ -150,5 +180,13 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ tasks }, { status: 201 });
+  // Attach resolved assumption refs for the client (not stored separately).
+  const tasksWithRefs = tasks.map((task) => ({
+    ...task,
+    annahmenBezug: task.annahmenBezugId
+      ? (statementMap.get(task.annahmenBezugId) ?? null)
+      : null,
+  }));
+
+  return NextResponse.json({ tasks: tasksWithRefs }, { status: 201 });
 }

@@ -115,6 +115,7 @@ model Statement {
 
   optionLinks     OptionStatement[]
   validationSteps ValidationStep[]  @relation("StepAssumption")
+  taskAssumptionRefs Task[]         @relation("TaskAssumptionRef")
   feedbacks       MarketFeedback[]
 }
 
@@ -226,6 +227,14 @@ model Task {
   hint      String?        // kurzer Praxistipp (1 Satz)
   sortOrder Int            // chronologische Reihenfolge innerhalb des Schritts
   done      Boolean        @default(false)
+  // Bezug zur Aussage, deren Prüfung diese Aufgabe primär unterstützt (optional)
+  annahmenBezugId String?
+  annahmenBezug   Statement? @relation("TaskAssumptionRef", fields: [annahmenBezugId], references: [id], onDelete: SetNull)
+  erfolgskriterium String?  @db.Text // vollständiger Satz, passend zu den Kennzahlen
+  // On-Demand-Ausarbeitung (Arbeitspaket) — ersetzt bei Neu-Generierung, keine Historie
+  elaboration            Json?
+  elaborationGeneratedAt DateTime?
+  elaborationModel       String?
 }
 
 enum KpiAssessment {

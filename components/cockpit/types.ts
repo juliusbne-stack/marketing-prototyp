@@ -1,7 +1,19 @@
-import type { EvidenceStatus, FeedbackResult, KpiAssessment } from "@prisma/client";
+import type {
+  EvidenceStatus,
+  FeedbackResult,
+  KpiAssessment,
+} from "@prisma/client";
+import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
 
 // Client-side shapes of the implementation cockpit, matching
 // app/project/[id]/cockpit/page.tsx and the /api/tasks + /api/kpi routes.
+
+export type StatementRef = {
+  id: string;
+  content: string;
+  evidenceStatus: EvidenceStatus;
+  displayNumber: number;
+};
 
 export type TaskData = {
   id: string;
@@ -10,6 +22,10 @@ export type TaskData = {
   hint: string | null;
   sortOrder: number;
   done: boolean;
+  annahmenBezugId: string | null;
+  erfolgskriterium: string | null;
+  elaboration: TaskElaborationResponse | null;
+  elaborationGeneratedAt: string | null;
 };
 
 export type KpiDataPointData = {
@@ -39,6 +55,7 @@ export type CockpitStepData = {
   budgetFrame: string | null;
   metrics: CockpitMetricData[];
   tasks: TaskData[];
+  adoptedStatements: StatementRef[];
   // A MarketFeedback for this step already exists in phase 5.
   hasFeedback: boolean;
   feedbackEvaluated: boolean;

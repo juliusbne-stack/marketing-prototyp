@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-
-const taskSelect = {
-  id: true,
-  stepId: true,
-  title: true,
-  hint: true,
-  sortOrder: true,
-  done: true,
-} as const;
+import { taskSelect } from "@/lib/tasks";
 
 const updateTaskSchema = z.object({
   id: z.string().min(1),
