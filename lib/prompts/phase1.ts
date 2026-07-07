@@ -4,9 +4,24 @@ Simuliere dafür eine Recherche zu Markt, Kunden, Wettbewerb und Umfeld (fiktive
 Quellen, siehe Simulationsmodus).
 
 Erzeuge Aussagen in diesen Bereichen:
-1. PESTEL: je Kategorie (POLITICAL, ECONOMIC, SOCIAL, TECHNOLOGICAL, ECOLOGICAL,
-   LEGAL) 1–3 relevante Aussagen. Nur was für dieses Geschäftsmodell wirklich
-   relevant ist — Kategorien dürfen auch nur 1 Aussage haben.
+1. PESTEL — RELEVANZENTSCHEIDUNG ZUERST:
+   Beurteile für ALLE SECHS Kategorien (POLITICAL, ECONOMIC, SOCIAL,
+   TECHNOLOGICAL, ECOLOGICAL, LEGAL) einzeln, ob sie für DIESES konkrete
+   Geschäftsmodell strategisch relevant sind. Wende PESTEL nicht schematisch an,
+   sondern kontextbezogen: Für viele Start-ups sind einzelne Dimensionen
+   nachrangig.
+
+   - Ist eine Kategorie relevant (relevant=true): erzeuge 1–3 Aussagen dazu
+     im statements-Array (category = PESTEL_<KATEGORIE>).
+   - Ist eine Kategorie nachrangig (relevant=false): erzeuge KEINE Aussage in
+     dieser Kategorie. Begründe stattdessen in relevanceJustification in einem
+     vollständigen, assertiven Satz, WARUM diese Dimension für dieses
+     Geschäftsmodell aktuell nachrangig ist.
+   - relevanceJustification ist für ALLE sechs Kategorien Pflicht — auch bei
+     relevant=true (dann ein Satz dazu, warum die Dimension hier greift).
+   - Sei ehrlich zurückhaltend: Markiere eine Kategorie nur dann als relevant,
+     wenn sich daraus tatsächlich eine prägende Aussage ableiten lässt. Lieber
+     wenige relevante Dimensionen als sechs erzwungene.
 2. TARGET_SEGMENT: Entwickle 2–3 Zielgruppensegmente. Erzeuge je Segment GENAU 5
    Aussagen (category TARGET_SEGMENT), alle mit demselben segmentLabel und je einem
    segmentAspect: DESCRIPTION (wer genau: Abgrenzung, relevante Merkmale wie Alter,
@@ -31,8 +46,19 @@ Erzeuge Aussagen in diesen Bereichen:
 Achte auf eine ehrliche Mischung: Es MUSS auch OPEN_QUESTIONs geben (typisch:
 Zahlungsbereitschaft, tatsächliche Problemrelevanz, Kanalwirksamkeit).
 
+Konsistenzregeln:
+- pestelRelevance MUSS genau 6 Einträge enthalten, einen je PESTEL-Kategorie.
+- Für jede Kategorie mit relevant=false darf im statements-Array KEINE Aussage mit dieser category stehen. Für relevant=true SOLL mindestens eine vorhanden sein.
+
 AUSGABEFORMAT (JSON, exakt dieses Schema):
 {
+  "pestelRelevance": [
+    {
+      "category": "PESTEL_POLITICAL | PESTEL_ECONOMIC | PESTEL_SOCIAL | PESTEL_TECHNOLOGICAL | PESTEL_ECOLOGICAL | PESTEL_LEGAL",
+      "relevant": true,
+      "relevanceJustification": "string (vollständiger Satz, warum die Dimension relevant oder nachrangig ist)"
+    }
+  ],
   "statements": [
     {
       "category": "PESTEL_POLITICAL | PESTEL_ECONOMIC | PESTEL_SOCIAL | PESTEL_TECHNOLOGICAL | PESTEL_ECOLOGICAL | PESTEL_LEGAL | TARGET_SEGMENT | CUSTOMER_PROBLEM | COMPETITOR | RESOURCE | SWOT_STRENGTH | SWOT_WEAKNESS | SWOT_OPPORTUNITY | SWOT_THREAT | MARKET_PATH",

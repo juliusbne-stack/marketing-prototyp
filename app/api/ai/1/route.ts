@@ -99,7 +99,7 @@ export async function POST(request: Request) {
 
   // Re-running the analysis replaces drafts that were not adopted yet;
   // adopted statements (the project state) are never touched.
-  const statements = await prisma.$transaction(async (tx) => {
+  const { statements, pestelRelevance } = await prisma.$transaction(async (tx) => {
     await tx.statement.deleteMany({
       where: { projectId: project.id, phase: 1, adopted: false },
     });
@@ -120,12 +120,22 @@ export async function POST(request: Request) {
         adopted: false,
       })),
     });
-    return tx.statement.findMany({
+    await tx.project.update({
+      where: { id: project.id },
+      data: {
+        pestelRelevance: result.pestelRelevance as Prisma.InputJsonValue,
+      },
+    });
+    const savedStatements = await tx.statement.findMany({
       where: { projectId: project.id, phase: 1 },
       orderBy: { createdAt: "asc" },
       select: statementSelect,
     });
+    return {
+      statements: savedStatements,
+      pestelRelevance: result.pestelRelevance,
+    };
   });
 
-  return NextResponse.json({ statements }, { status: 201 });
+  return NextResponse.json({ statements, pestelRelevance }, { status: 201 });
 }

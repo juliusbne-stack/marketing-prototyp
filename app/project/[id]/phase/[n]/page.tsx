@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { OPTION_DIMENSION_CATEGORIES } from "@/lib/schemas/phase2";
+import { resolvePestelRelevance } from "@/lib/pestelRelevance";
 import { Phase1View } from "@/components/phase1/Phase1View";
 import { Phase2View } from "@/components/phase2/Phase2View";
 import { Phase3View } from "@/components/phase3/Phase3View";
@@ -97,6 +98,7 @@ export default async function PhasePage({
           timePerWeek: true,
           skills: true,
           existingInsights: true,
+          pestelRelevance: true,
         },
       }),
       prisma.statement.findMany({
@@ -111,7 +113,14 @@ export default async function PhasePage({
     }
 
     phaseContent = (
-      <Phase1View project={project} initialStatements={statements} />
+      <Phase1View
+        project={project}
+        initialStatements={statements}
+        initialPestelRelevance={resolvePestelRelevance(
+          project.pestelRelevance,
+          statements
+        )}
+      />
     );
   }
 

@@ -17,6 +17,7 @@ import { PestelGrid } from "./PestelGrid";
 import { SegmentCards } from "./SegmentCards";
 import { CompetitorCards } from "./CompetitorCards";
 import { SwotMatrix } from "./SwotMatrix";
+import type { PestelRelevance } from "@/lib/schemas/phase1";
 
 const ANCHORS = [
   { href: "#pestel", label: "PESTEL" },
@@ -29,11 +30,14 @@ const ANCHORS = [
 export function Phase1View({
   project,
   initialStatements,
+  initialPestelRelevance,
 }: {
   project: ProfileData;
   initialStatements: StatementData[];
+  initialPestelRelevance: PestelRelevance[];
 }) {
   const [statements, setStatements] = useState(initialStatements);
+  const [pestelRelevance, setPestelRelevance] = useState(initialPestelRelevance);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAdoptingAll, setIsAdoptingAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +56,9 @@ export function Phase1View({
         throw new Error(body?.error ?? AI_ERROR_FALLBACK);
       }
       setStatements(body.statements);
+      if (Array.isArray(body.pestelRelevance)) {
+        setPestelRelevance(body.pestelRelevance);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : AI_ERROR_FALLBACK);
     } finally {
@@ -192,6 +199,7 @@ export function Phase1View({
           <PestelGrid
             projectId={project.id}
             statements={byCategory("PESTEL_")}
+            pestelRelevance={pestelRelevance}
             onChanged={handleChanged}
             onDeleted={handleDeleted}
             onAdded={handleAdded}

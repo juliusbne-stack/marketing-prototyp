@@ -37,6 +37,9 @@ model Project {
   skills           String? @db.Text // vorhandene Fähigkeiten/Kanäle/Netzwerk
   existingInsights String? @db.Text // bisherige Kundenerkenntnisse/Rückmeldungen
 
+  // Phase-1-Metadaten: KI-Relevanzentscheidungen je PESTEL-Dimension (JSON-Array)
+  pestelRelevance Json?
+
   statements  Statement[]
   options     StrategyOption[]
   steps       ValidationStep[]
