@@ -27,6 +27,8 @@ const optionInclude = {
           uncertainty: true,
           isCritical: true,
           adopted: true,
+          segmentLabel: true,
+          segmentAspect: true,
         },
       },
     },
@@ -67,6 +69,8 @@ export async function POST(request: Request) {
       justification: true,
       sourceRef: true,
       uncertainty: true,
+      segmentLabel: true,
+      segmentAspect: true,
     },
   });
 
@@ -103,6 +107,7 @@ export async function POST(request: Request) {
     result = await callLLM(PHASE2_PROMPT, context, phase2ResponseSchema);
   } catch (error) {
     if (error instanceof LlmValidationError) {
+      console.error("Phase 2 LLM validation failed:", error.message);
       return NextResponse.json(
         {
           error:
@@ -119,6 +124,37 @@ export async function POST(request: Request) {
       },
       { status: 502 }
     );
+  }
+
+  // The schema cannot know the project's segment labels — verify explicitly:
+  // every OPT_TARGET_GROUP dimension must reference an existing phase 1
+  // segment label (only enforced when labeled segment profiles exist).
+  const knownSegmentLabels = new Set(
+    adoptedAnalysis
+      .filter(
+        (statement) =>
+          statement.category === "TARGET_SEGMENT" && statement.segmentLabel
+      )
+      .map((statement) => statement.segmentLabel as string)
+  );
+  if (knownSegmentLabels.size > 0) {
+    const targetGroupsValid = result.options.every((option) =>
+      option.dimensions.every(
+        (dimension) =>
+          dimension.category !== "OPT_TARGET_GROUP" ||
+          (dimension.segmentLabel != null &&
+            knownSegmentLabels.has(dimension.segmentLabel))
+      )
+    );
+    if (!targetGroupsValid) {
+      return NextResponse.json(
+        {
+          error:
+            "Die KI-Antwort passte nicht zu den Segmentprofilen aus Phase 1. Erneut versuchen — dein Analysebild bleibt erhalten.",
+        },
+        { status: 502 }
+      );
+    }
   }
 
   // Re-running replaces DRAFT options (and their dimension statements);
@@ -159,6 +195,12 @@ export async function POST(request: Request) {
                   justification: dimension.justification,
                   uncertainty: dimension.uncertainty ?? null,
                   adopted: false,
+                  // The addressed segment stays a reference to the phase 1
+                  // profile — stored only on the target group dimension.
+                  segmentLabel:
+                    dimension.category === "OPT_TARGET_GROUP"
+                      ? (dimension.segmentLabel ?? null)
+                      : null,
                 },
               },
             })),

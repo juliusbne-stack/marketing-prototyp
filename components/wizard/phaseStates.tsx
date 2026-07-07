@@ -77,10 +77,13 @@ export function PhaseLoadingState({
   phase,
   variant = "card",
   count,
+  message,
 }: {
   phase: 1 | 2 | 3 | 4 | 5;
   variant?: SkeletonVariant;
   count?: number;
+  // Overrides the default phase message (e.g. scaling mode in phase 4).
+  message?: string;
 }) {
   const skeletonCount =
     count ??
@@ -98,7 +101,9 @@ export function PhaseLoadingState({
 
   return (
     <div aria-live="polite" aria-busy="true" className="flex flex-col gap-3">
-      <p className="text-sm text-text-muted">{AI_LOADING_MESSAGES[phase]}</p>
+      <p className="text-sm text-text-muted">
+        {message ?? AI_LOADING_MESSAGES[phase]}
+      </p>
       {variant === "option" ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{skeletons}</div>
       ) : (

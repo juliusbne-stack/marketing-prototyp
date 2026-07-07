@@ -2,14 +2,55 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import type { AdaptationType } from "@prisma/client";
 import {
   ADAPTATION_LABELS,
   ADAPTATION_ORDER,
   type AdaptationData,
   type AdaptationProposal,
+  type EvidenceBalance,
 } from "./types";
+
+// Compact evidence balance line above the AI proposal — the same numbers the
+// AI received as decision context, so the proposal stays traceable (NF1).
+function EvidenceBalanceLine({ balance }: { balance: EvidenceBalance }) {
+  return (
+    <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-text-muted">
+      <span className="font-medium text-text">
+        Evidenzbilanz dieser Option:
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-evidence-fact-border"
+          aria-hidden
+        />
+        {balance.dimensions.fact} von {balance.dimensions.total} Dimensionen
+        faktengestützt
+      </span>
+      <span aria-hidden>·</span>
+      <span className="inline-flex items-center gap-1">
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-evidence-assumption-border"
+          aria-hidden
+        />
+        {balance.dimensions.assumption}{" "}
+        {balance.dimensions.assumption === 1 ? "Annahme" : "Annahmen"}
+      </span>
+      <span aria-hidden>·</span>
+      <span className="inline-flex items-center gap-1">
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-evidence-question-border"
+          aria-hidden
+        />
+        {balance.dimensions.openQuestion} offene{" "}
+        {balance.dimensions.openQuestion === 1 ? "Frage" : "Fragen"}
+      </span>
+      <span aria-hidden>·</span>
+      <span>Durchlauf {balance.validationRun}</span>
+    </p>
+  );
+}
 
 // Adaptation decision (UI_KONZEPT §4, phase 5): the AI proposal is shown, the
 // USER decides via radio selection + confirmation (F9/NF3). LOOP_BACK renders
@@ -18,12 +59,14 @@ export function AdaptationPanel({
   projectId,
   optionId,
   proposal,
+  evidenceBalance,
   decision,
   onConfirmed,
 }: {
   projectId: string;
   optionId: string;
   proposal: AdaptationProposal | null;
+  evidenceBalance: EvidenceBalance | null;
   decision: AdaptationData | null;
   onConfirmed: (decision: AdaptationData) => void;
 }) {
@@ -97,9 +140,11 @@ export function AdaptationPanel({
             }
           : decision.decision === "CONTINUE"
             ? {
-                hint: "Dieser Strategiedurchlauf ist abgeschlossen. Deine Erkenntnisse und der Evidenzstand bleiben erhalten.",
-                targetPhase: 1,
-                cta: "Zurück zur Situationsanalyse (neuer Durchlauf)",
+                // Continuation mode: the validated core stays, phase 4 derives
+                // scaling steps — no new analysis run (see /api/ai/4/scale).
+                hint: "Dein strategischer Kern ist validiert. Im nächsten Schritt weitest du die Umsetzung kontrolliert aus – und beobachtest, ob die gestützten Annahmen auch im größeren Maßstab tragen.",
+                targetPhase: 4,
+                cta: "Skalierungsschritte in Phase 4 ableiten",
               }
             : null;
     return (
@@ -130,21 +175,16 @@ export function AdaptationPanel({
                 Zu Phase {decision.loopBackToPhase} springen
               </Link>
             )}
-            {nextStep && decision.decision !== "CONTINUE" && (
+            {nextStep && (
               <Link
                 href={`/project/${projectId}/phase/${nextStep.targetPhase}`}
                 className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
               >
-                <ArrowLeft className="h-4 w-4" aria-hidden />
-                {nextStep.cta}
-              </Link>
-            )}
-            {nextStep && decision.decision === "CONTINUE" && (
-              <Link
-                href={`/project/${projectId}/phase/${nextStep.targetPhase}`}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm text-text transition-colors hover:bg-background"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden />
+                {decision.decision === "CONTINUE" ? (
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                ) : (
+                  <ArrowLeft className="h-4 w-4" aria-hidden />
+                )}
                 {nextStep.cta}
               </Link>
             )}
@@ -161,6 +201,16 @@ export function AdaptationPanel({
               Entscheidung ändern
             </button>
           </div>
+          {decision.decision === "CONTINUE" && (
+            <p className="mt-2 text-xs text-text-muted">
+              <Link
+                href={`/project/${projectId}/phase/1`}
+                className="underline decoration-border underline-offset-2 transition-colors hover:text-text"
+              >
+                Stattdessen neue Analyse starten (Phase 1)
+              </Link>
+            </p>
+          )}
         </div>
       </section>
     );
@@ -173,6 +223,8 @@ export function AdaptationPanel({
           Anpassungsentscheidung
         </p>
 
+        {evidenceBalance && <EvidenceBalanceLine balance={evidenceBalance} />}
+
         {proposal && (
           <div className="mt-2 rounded-md bg-accent-soft/60 p-3">
             <p className="text-xs font-semibold text-accent">
@@ -184,6 +236,13 @@ export function AdaptationPanel({
             <p className="mt-1 text-sm leading-relaxed text-text">
               {proposal.rationale}
             </p>
+            {proposal.decision === "CONTINUE" && (
+              <p className="mt-2 text-sm text-text-muted">
+                Fortführen bedeutet: Der validierte Kern bleibt stabil, die
+                Umsetzung wird schrittweise ausgeweitet. Neue Erkenntnisse
+                fließen weiter in die Evidenzbasis ein.
+              </p>
+            )}
             <p className="mt-2 text-xs text-text-muted">
               Das ist ein Vorschlag — die Entscheidung triffst du.
             </p>

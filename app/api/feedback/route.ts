@@ -68,8 +68,14 @@ const updateFeedbackSchema = z
     // Applies the AI-proposed evidence status to the tested assumption —
     // only through an explicit user action (F10/NF5).
     applyStatus: z.literal(true).optional(),
+    // Sibling feedbacks of the SAME statement that are bundled into one
+    // consolidated evidence update — they are marked as processed together.
+    bundledIds: z.array(z.string().min(1)).optional(),
   })
-  .refine((data) => Object.keys(data).length > 1, "Keine Änderung angegeben.");
+  .refine(
+    (data) => data.content !== undefined || data.applyStatus === true,
+    "Keine Änderung angegeben."
+  );
 
 export async function PATCH(request: Request) {
   const body = await request.json().catch(() => null);
@@ -82,7 +88,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const { id, content, applyStatus } = parsed.data;
+  const { id, content, applyStatus, bundledIds } = parsed.data;
 
   const feedback = await prisma.marketFeedback.findUnique({
     where: { id },
@@ -122,6 +128,20 @@ export async function PATCH(request: Request) {
       select: feedbackSelect,
     });
 
+    // The consolidated evidence update covers all bundled feedbacks of the
+    // same statement — mark them as processed alongside the primary one.
+    let bundledFeedbacks: (typeof updatedFeedback)[] = [];
+    if (applyStatus && bundledIds && bundledIds.length > 0) {
+      await tx.marketFeedback.updateMany({
+        where: { id: { in: bundledIds }, statementId: feedback.statementId },
+        data: { statusApplied: true },
+      });
+      bundledFeedbacks = await tx.marketFeedback.findMany({
+        where: { id: { in: bundledIds }, statementId: feedback.statementId },
+        select: feedbackSelect,
+      });
+    }
+
     const statement = applyStatus
       ? await tx.statement.update({
           where: { id: feedback.statementId },
@@ -143,7 +163,11 @@ export async function PATCH(request: Request) {
         })
       : null;
 
-    return { feedback: updatedFeedback, statement };
+    return {
+      feedback: updatedFeedback,
+      feedbacks: [updatedFeedback, ...bundledFeedbacks],
+      statement,
+    };
   });
 
   return NextResponse.json(result);

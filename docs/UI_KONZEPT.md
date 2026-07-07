@@ -88,6 +88,7 @@ Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Ak
 ### Phase 2 — Strategieoptionen
 - Button „Optionen entwickeln" → 2–3 **OptionCards nebeneinander** (Grid, mobil untereinander).
 - OptionCard: Titel, Kurzbeschreibung, dann 6 Dimensionszeilen (Label links: Zielgruppe, Kundenproblem, Nutzenversprechen, Positionierung, Marktzugang, Erlös-/Wachstumslogik; rechts die StatementCard kompakt). Fußzeile: Mini-Evidenzbilanz der Option („1 Fakt-gestützt · 4 Annahmen · 1 offen").
+- Unter der Zielgruppen-Dimension (wenn das Statement ein segmentLabel trägt): aufklappbarer, schreibgeschützter Bereich **„Segmentprofil: {Label}"** (standardmäßig zugeklappt). Beim Aufklappen werden die übernommenen Profil-Statements dieses Segments live aus Phase 1 geladen und als kompakte Aspekt-Zeilen mit aktuellen Evidenz-Badges gezeigt (Badges hier NICHT klickbar — keine Duplikation, Phase 1 bleibt die einzige Quelle). Fußnote: „Quelle: Situationsanalyse — Änderungen dort vornehmen" mit Link zum Zielgruppen-Abschnitt von Phase 1. Ohne segmentLabel (Altbestand) entfällt der Bereich.
 - Bewusst KEINE Bewertungselemente in dieser Phase (Modelltreue: Bewertung erst in Phase 3).
 
 ### Phase 3 — Bewertung & Priorisierung

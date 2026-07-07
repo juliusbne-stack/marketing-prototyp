@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionDimensionEvidenceStatus } from "./evidenceStatus";
 
 // Zod schema mirroring the phase 5 JSON output format from docs/PROMPTS.md.
 const assessmentSchema = z.object({
@@ -12,7 +13,7 @@ const assessmentSchema = z.object({
 const newStatementSchema = z.object({
   category: z.literal("LEARNING"),
   content: z.string().trim().min(1),
-  evidenceStatus: z.enum(["ASSUMPTION", "OPEN_QUESTION"]),
+  evidenceStatus: optionDimensionEvidenceStatus,
   origin: z.literal("AI_DERIVATION"),
   justification: z.string().trim().min(1),
   uncertainty: z.string().trim().nullish(),

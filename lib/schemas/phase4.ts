@@ -32,3 +32,21 @@ export const phase4ResponseSchema = z
   );
 
 export type Phase4Response = z.infer<typeof phase4ResponseSchema>;
+
+// Scaling variant (continuation mode): same JSON shape, but steps reference
+// already SUPPORTED critical assumptions — several steps may observe the same
+// assumption, so there is no 1:1 pairing requirement.
+export const phase4ScaleResponseSchema = z
+  .object({
+    criticalAssumptions: z.array(z.string().trim().min(1)).min(1).max(4),
+    steps: z.array(stepSchema).min(2).max(4),
+  })
+  .refine(
+    (data) =>
+      data.steps.every((step) =>
+        data.criticalAssumptions.includes(step.assumptionId)
+      ),
+    "Jeder Ausweitungsschritt muss eine der gestützten Kernannahmen referenzieren."
+  );
+
+export type Phase4ScaleResponse = z.infer<typeof phase4ScaleResponseSchema>;

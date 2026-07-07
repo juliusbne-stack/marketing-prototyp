@@ -1,15 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { Star, TestTubeDiagonal } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Star, TestTubeDiagonal, TrendingUp } from "lucide-react";
+import type { FeedbackData } from "@/components/phase5/types";
 import type { StatementData } from "@/components/statements/types";
 import { StatementCard } from "@/components/statements/StatementCard";
+import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
 import {
   PhaseEmptyState,
   PhaseErrorState,
   PhaseLoadingState,
 } from "@/components/wizard/phaseStates";
+import {
+  buildValidationHistoryMap,
+  getAssessedFeedbackForStep,
+  isAssumptionPreviouslyValidated,
+  isStepCompleted,
+} from "@/lib/validation";
+import { CompletedAssumptionCard } from "./CompletedAssumptionCard";
 import { ValidationStepCard } from "./ValidationStepCard";
 import type { PrioritizedOptionData, StepWithAssumption } from "./types";
 
@@ -17,20 +26,31 @@ export function Phase4View({
   projectId,
   option,
   initialSteps,
+  initialFeedbacks,
+  continuationMode,
 }: {
   projectId: string;
   option: PrioritizedOptionData | null;
   initialSteps: StepWithAssumption[];
+  initialFeedbacks: FeedbackData[];
+  // Latest confirmed phase 5 decision is CONTINUE: offer controlled scaling.
+  continuationMode: boolean;
 }) {
   const [steps, setSteps] = useState(initialSteps);
+  const [feedbacks] = useState(initialFeedbacks);
+  const validationHistoryMap = useMemo(
+    () => buildValidationHistoryMap(feedbacks),
+    [feedbacks]
+  );
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isScaling, setIsScaling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isBusy = isGenerating || isScaling;
 
   const hasSteps = steps.length > 0;
   const hasDrafts = steps.some((step) => !step.adopted);
   const hasAdoptedStep = steps.some((step) => step.adopted);
 
-  // Precondition for phase 5: at least one adopted validation step (M5).
   const advanceButton = (
     <PhaseAdvanceButton
       projectId={projectId}
@@ -68,6 +88,36 @@ export function Phase4View({
     }
   }
 
+  // Continuation mode: derive limited scaling steps for the supported core
+  // assumptions (no new validation experiments, dimensions stay untouched).
+  async function handleScale() {
+    setIsScaling(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/ai/4/scale", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          body?.error ??
+            "Die Skalierungsschritte konnten nicht abgeleitet werden. Erneut versuchen — deine Fortführungsentscheidung bleibt erhalten."
+        );
+      }
+      setSteps(body.steps);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Die Skalierungsschritte konnten nicht abgeleitet werden. Erneut versuchen — deine Fortführungsentscheidung bleibt erhalten."
+      );
+    } finally {
+      setIsScaling(false);
+    }
+  }
+
   function handleStepChanged(updated: StepWithAssumption) {
     setSteps((current) =>
       current.map((step) =>
@@ -101,8 +151,8 @@ export function Phase4View({
     );
   }
 
-  // Steps grouped under their critical assumption (UI_KONZEPT §4, phase 4).
-  const assumptionGroups: { assumption: StatementData; steps: StepWithAssumption[] }[] = [];
+  const assumptionGroups: { assumption: StatementData; steps: StepWithAssumption[] }[] =
+    [];
   for (const step of steps) {
     const group = assumptionGroups.find(
       (entry) => entry.assumption.id === step.assumptionId
@@ -114,8 +164,45 @@ export function Phase4View({
     }
   }
 
+  const openGroups = assumptionGroups.filter(
+    (group) => !isAssumptionPreviouslyValidated(group.steps, feedbacks)
+  );
+  const completedGroups = assumptionGroups.filter((group) =>
+    isAssumptionPreviouslyValidated(group.steps, feedbacks)
+  );
+
   return (
     <div className="flex flex-col gap-6">
+      {continuationMode && (
+        <section
+          aria-label="Fortführungsmodus"
+          className="rounded-[10px] border-2 border-accent bg-surface p-4"
+        >
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
+            <TrendingUp className="h-3.5 w-3.5" aria-hidden />
+            Fortführungsmodus: kontrollierte Ausweitung
+          </p>
+          <p className="mt-2 text-sm text-text">
+            Deine Anpassungsentscheidung lautet Fortführen: Der validierte Kern
+            der Option bleibt stabil, die Umsetzung wird schrittweise
+            ausgeweitet. Die gestützten Annahmen werden dabei im größeren
+            Maßstab weiter beobachtet — statt neuer Validierungsexperimente
+            entstehen begrenzte Skalierungsschritte mit Monitoring-Metriken.
+          </p>
+          <button
+            type="button"
+            onClick={handleScale}
+            disabled={isBusy}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          >
+            <TrendingUp className="h-4 w-4" aria-hidden />
+            {isScaling
+              ? "Skalierungsschritte werden abgeleitet …"
+              : "Skalierungsschritte ableiten"}
+          </button>
+        </section>
+      )}
+
       <div className="rounded-[10px] border-2 border-accent bg-surface p-4">
         <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
           <Star className="h-3.5 w-3.5" aria-hidden />
@@ -138,7 +225,7 @@ export function Phase4View({
         <button
           type="button"
           onClick={handleGenerate}
-          disabled={isGenerating}
+          disabled={isBusy}
           className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
         >
           <TestTubeDiagonal className="h-4 w-4" aria-hidden />
@@ -153,46 +240,91 @@ export function Phase4View({
       {error && <PhaseErrorState message={error} />}
 
       {isGenerating && <PhaseLoadingState phase={4} variant="step" />}
-
-      {hasSteps && !isGenerating && (
-        <section aria-label="Kritische Annahmen" className="flex flex-col gap-6">
-          <div>
-            <h3 className="font-heading text-base font-medium text-text">
-              Kritische Annahmen ({assumptionGroups.length})
-            </h3>
-            <p className="mt-1 text-sm text-text-muted">
-              {hasDrafts
-                ? "Prüfe die Entwürfe, passe sie bei Bedarf an und übernimm die Schritte in den Projektstand — erst dann stehen sie in Phase 5 für Rückmeldungen bereit."
-                : "Alle Umsetzungsschritte sind übernommen. In Phase 5 erfasst du die Marktrückmeldungen dazu."}
-            </p>
-          </div>
-          {assumptionGroups.map((group) => (
-            <div key={group.assumption.id} className="flex flex-col gap-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Kritische Annahme
-              </p>
-              <StatementCard
-                statement={group.assumption}
-                onChanged={handleAssumptionChanged}
-              />
-              <div className="flex flex-col gap-3 border-l-2 border-accent/30 pl-4 md:ml-4">
-                {group.steps.map((step) => (
-                  <ValidationStepCard
-                    key={step.id}
-                    step={step}
-                    onChanged={(updated) =>
-                      handleStepChanged({ ...updated, assumption: step.assumption })
-                    }
-                    onDeleted={handleStepDeleted}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
+      {isScaling && (
+        <PhaseLoadingState
+          phase={4}
+          variant="step"
+          message="Die KI leitet aus den gestützten Annahmen begrenzte Skalierungsschritte mit Monitoring-Metriken ab …"
+        />
       )}
 
-      {!hasSteps && !isGenerating && (
+      {hasSteps && !isBusy && (
+        <>
+          {openGroups.length > 0 && (
+            <section aria-label="Offene Validierung" className="flex flex-col gap-6">
+              <div>
+                <h3 className="font-heading text-base font-medium text-text">
+                  Offene Validierung ({openGroups.length})
+                </h3>
+                <p className="mt-1 text-sm text-text-muted">
+                  {hasDrafts
+                    ? "Prüfe die Entwürfe, passe sie bei Bedarf an und übernimm die Schritte in den Projektstand — erst dann stehen sie in Phase 5 für Rückmeldungen bereit."
+                    : "Übernimm die Schritte in den Projektstand und erfasse in Phase 5 die Marktrückmeldungen."}
+                </p>
+              </div>
+              {openGroups.map((group) => (
+                <div key={group.assumption.id} className="flex flex-col gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                    Kritische Annahme
+                  </p>
+                  <StatementCard
+                    statement={group.assumption}
+                    onChanged={handleAssumptionChanged}
+                    validationHistory={validationHistoryMap.get(
+                      group.assumption.id
+                    )}
+                  />
+                  <div className="flex flex-col gap-3 border-l-2 border-accent/30 pl-4 md:ml-4">
+                    {group.steps
+                      // Already assessed steps stay out of the open list —
+                      // relevant when scaling steps join a validated assumption.
+                      .filter((step) => !isStepCompleted(step.id, feedbacks))
+                      .map((step) => (
+                        <ValidationStepCard
+                          key={step.id}
+                          step={step}
+                          onChanged={(updated) =>
+                            handleStepChanged({ ...updated, assumption: step.assumption })
+                          }
+                          onDeleted={handleStepDeleted}
+                        />
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
+          {completedGroups.length > 0 && (
+            <CollapsibleSection
+              title={`Bereits geprüft — vorheriger Durchlauf (${completedGroups.length})`}
+              intro="Diese Annahmen wurden bereits validiert. Ihre Ergebnisse sind in die Evidenzstatus und deine Anpassungsentscheidung eingeflossen."
+              defaultOpen={false}
+            >
+              <div className="flex flex-col gap-3">
+                {completedGroups.map((group) => {
+                  const adoptedStep = group.steps.find((step) => step.adopted);
+                  const assessedFeedback = adoptedStep
+                    ? getAssessedFeedbackForStep(adoptedStep.id, feedbacks)
+                    : undefined;
+                  if (!adoptedStep || !assessedFeedback) return null;
+                  return (
+                    <CompletedAssumptionCard
+                      key={group.assumption.id}
+                      projectId={projectId}
+                      assumption={group.assumption}
+                      feedback={assessedFeedback}
+                      anchorStepId={adoptedStep.id}
+                    />
+                  );
+                })}
+              </div>
+            </CollapsibleSection>
+          )}
+        </>
+      )}
+
+      {!hasSteps && !isBusy && (
         <PhaseEmptyState>
           In dieser Phase werden die kritischsten Annahmen deiner priorisierten
           Option in begrenzte Umsetzungsschritte mit Messpunkten übersetzt.

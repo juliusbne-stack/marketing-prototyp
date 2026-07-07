@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SEGMENT_ASPECTS } from "@/lib/segmentAspects";
 
 // Zod schema mirroring the phase 1 JSON output format from docs/PROMPTS.md.
 // Categories are restricted to those the phase 1 prompt may produce.
@@ -20,15 +21,37 @@ const phase1Category = z.enum([
   "MARKET_PATH",
 ]);
 
-const phase1StatementSchema = z.object({
-  category: phase1Category,
-  content: z.string().trim().min(1),
-  evidenceStatus: z.enum(["FACT", "ASSUMPTION", "OPEN_QUESTION"]),
-  origin: z.enum(["USER_INPUT", "SIMULATED_RESEARCH", "AI_DERIVATION"]),
-  justification: z.string().trim().min(1),
-  sourceRef: z.string().trim().nullish(),
-  uncertainty: z.string().trim().nullish(),
-});
+const segmentAspect = z.enum(SEGMENT_ASPECTS);
+
+const phase1StatementSchema = z
+  .object({
+    category: phase1Category,
+    content: z.string().trim().min(1),
+    evidenceStatus: z.enum(["FACT", "ASSUMPTION", "OPEN_QUESTION"]),
+    origin: z.enum(["USER_INPUT", "SIMULATED_RESEARCH", "AI_DERIVATION"]),
+    justification: z.string().trim().min(1),
+    sourceRef: z.string().trim().nullish(),
+    uncertainty: z.string().trim().nullish(),
+    segmentLabel: z.string().trim().min(1).nullish(),
+    segmentAspect: segmentAspect.nullish(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.category !== "TARGET_SEGMENT") return;
+    if (!data.segmentLabel?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "segmentLabel ist bei TARGET_SEGMENT Pflicht.",
+        path: ["segmentLabel"],
+      });
+    }
+    if (!data.segmentAspect) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "segmentAspect ist bei TARGET_SEGMENT Pflicht.",
+        path: ["segmentAspect"],
+      });
+    }
+  });
 
 export const phase1ResponseSchema = z.object({
   statements: z.array(phase1StatementSchema).min(1),

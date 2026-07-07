@@ -80,6 +80,8 @@ export async function POST(request: Request) {
       justification: true,
       sourceRef: true,
       uncertainty: true,
+      segmentLabel: true,
+      segmentAspect: true,
     },
   });
 

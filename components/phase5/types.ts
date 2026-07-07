@@ -26,6 +26,23 @@ export type AdaptationProposal = {
   rationale: string;
 };
 
+// Evidence balance of the prioritized option, computed server-side in
+// app/api/ai/5/route.ts (state BEFORE the latest evaluation run).
+export type EvidenceBalance = {
+  dimensions: {
+    total: number;
+    fact: number;
+    assumption: number;
+    openQuestion: number;
+  };
+  criticalAssumptionResults: {
+    supported: number;
+    partiallySupported: number;
+    refuted: number;
+  };
+  validationRun: number;
+};
+
 // User-confirmed decision, matching app/api/adaptation/route.ts.
 export type AdaptationData = AdaptationProposal & {
   id: string;

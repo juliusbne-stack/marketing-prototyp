@@ -1,17 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Pencil } from "lucide-react";
+import { Check, Info, Pencil } from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
 import type { StatementData } from "@/components/statements/types";
-import { DIMENSION_ORDER, type OptionData } from "./types";
+import { RevisionProposalCard } from "./RevisionProposalCard";
+import { SegmentProfileDisclosure } from "./SegmentProfileDisclosure";
+import {
+  DIMENSION_ORDER,
+  type OptionData,
+  type UnchangedDimension,
+} from "./types";
 
 export function OptionCard({
   option,
   onChanged,
+  revisions = [],
+  unchangedDimensions = [],
+  onRevisionAdopted,
+  onRevisionDiscarded,
 }: {
   option: OptionData;
   onChanged: (option: OptionData) => void;
+  /** Revision mode: pending AI revision proposals for this option's dimensions. */
+  revisions?: StatementData[];
+  /** Revision mode: dimensions the AI marked as not affected (with reason). */
+  unchangedDimensions?: UnchangedDimension[];
+  onRevisionAdopted?: (option: OptionData, revisionId: string) => void;
+  onRevisionDiscarded?: (revisionId: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(option.title);
@@ -163,6 +179,12 @@ export function OptionCard({
             (candidate) => candidate.category === category
           );
           if (!statement) return null;
+          const revision = revisions.find(
+            (candidate) => candidate.category === category
+          );
+          const unchanged = unchangedDimensions.find(
+            (candidate) => candidate.dimensionCategory === category
+          );
           return (
             <div key={category}>
               <dt className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -175,6 +197,30 @@ export function OptionCard({
                   showAdoptAction={false}
                   compact
                 />
+                {category === "OPT_TARGET_GROUP" && statement.segmentLabel && (
+                  <SegmentProfileDisclosure
+                    projectId={statement.projectId}
+                    segmentLabel={statement.segmentLabel}
+                  />
+                )}
+                {revision && onRevisionAdopted && onRevisionDiscarded && (
+                  <RevisionProposalCard
+                    revision={revision}
+                    optionId={option.id}
+                    oldStatementId={statement.id}
+                    onAdopted={onRevisionAdopted}
+                    onDiscarded={onRevisionDiscarded}
+                  />
+                )}
+                {!revision && unchanged && (
+                  <span
+                    title={unchanged.reason}
+                    className="mt-1.5 inline-flex cursor-help items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-text-muted"
+                  >
+                    <Info className="h-3 w-3" aria-hidden />
+                    Laut Auswertung nicht betroffen
+                  </span>
+                )}
               </dd>
             </div>
           );

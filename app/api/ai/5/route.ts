@@ -34,6 +34,8 @@ const statementSelect = {
   uncertainty: true,
   isCritical: true,
   adopted: true,
+  segmentLabel: true,
+  segmentAspect: true,
 } as const;
 
 export async function POST(request: Request) {
@@ -118,6 +120,67 @@ export async function POST(request: Request) {
     );
   }
 
+  // Evidence balance of the prioritized option, computed BEFORE this
+  // evaluation run: dimension counts by evidence status, results of all
+  // previous assessments and the current validation run number. It anchors
+  // the AI's adaptation proposal (CONTINUE vs. ADAPT) and is shown in the UI.
+  const dimensions = option.statements
+    .map((link) => link.statement)
+    .filter((statement) => statement.adopted);
+  const assessedFeedbacks = feedbacks.filter(
+    (feedback) => feedback.interpretation !== null
+  );
+  const completedRuns = await prisma.adaptationDecision.count({
+    where: { optionId: option.id, userConfirmed: true },
+  });
+  const evidenceBalance = {
+    dimensions: {
+      total: dimensions.length,
+      fact: dimensions.filter((s) => s.evidenceStatus === "FACT").length,
+      assumption: dimensions.filter((s) => s.evidenceStatus === "ASSUMPTION")
+        .length,
+      openQuestion: dimensions.filter(
+        (s) => s.evidenceStatus === "OPEN_QUESTION"
+      ).length,
+    },
+    criticalAssumptionResults: {
+      supported: assessedFeedbacks.filter((f) => f.result === "SUPPORTED")
+        .length,
+      partiallySupported: assessedFeedbacks.filter(
+        (f) => f.result === "PARTIALLY_SUPPORTED"
+      ).length,
+      refuted: assessedFeedbacks.filter((f) => f.result === "REFUTED").length,
+    },
+    validationRun: completedRuns + 1,
+  };
+
+  // Validation history per tested statement (state BEFORE this run): how
+  // often previous assessments supported, partially supported or refuted the
+  // assumption. Anchors the staged status proposal in the phase 5 prompt.
+  const historyByStatement = new Map<
+    string,
+    {
+      supported: number;
+      partiallySupported: number;
+      refuted: number;
+      ambiguous: number;
+    }
+  >();
+  for (const feedback of assessedFeedbacks) {
+    const counts = historyByStatement.get(feedback.statementId) ?? {
+      supported: 0,
+      partiallySupported: 0,
+      refuted: 0,
+      ambiguous: 0,
+    };
+    if (feedback.result === "SUPPORTED") counts.supported += 1;
+    else if (feedback.result === "PARTIALLY_SUPPORTED")
+      counts.partiallySupported += 1;
+    else if (feedback.result === "REFUTED") counts.refuted += 1;
+    else counts.ambiguous += 1;
+    historyByStatement.set(feedback.statementId, counts);
+  }
+
   // Context rule: profile + prioritized option (adopted dimensions) + the
   // tested assumptions with their steps, metrics and user feedback.
   const context = {
@@ -162,6 +225,12 @@ export async function POST(request: Request) {
         evidenceStatus: step.assumption.evidenceStatus,
         justification: step.assumption.justification,
         uncertainty: step.assumption.uncertainty,
+        validationHistory: historyByStatement.get(step.assumption.id) ?? {
+          supported: 0,
+          partiallySupported: 0,
+          refuted: 0,
+          ambiguous: 0,
+        },
       },
     })),
     marketFeedbacks: feedbacks.map((feedback) => ({
@@ -170,6 +239,7 @@ export async function POST(request: Request) {
       statementId: feedback.statementId,
       content: feedback.content,
     })),
+    evidenceBalance,
   };
 
   let result;
@@ -287,6 +357,7 @@ export async function POST(request: Request) {
             : null,
         rationale: result.adaptation.rationale,
       },
+      evidenceBalance,
     },
     { status: 201 }
   );

@@ -74,6 +74,7 @@ export async function POST(request: Request) {
               justification: true,
               uncertainty: true,
               adopted: true,
+              segmentLabel: true,
             },
           },
         },
@@ -105,12 +106,40 @@ export async function POST(request: Request) {
       justification: true,
       sourceRef: true,
       uncertainty: true,
+      segmentLabel: true,
+      segmentAspect: true,
     },
   });
 
   const adoptedDimensions = option.statements
     .map((link) => link.statement)
     .filter((statement) => statement.adopted);
+
+  // Full profile of the segment addressed by the prioritized option (single
+  // source in phase 1) — critical assumptions should preferably come from its
+  // weakly supported aspects.
+  const addressedSegmentLabel =
+    adoptedDimensions.find(
+      (statement) => statement.category === "OPT_TARGET_GROUP"
+    )?.segmentLabel ?? null;
+  const addressedSegmentProfile = addressedSegmentLabel
+    ? {
+        segmentLabel: addressedSegmentLabel,
+        aspects: adoptedAnalysis
+          .filter(
+            (statement) =>
+              statement.category === "TARGET_SEGMENT" &&
+              statement.segmentLabel === addressedSegmentLabel
+          )
+          .map((statement) => ({
+            statementId: statement.id,
+            segmentAspect: statement.segmentAspect,
+            content: statement.content,
+            evidenceStatus: statement.evidenceStatus,
+            uncertainty: statement.uncertainty,
+          })),
+      }
+    : null;
 
   const context = {
     startupProfile: {
@@ -141,6 +170,7 @@ export async function POST(request: Request) {
         uncertainty: statement.uncertainty,
       })),
     },
+    addressedSegmentProfile,
     adoptedAnalysisStatements: adoptedAnalysis,
   };
 
@@ -211,8 +241,14 @@ export async function POST(request: Request) {
       data: { isCritical: true },
     });
 
+    // Skip assumptions that already have an adopted step — they stay untouched.
+    const adoptedAssumptionIds = new Set(
+      remainingSteps.map((step) => step.assumptionId)
+    );
+
     // AI drafts: steps with adopted=false (rule 3).
     for (const step of result.steps) {
+      if (adoptedAssumptionIds.has(step.assumptionId)) continue;
       await tx.validationStep.create({
         data: {
           projectId: project.id,

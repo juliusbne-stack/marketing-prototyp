@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionDimensionEvidenceStatus, optionDimensionOrigin } from "./evidenceStatus";
 
 // Zod schema mirroring the phase 2 JSON output format from docs/PROMPTS.md.
 export const OPTION_DIMENSION_CATEGORIES = [
@@ -16,10 +17,13 @@ const dimensionSchema = z.object({
   category: dimensionCategory,
   content: z.string().trim().min(1),
   // Dimensions of a new option are never FACT (prompt rule).
-  evidenceStatus: z.enum(["ASSUMPTION", "OPEN_QUESTION"]),
-  origin: z.literal("AI_DERIVATION"),
+  evidenceStatus: optionDimensionEvidenceStatus,
+  origin: optionDimensionOrigin,
   justification: z.string().trim().min(1),
   uncertainty: z.string().trim().nullish(),
+  // Only OPT_TARGET_GROUP carries the addressed segment's label; the route
+  // validates it against the phase 1 segment labels in the context.
+  segmentLabel: z.string().trim().min(1).nullish(),
 });
 
 const optionSchema = z.object({

@@ -22,6 +22,17 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   "AI_DERIVATION" (deine Schlussfolgerung aus dem Kontext).
 - justification: 1–2 Sätze, warum die Aussage plausibel ist / worauf sie sich stützt.
 - uncertainty: bei ASSUMPTION und OPEN_QUESTION kurz benennen, was unsicher ist.
+- JEDE Aussage (content) muss ein vollständiger, eigenständig prüfbarer
+  Aussagesatz sein, der eine Behauptung enthält, die durch Marktfeedback
+  gestützt oder widerlegt werden kann. Verboten sind bloße Bezeichnungen,
+  Namen oder Stichwörter. Falsch: "Einzelunternehmerische Yogalehrer und
+  kleine Yogaschulen". Richtig: "Einzelunternehmerische Yogalehrer und kleine
+  Yogaschulen haben Bedarf an einem kostengünstigen Buchungstool und sind
+  bereit, dafür zu zahlen." Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
+  Jede Aussage gehört zu einem Segmentprofil (gemeinsames segmentLabel) und einer
+  von fünf Dimensionen (segmentAspect). Der content muss die jeweilige Dimension
+  als eigenständig prüfbare Behauptung formulieren — nicht nur den Segmentnamen
+  wiederholen.
 
 RESSOURCENSENSIBILITÄT: Berücksichtige immer Budget, Teamgröße, Zeit und Fähigkeiten
 aus dem Profil. Schlage nichts vor, was diese Mittel offensichtlich übersteigt.

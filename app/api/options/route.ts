@@ -20,6 +20,8 @@ const optionInclude = {
           uncertainty: true,
           isCritical: true,
           adopted: true,
+          segmentLabel: true,
+          segmentAspect: true,
         },
       },
     },

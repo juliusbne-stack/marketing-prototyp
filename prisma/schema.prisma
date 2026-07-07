@@ -103,6 +103,8 @@ model Statement {
   uncertainty    String?           @db.Text // Unsicherheitshinweis (NF2)
   isCritical     Boolean           @default(false) // kritische Annahme (Phase 4)
   adopted        Boolean           @default(false) // Übernahme-Prinzip (F10/NF3/NF5)
+  segmentLabel   String?           // Zielgruppensegment-Name (nur TARGET_SEGMENT)
+  segmentAspect  String?           // Segmentdimension: DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 

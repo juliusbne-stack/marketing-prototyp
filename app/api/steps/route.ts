@@ -29,6 +29,18 @@ const updateStepSchema = z
     channel: z.string().trim().nullable().optional(),
     // Adoption happens only through an explicit user action (F10/NF5).
     adopted: z.boolean().optional(),
+    // Full replacement of the step's metrics (AI refinement adoption).
+    metrics: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1),
+          successCriterion: z.string().trim().min(1),
+          failureCriterion: z.string().trim().min(1),
+        })
+      )
+      .min(1)
+      .max(2)
+      .optional(),
   })
   .refine((data) => Object.keys(data).length > 1, "Keine Änderung angegeben.");
 
@@ -43,7 +55,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const { id, channel, ...data } = parsed.data;
+  const { id, channel, metrics, ...data } = parsed.data;
 
   try {
     const step = await prisma.validationStep.update({
@@ -51,6 +63,9 @@ export async function PATCH(request: Request) {
       data: {
         ...data,
         ...(channel !== undefined ? { channel: channel || null } : {}),
+        ...(metrics !== undefined
+          ? { metrics: { deleteMany: {}, create: metrics } }
+          : {}),
       },
       select: stepSelect,
     });

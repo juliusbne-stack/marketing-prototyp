@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Prisma, EvidenceStatus, Origin, StatementCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { SEGMENT_ASPECTS } from "@/lib/segmentAspects";
 
 const statementSelect = {
   id: true,
@@ -16,6 +17,8 @@ const statementSelect = {
   uncertainty: true,
   isCritical: true,
   adopted: true,
+  segmentLabel: true,
+  segmentAspect: true,
 } satisfies Prisma.StatementSelect;
 
 const createStatementSchema = z.object({
@@ -28,6 +31,8 @@ const createStatementSchema = z.object({
   justification: z.string().trim().optional(),
   sourceRef: z.string().trim().optional(),
   uncertainty: z.string().trim().optional(),
+  segmentLabel: z.string().trim().min(1).optional(),
+  segmentAspect: z.enum(SEGMENT_ASPECTS).optional(),
 });
 
 const updateStatementSchema = z
@@ -41,6 +46,8 @@ const updateStatementSchema = z
     sourceRef: z.string().trim().nullable().optional(),
     uncertainty: z.string().trim().nullable().optional(),
     adopted: z.boolean().optional(),
+    segmentLabel: z.string().trim().min(1).nullable().optional(),
+    segmentAspect: z.enum(SEGMENT_ASPECTS).nullable().optional(),
   })
   .refine(
     (data) => Object.keys(data).length > 1,
@@ -82,7 +89,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const { justification, sourceRef, uncertainty, ...rest } = parsed.data;
+  const { justification, sourceRef, uncertainty, segmentLabel, segmentAspect, ...rest } =
+    parsed.data;
 
   const statement = await prisma.statement.create({
     data: {
@@ -90,6 +98,8 @@ export async function POST(request: Request) {
       justification: justification || null,
       sourceRef: sourceRef || null,
       uncertainty: uncertainty || null,
+      segmentLabel: segmentLabel || null,
+      segmentAspect: segmentAspect || null,
       // Adoption happens only through an explicit user action (F10/NF5).
       adopted: false,
     },

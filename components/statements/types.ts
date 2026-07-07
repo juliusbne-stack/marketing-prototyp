@@ -18,4 +18,6 @@ export type StatementData = {
   uncertainty: string | null;
   isCritical: boolean;
   adopted: boolean;
+  segmentLabel: string | null;
+  segmentAspect: string | null;
 };

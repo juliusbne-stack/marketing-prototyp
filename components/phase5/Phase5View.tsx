@@ -5,6 +5,7 @@ import { Sparkles, Star } from "lucide-react";
 import type { PrioritizedOptionData, StepWithAssumption } from "@/components/phase4/types";
 import type { StatementData } from "@/components/statements/types";
 import { StatementCard } from "@/components/statements/StatementCard";
+import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
 import { AdaptationPanel } from "./AdaptationPanel";
 import { EvidenceUpdateList } from "./EvidenceUpdateList";
 import { FeedbackForm } from "./FeedbackForm";
@@ -13,7 +14,13 @@ import {
   PhaseErrorState,
   PhaseLoadingState,
 } from "@/components/wizard/phaseStates";
-import type { AdaptationData, AdaptationProposal, FeedbackData } from "./types";
+import { isStepCompleted } from "@/lib/validation";
+import type {
+  AdaptationData,
+  AdaptationProposal,
+  EvidenceBalance,
+  FeedbackData,
+} from "./types";
 
 export function Phase5View({
   projectId,
@@ -22,6 +29,7 @@ export function Phase5View({
   initialFeedbacks,
   initialLearnings,
   initialDecision,
+  previousRunStepIds,
 }: {
   projectId: string;
   option: PrioritizedOptionData | null;
@@ -29,20 +37,30 @@ export function Phase5View({
   initialFeedbacks: FeedbackData[];
   initialLearnings: StatementData[];
   initialDecision: AdaptationData | null;
+  // Steps created before the latest confirmed adaptation decision — their
+  // evidence updates belong to the previous run (computed server-side).
+  previousRunStepIds: string[];
 }) {
   const [steps, setSteps] = useState(initialSteps);
   const [feedbacks, setFeedbacks] = useState(initialFeedbacks);
   const [learnings, setLearnings] = useState(initialLearnings);
   const [decision, setDecision] = useState(initialDecision);
-  // The AI adaptation proposal lives in client state only — it is never a
-  // decision; only the user-confirmed choice is persisted (NF3).
   const [proposal, setProposal] = useState<AdaptationProposal | null>(null);
+  const [evidenceBalance, setEvidenceBalance] =
+    useState<EvidenceBalance | null>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasFeedback = feedbacks.length > 0;
   const hasAssessments = feedbacks.some(
     (feedback) => feedback.interpretation !== null
+  );
+
+  const openSteps = steps.filter(
+    (step) => !isStepCompleted(step.id, feedbacks)
+  );
+  const completedSteps = steps.filter((step) =>
+    isStepCompleted(step.id, feedbacks)
   );
 
   async function handleEvaluate() {
@@ -64,6 +82,7 @@ export function Phase5View({
       setFeedbacks(body.feedbacks);
       setLearnings(body.newStatements);
       setProposal(body.adaptation);
+      setEvidenceBalance(body.evidenceBalance ?? null);
     } catch (err) {
       setError(
         err instanceof Error
@@ -84,8 +103,13 @@ export function Phase5View({
     });
   }
 
-  function handleStatusApplied(feedback: FeedbackData, statement: StatementData) {
-    handleFeedbackSaved(feedback);
+  function handleStatusApplied(
+    appliedFeedbacks: FeedbackData[],
+    statement: StatementData
+  ) {
+    for (const feedback of appliedFeedbacks) {
+      handleFeedbackSaved(feedback);
+    }
     setSteps((current) =>
       current.map((step) =>
         step.assumptionId === statement.id
@@ -147,17 +171,44 @@ export function Phase5View({
             wird gegen die vorab festgelegten Messpunkte.
           </p>
         </div>
-        {steps.map((step) => (
-          <FeedbackForm
-            key={step.id}
-            projectId={projectId}
-            step={step}
-            feedback={
-              feedbacks.find((feedback) => feedback.stepId === step.id) ?? null
-            }
-            onSaved={handleFeedbackSaved}
-          />
-        ))}
+
+        {openSteps.length > 0 && (
+          <div className="flex flex-col gap-3">
+            {openSteps.map((step) => (
+              <FeedbackForm
+                key={step.id}
+                projectId={projectId}
+                step={step}
+                feedback={
+                  feedbacks.find((feedback) => feedback.stepId === step.id) ?? null
+                }
+                onSaved={handleFeedbackSaved}
+              />
+            ))}
+          </div>
+        )}
+
+        {completedSteps.length > 0 && (
+          <CollapsibleSection
+            title={`Abgeschlossene Auswertungen (${completedSteps.length})`}
+            intro="Optional: Trage nach, falls dich weitere Rückmeldungen zu bereits geprüften Annahmen erreichen."
+            defaultOpen={false}
+          >
+            <div className="flex flex-col gap-3">
+              {completedSteps.map((step) => (
+                <FeedbackForm
+                  key={step.id}
+                  projectId={projectId}
+                  step={step}
+                  feedback={
+                    feedbacks.find((feedback) => feedback.stepId === step.id) ?? null
+                  }
+                  onSaved={handleFeedbackSaved}
+                />
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-border bg-surface px-4 py-3">
@@ -199,6 +250,8 @@ export function Phase5View({
         <EvidenceUpdateList
           feedbacks={feedbacks}
           assumptionsById={assumptionsById}
+          steps={steps}
+          previousRunStepIds={previousRunStepIds}
           onApplied={handleStatusApplied}
         />
       )}
@@ -231,6 +284,7 @@ export function Phase5View({
           projectId={projectId}
           optionId={option.id}
           proposal={proposal}
+          evidenceBalance={evidenceBalance}
           decision={decision}
           onConfirmed={setDecision}
         />

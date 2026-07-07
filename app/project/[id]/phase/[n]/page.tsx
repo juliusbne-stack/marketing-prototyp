@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { OPTION_DIMENSION_CATEGORIES } from "@/lib/schemas/phase2";
 import { Phase1View } from "@/components/phase1/Phase1View";
 import { Phase2View } from "@/components/phase2/Phase2View";
 import { Phase3View } from "@/components/phase3/Phase3View";
@@ -19,6 +20,8 @@ const statementSelect = {
   uncertainty: true,
   isCritical: true,
   adopted: true,
+  segmentLabel: true,
+  segmentAspect: true,
 } as const;
 
 const PHASE_INFO: Record<
@@ -113,18 +116,59 @@ export default async function PhasePage({
   }
 
   if (phaseNumber === 2) {
-    const [options, adoptedAnalysisCount] = await Promise.all([
-      prisma.strategyOption.findMany({
-        where: { projectId: id },
-        orderBy: { createdAt: "asc" },
-        include: {
-          statements: { include: { statement: { select: statementSelect } } },
-        },
-      }),
-      prisma.statement.count({
-        where: { projectId: id, phase: 1, adopted: true },
-      }),
-    ]);
+    const [options, adoptedAnalysisCount, latestAdaptation] =
+      await Promise.all([
+        prisma.strategyOption.findMany({
+          where: { projectId: id },
+          orderBy: { createdAt: "asc" },
+          include: {
+            statements: { include: { statement: { select: statementSelect } } },
+          },
+        }),
+        prisma.statement.count({
+          where: { projectId: id, phase: 1, adopted: true },
+        }),
+        prisma.adaptationDecision.findFirst({
+          where: { projectId: id },
+          orderBy: { createdAt: "desc" },
+          select: { decision: true, createdAt: true },
+        }),
+      ]);
+
+    // Revision mode (learning loop): the latest phase 5 decision is ADAPT and
+    // a prioritized option exists that can be reworked here.
+    const prioritizedOption = options.find(
+      (option) => option.status === "PRIORITIZED"
+    );
+    const revisionMode =
+      latestAdaptation?.decision === "ADAPT" && Boolean(prioritizedOption);
+
+    const [initialRevisions, adoptedRevisionCount] = revisionMode
+      ? await Promise.all([
+          // Pending proposals: phase 2 dimension statements not linked to any
+          // option yet (the AI revision route creates them unlinked).
+          prisma.statement.findMany({
+            where: {
+              projectId: id,
+              phase: 2,
+              origin: "AI_DERIVATION",
+              adopted: false,
+              category: { in: [...OPTION_DIMENSION_CATEGORIES] },
+              optionLinks: { none: {} },
+            },
+            orderBy: { createdAt: "asc" },
+            select: statementSelect,
+          }),
+          // Already adopted revisions: statements linked to the prioritized
+          // option that were created after the ADAPT decision.
+          prisma.statement.count({
+            where: {
+              optionLinks: { some: { optionId: prioritizedOption!.id } },
+              createdAt: { gt: latestAdaptation!.createdAt },
+            },
+          }),
+        ])
+      : [[], 0];
 
     phaseContent = (
       <Phase2View
@@ -138,6 +182,9 @@ export default async function PhasePage({
           statements: option.statements.map((link) => link.statement),
         }))}
         hasAdoptedAnalysis={adoptedAnalysisCount > 0}
+        revisionMode={revisionMode}
+        initialRevisions={initialRevisions}
+        initialHasAdoptedRevision={adoptedRevisionCount > 0}
       />
     );
   }
@@ -180,15 +227,27 @@ export default async function PhasePage({
 
   if (phaseNumber === 4) {
     // Phase 4 works exclusively on the prioritized option (M5).
-    const option = await prisma.strategyOption.findFirst({
-      where: { projectId: id, status: "PRIORITIZED" },
-      select: {
-        id: true,
-        title: true,
-        summary: true,
-        prioritizationRationale: true,
-      },
-    });
+    const [option, latestAdaptation] = await Promise.all([
+      prisma.strategyOption.findFirst({
+        where: { projectId: id, status: "PRIORITIZED" },
+        select: {
+          id: true,
+          title: true,
+          summary: true,
+          prioritizationRationale: true,
+        },
+      }),
+      prisma.adaptationDecision.findFirst({
+        where: { projectId: id, userConfirmed: true },
+        orderBy: { createdAt: "desc" },
+        select: { decision: true },
+      }),
+    ]);
+
+    // Continuation mode (learning loop): the latest phase 5 decision is
+    // CONTINUE — phase 4 offers controlled scaling instead of a fresh run.
+    const continuationMode =
+      latestAdaptation?.decision === "CONTINUE" && Boolean(option);
     const steps = option
       ? await prisma.validationStep.findMany({
           where: { optionId: option.id },
@@ -207,8 +266,33 @@ export default async function PhasePage({
         })
       : [];
 
+    const feedbacks =
+      steps.length > 0
+        ? await prisma.marketFeedback.findMany({
+            where: { stepId: { in: steps.map((step) => step.id) } },
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              projectId: true,
+              stepId: true,
+              statementId: true,
+              content: true,
+              result: true,
+              interpretation: true,
+              proposedNewStatus: true,
+              statusApplied: true,
+            },
+          })
+        : [];
+
     phaseContent = (
-      <Phase4View projectId={id} option={option} initialSteps={steps} />
+      <Phase4View
+        projectId={id}
+        option={option}
+        initialSteps={steps}
+        initialFeedbacks={feedbacks}
+        continuationMode={continuationMode}
+      />
     );
   }
 
@@ -225,6 +309,7 @@ export default async function PhasePage({
         rationale: true,
         loopBackToPhase: true,
         userConfirmed: true,
+        createdAt: true,
       },
     });
     const optionSelect = {
@@ -285,6 +370,14 @@ export default async function PhasePage({
       }),
     ]);
 
+    // Run boundary without a schema change: steps created before the latest
+    // confirmed adaptation decision belong to the previous validation run.
+    const previousRunStepIds = adaptation
+      ? steps
+          .filter((step) => step.createdAt <= adaptation.createdAt)
+          .map((step) => step.id)
+      : [];
+
     phaseContent = (
       <Phase5View
         projectId={id}
@@ -292,7 +385,19 @@ export default async function PhasePage({
         initialSteps={steps}
         initialFeedbacks={feedbacks}
         initialLearnings={learnings}
-        initialDecision={adaptation}
+        initialDecision={
+          adaptation
+            ? {
+                id: adaptation.id,
+                optionId: adaptation.optionId,
+                decision: adaptation.decision,
+                rationale: adaptation.rationale,
+                loopBackToPhase: adaptation.loopBackToPhase,
+                userConfirmed: adaptation.userConfirmed,
+              }
+            : null
+        }
+        previousRunStepIds={previousRunStepIds}
       />
     );
   }

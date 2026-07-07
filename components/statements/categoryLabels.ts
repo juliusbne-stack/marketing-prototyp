@@ -1,0 +1,30 @@
+import type { StatementCategory } from "@prisma/client";
+
+// German display labels for all statement categories (.cursorrules: UI German,
+// code English). Used wherever a statement needs its category shown as context,
+// e.g. the evidence updates in phase 5.
+export const CATEGORY_LABELS: Record<StatementCategory, string> = {
+  PESTEL_POLITICAL: "PESTEL: Politisch",
+  PESTEL_ECONOMIC: "PESTEL: Ökonomisch",
+  PESTEL_SOCIAL: "PESTEL: Sozial",
+  PESTEL_TECHNOLOGICAL: "PESTEL: Technologisch",
+  PESTEL_ECOLOGICAL: "PESTEL: Ökologisch",
+  PESTEL_LEGAL: "PESTEL: Rechtlich",
+  TARGET_SEGMENT: "Zielgruppe",
+  CUSTOMER_PROBLEM: "Kundenproblem",
+  COMPETITOR: "Wettbewerb",
+  RESOURCE: "Ressource",
+  SWOT_STRENGTH: "Stärke",
+  SWOT_WEAKNESS: "Schwäche",
+  SWOT_OPPORTUNITY: "Chance",
+  SWOT_THREAT: "Risiko",
+  MARKET_PATH: "Marktpfad",
+  OPT_TARGET_GROUP: "Zielgruppe",
+  OPT_CUSTOMER_PROBLEM: "Kundenproblem",
+  OPT_VALUE_PROPOSITION: "Nutzenversprechen",
+  OPT_POSITIONING: "Positionierung",
+  OPT_MARKET_ACCESS: "Marktzugang",
+  OPT_REVENUE_GROWTH: "Erlös-/Wachstumslogik",
+  LEARNING: "Erkenntnis",
+  OTHER: "Sonstiges",
+};

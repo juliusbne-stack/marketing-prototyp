@@ -2,7 +2,7 @@
 
 Diese Datei definiert den globalen Systemprompt-Baustein und die fünf phasenspezifischen Prompts. In `lib/prompts/*.ts` als Template-Strings ablegen. Jeder LLM-Aufruf = `GLOBAL + PHASE_N + Projektkontext (JSON aus der DB)`. Antwortformat: `response_format: { type: "json_object" }`, Validierung mit Zod (Schemata unten spiegeln).
 
-**Kontext-Regel:** Als Projektkontext werden das Start-up-Profil (inkl. Ressourcenangaben) und ausschließlich `adopted=true` Statements der Vorphasen mitgegeben.
+**Kontext-Regel:** Als Projektkontext werden das Start-up-Profil (inkl. Ressourcenangaben) und ausschließlich `adopted=true` Statements der Vorphasen mitgegeben. Bei `TARGET_SEGMENT`-Statements aus Phase 1 werden `segmentLabel` und `segmentAspect` mit übergeben, damit die KI zusammengehörige Segmentprofile erkennt.
 
 ---
 
@@ -32,6 +32,17 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   "AI_DERIVATION" (deine Schlussfolgerung aus dem Kontext).
 - justification: 1–2 Sätze, warum die Aussage plausibel ist / worauf sie sich stützt.
 - uncertainty: bei ASSUMPTION und OPEN_QUESTION kurz benennen, was unsicher ist.
+- JEDE Aussage (content) muss ein vollständiger, eigenständig prüfbarer
+  Aussagesatz sein, der eine Behauptung enthält, die durch Marktfeedback
+  gestützt oder widerlegt werden kann. Verboten sind bloße Bezeichnungen,
+  Namen oder Stichwörter. Falsch: "Einzelunternehmerische Yogalehrer und
+  kleine Yogaschulen". Richtig: "Einzelunternehmerische Yogalehrer und kleine
+  Yogaschulen haben Bedarf an einem kostengünstigen Buchungstool und sind
+  bereit, dafür zu zahlen." Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
+  Jede Aussage gehört zu einem Segmentprofil (gemeinsames segmentLabel) und einer
+  von fünf Dimensionen (segmentAspect). Der content muss die jeweilige Dimension
+  als eigenständig prüfbare Behauptung formulieren — nicht nur den Segmentnamen
+  wiederholen.
 
 RESSOURCENSENSIBILITÄT: Berücksichtige immer Budget, Teamgröße, Zeit und Fähigkeiten
 aus dem Profil. Schlage nichts vor, was diese Mittel offensichtlich übersteigt.
@@ -56,9 +67,17 @@ Erzeuge Aussagen in diesen Bereichen:
 1. PESTEL: je Kategorie (POLITICAL, ECONOMIC, SOCIAL, TECHNOLOGICAL, ECOLOGICAL,
    LEGAL) 1–3 relevante Aussagen. Nur was für dieses Geschäftsmodell wirklich
    relevant ist — Kategorien dürfen auch nur 1 Aussage haben.
-2. TARGET_SEGMENT: 2–4 Zielgruppenhypothesen. Wenn der Nutzer keine Zielgruppe
-   angegeben hat, leite sie aus Geschäftsidee, Problem und Nutzenversprechen ab —
-   dann als ASSUMPTION, nie als FACT.
+2. TARGET_SEGMENT: Entwickle 2–3 Zielgruppensegmente. Erzeuge je Segment GENAU 5
+   Aussagen (category TARGET_SEGMENT), alle mit demselben segmentLabel und je einem
+   segmentAspect: DESCRIPTION (wer genau: Abgrenzung, relevante Merkmale wie Alter,
+   Situation, Einstellung), PROBLEM_NEED (welches Problem/welcher Bedarf, wie
+   relevant/dringlich), BEHAVIOR_CONTEXT (Kauf-/Nutzungsverhalten, in welchem Kontext
+   das Angebot genutzt würde), WILLINGNESS_TO_PAY (Zahlungsbereitschaft, ggf.
+   plausible fiktive Preisspanne), REACHABILITY (über welche Kanäle erreichbar).
+   Jede Aussage bleibt ein eigenständig prüfbarer Aussagesatz mit EIGENEM, ehrlich
+   differenziertem Evidenzstatus — typischerweise ist DESCRIPTION besser gestützt als
+   WILLINGNESS_TO_PAY (oft OPEN_QUESTION). Wenn der Nutzer keine Zielgruppe angegeben
+   hat, leite die Segmente aus Geschäftsidee, Problem und Nutzenversprechen ab.
 3. CUSTOMER_PROBLEM: 2–4 Aussagen zu Kundenproblemen und deren Relevanz.
 4. COMPETITOR: 3–5 fiktive Wettbewerber/Alternativen/Ersatzlösungen (auch
    Nicht-Nutzung oder manuelle Lösungen zählen als Alternative).
@@ -84,7 +103,9 @@ Zahlungsbereitschaft, tatsächliche Problemrelevanz, Kanalwirksamkeit).
       "origin": "USER_INPUT | SIMULATED_RESEARCH | AI_DERIVATION",
       "justification": "string",
       "sourceRef": "string | null  (Pflicht bei SIMULATED_RESEARCH, endet mit '(fiktiv)')",
-      "uncertainty": "string | null"
+      "uncertainty": "string | null",
+      "segmentLabel": "string | null  (Pflicht bei TARGET_SEGMENT: Name des Segments, z. B. Studierende mit begrenztem Budget)",
+      "segmentAspect": "DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)"
     }
   ]
 }
@@ -110,6 +131,17 @@ REGELN:
   Dimension auf übernommenen FACTs auf → ASSUMPTION mit Verweis darauf in der
   justification; baut sie auf OPEN_QUESTIONs auf → OPEN_QUESTION. Dimensionen
   einer neuen Option sind nie FACT.
+- Die Dimension OPT_TARGET_GROUP adressiert GENAU EIN Zielgruppensegment aus
+  dem Analysebild und benennt es explizit über dessen segmentLabel ("Diese
+  Option adressiert das Segment '{Label}' mit dem Fokus ..." plus strategische
+  Zuspitzung). Nur diese Dimension erhält im JSON das Feld segmentLabel; der
+  Wert muss exakt einem segmentLabel aus dem Kontext entsprechen (die Route
+  validiert das und speichert es am Statement).
+- Profilaspekte des adressierten Segments gezielt nutzen: REACHABILITY
+  informiert OPT_MARKET_ACCESS, WILLINGNESS_TO_PAY informiert
+  OPT_REVENUE_GROWTH, PROBLEM_NEED informiert OPT_CUSTOMER_PROBLEM — mit
+  Verweis auf die konkreten Profilaussagen in den justifications. (Gilt
+  sinngemäß auch für den Revisions-Prompt in lib/prompts/phase2Revision.ts.)
 - Die Optionen müssen sich in Zielgruppe ODER Marktzugang ODER Erlöslogik
   deutlich unterscheiden — keine Varianten derselben Idee.
 - Keine Bewertung, kein Favorit, keine Empfehlung (das ist Phase 3).
@@ -129,7 +161,8 @@ REGELN:
           "evidenceStatus": "ASSUMPTION | OPEN_QUESTION",
           "origin": "AI_DERIVATION",
           "justification": "string (mit Bezug auf das Analysebild)",
-          "uncertainty": "string | null"
+          "uncertainty": "string | null",
+          "segmentLabel": "string | null (nur bei OPT_TARGET_GROUP: exakt ein segmentLabel aus dem Kontext)"
         }
       ]
     }
@@ -194,6 +227,10 @@ REGELN:
 - Kritisch = erfolgsentscheidend für die Stoßrichtung UND geringer Evidenzgrad
   (bevorzugt OPEN_QUESTION, dann ASSUMPTION). Wähle aus den übergebenen
   Statements der Option und des Analysebilds; gib deren IDs zurück.
+- Wenn im Kontext ein addressedSegmentProfile übergeben wird (vollständiges
+  Profil des von der Option adressierten Segments inkl. Evidenzstatus und
+  Statement-IDs), wähle kritische Annahmen bevorzugt aus dessen schwach
+  gestützten Profilaspekten und aus den Dimensionen der Option.
 - Jeder Schritt: konkret in 1–3 Wochen mit dem Profil-Budget umsetzbar
   (z. B. 5 Problem-Interviews, einfache Landingpage mit Warteliste, ein
   Kanaltest mit kleinem Budget). Kein breiter Rollout.
@@ -245,8 +282,28 @@ REGELN:
 - interpretation: kurz, ehrlich, inkl. Grenzen der Aussagekraft (kleine
   Stichprobe, situative Einflüsse).
 - adaptation: genau EIN Vorschlag: CONTINUE | ADAPT | DEFER | DISCARD | LOOP_BACK
-  (mit loopBackToPhase 1–3). Begründung muss die Evidenzlage zusammenfassen.
-  Formuliere als Vorschlag — die Entscheidung trifft der Nutzer.
+  (mit loopBackToPhase 1–3). Formuliere als Vorschlag — die Entscheidung trifft
+  der Nutzer. Wähle die Anpassungsentscheidung streng nach diesen Kriterien und
+  nenne in der rationale ausdrücklich die Evidenz, auf die du dich stützt:
+  - CONTINUE ist der Standard, wenn die geprüften kritischen Annahmen
+    überwiegend gestützt wurden und KEINE erfolgskritische Annahme widerlegt
+    ist. Neue offene Fragen oder Detail-Verbesserungsideen sind KEIN Grund für
+    ADAPT — sie können bei der breiteren Umsetzung beobachtet werden.
+    Wiederholtes Anpassen hat Kosten: Jede Überarbeitung macht die betroffene
+    Dimension wieder zur ungeprüften Annahme und verhindert, dass die
+    Strategie Wirkung entfalten kann.
+  - ADAPT nur, wenn eine konkrete, erfolgskritische Annahme widerlegt oder
+    deutlich geschwächt wurde UND die Stoßrichtung insgesamt tragfähig bleibt.
+    Benenne dann exakt, WELCHE Dimension aufgrund WELCHER Rückmeldung
+    angepasst werden soll.
+  - DEFER/DISCARD, wenn tragende Annahmen (Kundenproblem,
+    Zahlungsbereitschaft, Zielgruppenbedarf) widerlegt sind.
+  - LOOP_BACK nur bei grundlegend neuen Erkenntnissen über Markt oder Kunden,
+    die das Analysebild selbst infrage stellen.
+  - Berücksichtige die mitgelieferte Evidenzbilanz der Option (evidenceBalance
+    im Kontext): Je höher der Anteil faktengestützter Dimensionen und je
+    weniger offene kritische Annahmen, desto stärker spricht die Lage für
+    CONTINUE.
 - newStatements: 0–3 neue Erkenntnisse oder offene Fragen (category LEARNING),
   die sich aus den Rückmeldungen ergeben.
 ```

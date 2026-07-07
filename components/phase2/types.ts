@@ -12,6 +12,13 @@ export type OptionData = {
   statements: StatementData[];
 };
 
+// Dimension the AI marked as not affected by the phase 5 learning results
+// (revision mode). Held in client state only — not persisted.
+export type UnchangedDimension = {
+  dimensionCategory: StatementCategory;
+  reason: string;
+};
+
 // Display order + German labels of the six option dimensions (UI_KONZEPT §4).
 export const DIMENSION_ORDER: { category: StatementCategory; label: string }[] =
   [

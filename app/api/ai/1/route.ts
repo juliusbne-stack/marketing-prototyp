@@ -23,6 +23,8 @@ const statementSelect = {
   uncertainty: true,
   isCritical: true,
   adopted: true,
+  segmentLabel: true,
+  segmentAspect: true,
 } satisfies Prisma.StatementSelect;
 
 export async function POST(request: Request) {
@@ -113,6 +115,8 @@ export async function POST(request: Request) {
         justification: statement.justification,
         sourceRef: statement.sourceRef ?? null,
         uncertainty: statement.uncertainty ?? null,
+        segmentLabel: statement.segmentLabel ?? null,
+        segmentAspect: statement.segmentAspect ?? null,
         adopted: false,
       })),
     });

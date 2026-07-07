@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { Check, Pencil, Trash2 } from "lucide-react";
 import type { EvidenceStatus } from "@prisma/client";
+import type { ValidationHistoryCounts } from "@/lib/validation";
 import { EvidenceBadge } from "./EvidenceBadge";
 import { OriginTag } from "./OriginTag";
 import type { StatementData } from "./types";
+import { ValidationHistoryChip } from "./ValidationHistoryChip";
 
 // Meta text longer than this is collapsed to one line with a "Mehr" toggle.
 const META_COLLAPSE_THRESHOLD = 120;
@@ -16,6 +18,7 @@ export function StatementCard({
   onDeleted,
   showAdoptAction = true,
   compact = false,
+  validationHistory,
 }: {
   statement: StatementData;
   onChanged: (statement: StatementData) => void;
@@ -24,6 +27,8 @@ export function StatementCard({
   /** Phase 2 adopts whole options (hypothesis bundles), not single dimensions. */
   showAdoptAction?: boolean;
   compact?: boolean;
+  /** Cumulative assessed feedback counts — chip hidden when absent or empty. */
+  validationHistory?: ValidationHistoryCounts | null;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftContent, setDraftContent] = useState(statement.content);
@@ -123,11 +128,16 @@ export function StatementCard({
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <EvidenceBadge
-          status={statement.evidenceStatus}
-          onChange={handleStatusChange}
-          disabled={isBusy}
-        />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <EvidenceBadge
+            status={statement.evidenceStatus}
+            onChange={handleStatusChange}
+            disabled={isBusy}
+          />
+          {validationHistory && (
+            <ValidationHistoryChip counts={validationHistory} />
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <OriginTag origin={statement.origin} />
           <button

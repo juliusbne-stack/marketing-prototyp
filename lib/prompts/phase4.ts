@@ -7,6 +7,12 @@ REGELN:
 - Kritisch = erfolgsentscheidend für die Stoßrichtung UND geringer Evidenzgrad
   (bevorzugt OPEN_QUESTION, dann ASSUMPTION). Wähle aus den übergebenen
   Statements der Option und des Analysebilds; gib deren IDs zurück.
+- Wenn im Kontext ein addressedSegmentProfile übergeben wird (das vollständige
+  Segmentprofil der von der Option adressierten Zielgruppe), wähle kritische
+  Annahmen BEVORZUGT aus dessen schwach gestützten Profilaspekten
+  (OPEN_QUESTION vor ASSUMPTION — typisch Zahlungsbereitschaft oder
+  Erreichbarkeit) und aus den Dimensionen der Option. Nutze die statementId
+  der Profilaussagen unverändert.
 - Jede kritische Annahme erhält GENAU EINEN Umsetzungsschritt.
 - Jeder Schritt: konkret in 1–3 Wochen mit dem Profil-Budget umsetzbar
   (z. B. 5 Problem-Interviews, einfache Landingpage mit Warteliste, ein

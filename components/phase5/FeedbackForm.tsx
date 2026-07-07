@@ -59,7 +59,10 @@ export function FeedbackForm({
   }
 
   return (
-    <div className="rounded-[10px] border border-border bg-surface p-4">
+    <div
+      id={`step-feedback-${step.id}`}
+      className="scroll-mt-6 rounded-[10px] border border-border bg-surface p-4"
+    >
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="font-heading text-sm font-medium text-text">
           {step.title}
