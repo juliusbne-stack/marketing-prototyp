@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Star, TestTubeDiagonal, TrendingUp } from "lucide-react";
+import { ProgressButton } from "@/components/ui/ProgressButton";
 import type { FeedbackData } from "@/components/phase5/types";
 import type { StatementData } from "@/components/statements/types";
 import { StatementCard } from "@/components/statements/StatementCard";
@@ -189,17 +190,17 @@ export function Phase4View({
             Maßstab weiter beobachtet — statt neuer Validierungsexperimente
             entstehen begrenzte Skalierungsschritte mit Monitoring-Metriken.
           </p>
-          <button
+          <ProgressButton
             type="button"
             onClick={handleScale}
-            disabled={isBusy}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+            loading={isScaling}
+            disabled={isGenerating}
+            loadingLabel="Skalierungsschritte werden abgeleitet …"
+            className="mt-3"
           >
             <TrendingUp className="h-4 w-4" aria-hidden />
-            {isScaling
-              ? "Skalierungsschritte werden abgeleitet …"
-              : "Skalierungsschritte ableiten"}
-          </button>
+            Skalierungsschritte ableiten
+          </ProgressButton>
         </section>
       )}
 
@@ -222,19 +223,18 @@ export function Phase4View({
             ? "Erneutes Ableiten ersetzt nur Entwürfe — übernommene Schritte bleiben erhalten."
             : "Die KI markiert die 2–4 kritischsten Annahmen und übersetzt sie in prüfbare Umsetzungsschritte."}
         </p>
-        <button
+        <ProgressButton
           type="button"
           onClick={handleGenerate}
-          disabled={isBusy}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          loading={isGenerating}
+          disabled={isScaling}
+          loadingLabel="Schritte werden abgeleitet …"
         >
           <TestTubeDiagonal className="h-4 w-4" aria-hidden />
-          {isGenerating
-            ? "Schritte werden abgeleitet …"
-            : hasSteps
-              ? "Umsetzungsschritte erneut ableiten"
-              : "Umsetzungsschritte ableiten"}
-        </button>
+          {hasSteps
+            ? "Umsetzungsschritte erneut ableiten"
+            : "Umsetzungsschritte ableiten"}
+        </ProgressButton>
       </div>
 
       {error && <PhaseErrorState message={error} />}

@@ -21,6 +21,12 @@ REGELN:
 - Jeder Schritt bleibt im Ressourcenrahmen des Profils (Budget, Teamgröße,
   Zeit, Fähigkeiten) und ist konkret umsetzbar. Kein ungebremster Rollout —
   die Ausweitung erfolgt in begrenzten, beobachtbaren Stufen.
+- Jeder Schritt MUSS timeframe und budgetFrame enthalten:
+  - timeframe: ein begrenzter Zeitraum (1–4 Wochen), passend zur Ausweitung
+    (z. B. „4 Wochen").
+  - budgetFrame: ein konkreter Budgeteinsatz, der explizit als tragbarer
+    Anteil des Profil-Budgets begründet wird. Bei kostenlosen Maßnahmen:
+    „0 € — Zeiteinsatz ca. X Std./Woche" im Rahmen der Profil-Zeitangabe.
 - Je Schritt 1–2 Monitoring-Metriken mit klaren Schwellen (quantifiziert als
   Spanne oder Schwelle): successCriterion = gilt als stützend, wenn die
   Annahme auch im größeren Maßstab hält; failureCriterion = gilt als
@@ -38,6 +44,8 @@ supportedCriticalAssumptions, unverändert übernehmen):
       "title": "string",
       "description": "string (Was wird ausgeweitet, warum dieser Kanal, welcher Aufwand)",
       "channel": "string | null",
+      "timeframe": "string (begrenzter Zeitraum, z. B. 4 Wochen)",
+      "budgetFrame": "string (tragbarer Budgeteinsatz, z. B. max. 300 € von 500 €/Monat)",
       "metrics": [
         {
           "name": "string",

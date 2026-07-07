@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { ProgressButton } from "@/components/ui/ProgressButton";
 import { PHASES } from "./PhaseStepper";
 
 // Footer navigation at the bottom of each phase view. Advancing persists the
@@ -59,17 +60,17 @@ export function PhaseAdvanceButton({
       {!enabled && disabledHint && (
         <p className="text-sm text-text-muted">{disabledHint}</p>
       )}
-      <button
+      <ProgressButton
         type="button"
         onClick={handleAdvance}
-        disabled={!enabled || isAdvancing}
-        className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+        loading={isAdvancing}
+        loadingPhase="save"
+        disabled={!enabled}
+        loadingLabel="Wechsel läuft …"
       >
-        {isAdvancing
-          ? "Wechsel läuft …"
-          : `Weiter zu Phase ${nextPhase}: ${nextTitle}`}
+        {`Weiter zu Phase ${nextPhase}: ${nextTitle}`}
         <ArrowRight className="h-4 w-4" aria-hidden />
-      </button>
+      </ProgressButton>
     </div>
   );
 }

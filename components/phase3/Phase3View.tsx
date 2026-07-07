@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Scale } from "lucide-react";
+import { ProgressButton } from "@/components/ui/ProgressButton";
 import type { OptionData } from "@/components/phase2/types";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
 import {
@@ -112,19 +113,15 @@ export function Phase3View({
             ? "Erneutes Starten ersetzt die bisherigen Scores und erzeugt einen neuen Vorschlag."
             : `${options.length} übernommene Optionen werden anhand der sechs Kriterien verglichen.`}
         </p>
-        <button
+        <ProgressButton
           type="button"
           onClick={handleEvaluate}
-          disabled={isEvaluating}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          loading={isEvaluating}
+          loadingLabel="Bewertung läuft …"
         >
           <Scale className="h-4 w-4" aria-hidden />
-          {isEvaluating
-            ? "Bewertung läuft …"
-            : hasEvaluations
-              ? "Bewertung erneut starten"
-              : "Bewertung starten"}
-        </button>
+          {hasEvaluations ? "Bewertung erneut starten" : "Bewertung starten"}
+        </ProgressButton>
       </div>
 
       {error && <PhaseErrorState message={error} />}

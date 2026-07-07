@@ -5,12 +5,14 @@ import {
   Check,
   CircleCheck,
   CircleX,
+  ListChecks,
   Pencil,
   Radio,
   Sparkles,
   Trash2,
 } from "lucide-react";
 import { RefinementPanel } from "./RefinementPanel";
+import { StepImplementationFrame } from "@/components/steps/StepImplementationFrame";
 import type { StepData } from "./types";
 
 // Validation step card (UI_KONZEPT §4, phase 4): title, description, channel
@@ -160,16 +162,38 @@ export function ValidationStepCard({
         ) : (
           <>
             <div className="flex items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0 flex-1">
                 <h5 className="font-heading text-sm font-medium text-text">
                   {step.title}
                 </h5>
-                {step.channel && (
-                  <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
-                    <Radio className="h-3 w-3" aria-hidden />
-                    {step.channel}
-                  </span>
-                )}
+                <StepImplementationFrame
+                  timeframe={step.timeframe}
+                  budgetFrame={step.budgetFrame}
+                  onSave={async (data) =>
+                    patch({
+                      timeframe: data.timeframe,
+                      budgetFrame: data.budgetFrame,
+                    })
+                  }
+                />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {step.channel && (
+                    <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
+                      <Radio className="h-3 w-3" aria-hidden />
+                      {step.channel}
+                    </span>
+                  )}
+                  {/* Subtle cockpit progress chip ("Aufgaben 3/6") */}
+                  {step.taskProgress && step.taskProgress.total > 0 && (
+                    <span
+                      title="Aufgabenfortschritt aus dem Umsetzungs-Cockpit"
+                      className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-text-muted"
+                    >
+                      <ListChecks className="h-3 w-3" aria-hidden />
+                      Aufgaben {step.taskProgress.done}/{step.taskProgress.total}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <button

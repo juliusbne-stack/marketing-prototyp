@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { ProgressButton } from "@/components/ui/ProgressButton";
 
 export function NewProjectForm() {
   const router = useRouter();
@@ -56,14 +57,17 @@ export function NewProjectForm() {
           className="h-10 flex-1 rounded-md border border-border bg-surface px-3 text-sm text-text placeholder:text-text-muted"
           disabled={isSubmitting}
         />
-        <button
+        <ProgressButton
           type="submit"
-          disabled={isSubmitting || !name.trim()}
-          className="inline-flex h-10 items-center gap-1.5 rounded-md bg-accent px-4 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+          loading={isSubmitting}
+          loadingPhase="save"
+          disabled={!name.trim()}
+          loadingLabel="Wird angelegt …"
+          className="h-10"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          {isSubmitting ? "Wird angelegt …" : "Projekt anlegen"}
-        </button>
+          Projekt anlegen
+        </ProgressButton>
       </div>
       {error && <p className="text-xs text-danger-text">{error}</p>}
     </form>

@@ -20,4 +20,6 @@ export type StatementData = {
   adopted: boolean;
   segmentLabel: string | null;
   segmentAspect: string | null;
+  competitorLabel: string | null;
+  competitorAspect: string | null;
 };

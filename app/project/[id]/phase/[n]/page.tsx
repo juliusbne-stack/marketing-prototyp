@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { OPTION_DIMENSION_CATEGORIES } from "@/lib/schemas/phase2";
+import { buildKpiFeedbackSummary } from "@/lib/kpiSummary";
 import { resolvePestelRelevance } from "@/lib/pestelRelevance";
 import { Phase1View } from "@/components/phase1/Phase1View";
 import { Phase2View } from "@/components/phase2/Phase2View";
@@ -23,6 +24,8 @@ const statementSelect = {
   adopted: true,
   segmentLabel: true,
   segmentAspect: true,
+  competitorLabel: true,
+  competitorAspect: true,
 } as const;
 
 const PHASE_INFO: Record<
@@ -257,7 +260,7 @@ export default async function PhasePage({
     // CONTINUE — phase 4 offers controlled scaling instead of a fresh run.
     const continuationMode =
       latestAdaptation?.decision === "CONTINUE" && Boolean(option);
-    const steps = option
+    const rawSteps = option
       ? await prisma.validationStep.findMany({
           where: { optionId: option.id },
           orderBy: { createdAt: "asc" },
@@ -271,9 +274,21 @@ export default async function PhasePage({
               },
             },
             assumption: { select: statementSelect },
+            // Cockpit progress chip ("Aufgaben 3/6") on adopted step cards.
+            tasks: { select: { done: true } },
           },
         })
       : [];
+    const steps = rawSteps.map(({ tasks, ...step }) => ({
+      ...step,
+      taskProgress:
+        tasks.length > 0
+          ? {
+              done: tasks.filter((task) => task.done).length,
+              total: tasks.length,
+            }
+          : null,
+    }));
 
     const feedbacks =
       steps.length > 0
@@ -356,7 +371,7 @@ export default async function PhasePage({
         })
       : [];
 
-    const [feedbacks, learnings] = await Promise.all([
+    const [feedbacks, learnings, kpiMetrics] = await Promise.all([
       prisma.marketFeedback.findMany({
         where: { stepId: { in: steps.map((step) => step.id) } },
         orderBy: { createdAt: "asc" },
@@ -377,7 +392,31 @@ export default async function PhasePage({
         orderBy: { createdAt: "asc" },
         select: statementSelect,
       }),
+      // Cockpit KPI data: offered as an LLM-free prefill for the feedback form.
+      prisma.metric.findMany({
+        where: { stepId: { in: steps.map((step) => step.id) } },
+        select: {
+          stepId: true,
+          name: true,
+          successCriterion: true,
+          failureCriterion: true,
+          dataPoints: {
+            orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+            select: { periodLabel: true, value: true, assessment: true },
+          },
+        },
+      }),
     ]);
+
+    const kpiSummaries: Record<string, string> = {};
+    for (const step of steps) {
+      const stepMetrics = kpiMetrics.filter(
+        (metric) => metric.stepId === step.id
+      );
+      if (stepMetrics.some((metric) => metric.dataPoints.length > 0)) {
+        kpiSummaries[step.id] = buildKpiFeedbackSummary(stepMetrics);
+      }
+    }
 
     // Run boundary without a schema change: steps created before the latest
     // confirmed adaptation decision belong to the previous validation run.
@@ -407,6 +446,7 @@ export default async function PhasePage({
             : null
         }
         previousRunStepIds={previousRunStepIds}
+        kpiSummaries={kpiSummaries}
       />
     );
   }

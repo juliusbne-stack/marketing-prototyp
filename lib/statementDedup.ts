@@ -3,6 +3,8 @@ type StatementLike = {
   content: string;
   segmentLabel?: string | null;
   segmentAspect?: string | null;
+  competitorLabel?: string | null;
+  competitorAspect?: string | null;
 };
 
 const STOP_WORDS = new Set([
@@ -122,13 +124,30 @@ export function jaccardSimilarity(a: string, b: string): number {
 }
 
 function sameSegmentKey(a: StatementLike, b: StatementLike): boolean {
-  if (a.category !== "TARGET_SEGMENT" || b.category !== "TARGET_SEGMENT") {
-    return a.category === b.category;
+  if (a.category === "TARGET_SEGMENT" && b.category === "TARGET_SEGMENT") {
+    return (
+      normalizeText(a.segmentLabel ?? "") === normalizeText(b.segmentLabel ?? "") &&
+      a.segmentAspect === b.segmentAspect
+    );
   }
-  return (
-    normalizeText(a.segmentLabel ?? "") === normalizeText(b.segmentLabel ?? "") &&
-    a.segmentAspect === b.segmentAspect
-  );
+
+  if (a.category === "COMPETITOR" && b.category === "COMPETITOR") {
+    const aHasProfile = !!(a.competitorLabel?.trim() || a.competitorAspect);
+    const bHasProfile = !!(b.competitorLabel?.trim() || b.competitorAspect);
+    if (!aHasProfile && !bHasProfile) {
+      return true;
+    }
+    if (aHasProfile && bHasProfile) {
+      return (
+        normalizeText(a.competitorLabel ?? "") ===
+          normalizeText(b.competitorLabel ?? "") &&
+        a.competitorAspect === b.competitorAspect
+      );
+    }
+    return false;
+  }
+
+  return a.category === b.category;
 }
 
 const DEFAULT_THRESHOLD = 0.55;

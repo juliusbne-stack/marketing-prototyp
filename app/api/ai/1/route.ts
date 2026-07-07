@@ -31,6 +31,8 @@ const statementSelect = {
   adopted: true,
   segmentLabel: true,
   segmentAspect: true,
+  competitorLabel: true,
+  competitorAspect: true,
 } satisfies Prisma.StatementSelect;
 
 const adoptedContextSelect = {
@@ -43,6 +45,8 @@ const adoptedContextSelect = {
   uncertainty: true,
   segmentLabel: true,
   segmentAspect: true,
+  competitorLabel: true,
+  competitorAspect: true,
 } satisfies Prisma.StatementSelect;
 
 export async function POST(request: Request) {
@@ -154,6 +158,8 @@ export async function POST(request: Request) {
           uncertainty: statement.uncertainty ?? null,
           segmentLabel: statement.segmentLabel ?? null,
           segmentAspect: statement.segmentAspect ?? null,
+          competitorLabel: statement.competitorLabel ?? null,
+          competitorAspect: statement.competitorAspect ?? null,
           adopted: false,
         })),
       });

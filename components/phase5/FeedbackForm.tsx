@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquareText, Radio } from "lucide-react";
+import { Gauge, MessageSquareText, Radio } from "lucide-react";
 import type { StepWithAssumption } from "@/components/phase4/types";
 import type { FeedbackData } from "./types";
 
@@ -10,11 +10,14 @@ export function FeedbackForm({
   projectId,
   step,
   feedback,
+  kpiSummary = null,
   onSaved,
 }: {
   projectId: string;
   step: StepWithAssumption;
   feedback: FeedbackData | null;
+  // LLM-free summary of the cockpit KPI data (null = no data points yet).
+  kpiSummary?: string | null;
   onSaved: (feedback: FeedbackData) => void;
 }) {
   const [isEditing, setIsEditing] = useState(feedback === null);
@@ -99,6 +102,17 @@ export function FeedbackForm({
               className="mt-1 w-full rounded-md border border-border bg-surface p-2 text-sm text-text"
             />
           </label>
+          {kpiSummary && (
+            <button
+              type="button"
+              onClick={() => setDraft(kpiSummary)}
+              disabled={isBusy}
+              className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline disabled:opacity-50"
+            >
+              <Gauge className="h-3.5 w-3.5" aria-hidden />
+              Kennzahlen aus dem Cockpit übernehmen
+            </button>
+          )}
           <div className="mt-2 flex gap-2">
             <button
               type="button"

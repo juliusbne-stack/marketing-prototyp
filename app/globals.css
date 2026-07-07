@@ -24,6 +24,13 @@
   /* Danger / refuted (phase 5 only) */
   --danger-text: #a32d2d;
   --danger-bg: #fcebeb;
+
+  /* KPI tones (Umsetzungs-Cockpit) — deliberately distinct from the reserved
+     evidence colors and the phase 5 danger red */
+  --kpi-supporting-text: #2f6b33;
+  --kpi-supporting-bg: #eaf4e5;
+  --kpi-contradicting-text: #9a3b1f;
+  --kpi-contradicting-bg: #fdeee6;
 }
 
 @theme inline {
@@ -48,6 +55,11 @@
   --color-danger-text: var(--danger-text);
   --color-danger-bg: var(--danger-bg);
 
+  --color-kpi-supporting-text: var(--kpi-supporting-text);
+  --color-kpi-supporting-bg: var(--kpi-supporting-bg);
+  --color-kpi-contradicting-text: var(--kpi-contradicting-text);
+  --color-kpi-contradicting-bg: var(--kpi-contradicting-bg);
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
@@ -63,6 +75,23 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+@keyframes loading-dot-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
+.loading-dot-bounce {
+  animation: loading-dot-bounce 1.2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

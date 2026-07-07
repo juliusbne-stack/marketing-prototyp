@@ -28,10 +28,15 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   Namen oder Stichwörter. Falsch: "Einzelunternehmerische Yogalehrer und
   kleine Yogaschulen". Richtig: "Einzelunternehmerische Yogalehrer und kleine
   Yogaschulen haben Bedarf an einem kostengünstigen Buchungstool und sind
-  bereit, dafür zu zahlen." Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
+  bereit, dafür zu zahlen."   Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
   Jede Aussage gehört zu einem Segmentprofil (gemeinsames segmentLabel) und einer
   von fünf Dimensionen (segmentAspect). Der content muss die jeweilige Dimension
   als eigenständig prüfbare Behauptung formulieren — nicht nur den Segmentnamen
+  wiederholen.
+  Bei Wettbewerberprofilen (COMPETITOR mit competitorLabel) gilt analog:
+  Jede Aussage gehört zu einem Profil (gemeinsames competitorLabel) und einer von
+  sechs Dimensionen (competitorAspect). Der content muss die jeweilige Dimension
+  als eigenständig prüfbare Behauptung formulieren — nicht nur den Akteursnamen
   wiederholen.
 
 RESSOURCENSENSIBILITÄT: Berücksichtige immer Budget, Teamgröße, Zeit und Fähigkeiten

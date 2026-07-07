@@ -12,6 +12,8 @@ const stepSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1),
   channel: z.string().trim().min(1).nullish(),
+  timeframe: z.string().trim().min(1),
+  budgetFrame: z.string().trim().min(1),
   metrics: z.array(metricSchema).min(1).max(2),
 });
 

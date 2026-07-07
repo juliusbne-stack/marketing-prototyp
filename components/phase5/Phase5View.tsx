@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles, Star } from "lucide-react";
+import { ProgressButton } from "@/components/ui/ProgressButton";
 import type { PrioritizedOptionData, StepWithAssumption } from "@/components/phase4/types";
 import type { StatementData } from "@/components/statements/types";
 import { StatementCard } from "@/components/statements/StatementCard";
@@ -30,6 +31,7 @@ export function Phase5View({
   initialLearnings,
   initialDecision,
   previousRunStepIds,
+  kpiSummaries = {},
 }: {
   projectId: string;
   option: PrioritizedOptionData | null;
@@ -40,6 +42,8 @@ export function Phase5View({
   // Steps created before the latest confirmed adaptation decision — their
   // evidence updates belong to the previous run (computed server-side).
   previousRunStepIds: string[];
+  // LLM-free summaries of the cockpit KPI data per step (only steps with data).
+  kpiSummaries?: Record<string, string>;
 }) {
   const [steps, setSteps] = useState(initialSteps);
   const [feedbacks, setFeedbacks] = useState(initialFeedbacks);
@@ -182,6 +186,7 @@ export function Phase5View({
                 feedback={
                   feedbacks.find((feedback) => feedback.stepId === step.id) ?? null
                 }
+                kpiSummary={kpiSummaries[step.id] ?? null}
                 onSaved={handleFeedbackSaved}
               />
             ))}
@@ -203,6 +208,7 @@ export function Phase5View({
                   feedback={
                     feedbacks.find((feedback) => feedback.stepId === step.id) ?? null
                   }
+                  kpiSummary={kpiSummaries[step.id] ?? null}
                   onSaved={handleFeedbackSaved}
                 />
               ))}
@@ -219,19 +225,18 @@ export function Phase5View({
               ? "Die KI verknüpft die Rückmeldungen mit den geprüften Annahmen und schlägt Evidenz-Updates vor."
               : "Erfasse zuerst mindestens eine Rückmeldung."}
         </p>
-        <button
+        <ProgressButton
           type="button"
           onClick={handleEvaluate}
-          disabled={isEvaluating || !hasFeedback}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          loading={isEvaluating}
+          disabled={!hasFeedback}
+          loadingLabel="Auswertung läuft …"
         >
           <Sparkles className="h-4 w-4" aria-hidden />
-          {isEvaluating
-            ? "Auswertung läuft …"
-            : hasAssessments
-              ? "Rückmeldungen erneut auswerten"
-              : "Rückmeldungen auswerten"}
-        </button>
+          {hasAssessments
+            ? "Rückmeldungen erneut auswerten"
+            : "Rückmeldungen auswerten"}
+        </ProgressButton>
       </div>
 
       {error && <PhaseErrorState message={error} />}

@@ -17,8 +17,13 @@ export type StepData = {
   title: string;
   description: string;
   channel: string | null;
+  timeframe: string | null;
+  budgetFrame: string | null;
   adopted: boolean;
   metrics: MetricData[];
+  // Cockpit task progress ("Aufgaben 3/6"), computed server-side; absent in
+  // API responses that don't load tasks.
+  taskProgress?: { done: number; total: number } | null;
 };
 
 // Phase 4 groups steps under their tested critical assumption.

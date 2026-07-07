@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Prisma, EvidenceStatus, Origin, StatementCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SEGMENT_ASPECTS } from "@/lib/segmentAspects";
+import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
 
 const statementSelect = {
   id: true,
@@ -19,6 +20,8 @@ const statementSelect = {
   adopted: true,
   segmentLabel: true,
   segmentAspect: true,
+  competitorLabel: true,
+  competitorAspect: true,
 } satisfies Prisma.StatementSelect;
 
 const createStatementSchema = z.object({
@@ -33,6 +36,8 @@ const createStatementSchema = z.object({
   uncertainty: z.string().trim().optional(),
   segmentLabel: z.string().trim().min(1).optional(),
   segmentAspect: z.enum(SEGMENT_ASPECTS).optional(),
+  competitorLabel: z.string().trim().min(1).optional(),
+  competitorAspect: z.enum(COMPETITOR_ASPECTS).optional(),
 });
 
 const updateStatementSchema = z
@@ -48,6 +53,8 @@ const updateStatementSchema = z
     adopted: z.boolean().optional(),
     segmentLabel: z.string().trim().min(1).nullable().optional(),
     segmentAspect: z.enum(SEGMENT_ASPECTS).nullable().optional(),
+    competitorLabel: z.string().trim().min(1).nullable().optional(),
+    competitorAspect: z.enum(COMPETITOR_ASPECTS).nullable().optional(),
   })
   .refine(
     (data) => Object.keys(data).length > 1,
@@ -89,8 +96,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const { justification, sourceRef, uncertainty, segmentLabel, segmentAspect, ...rest } =
-    parsed.data;
+  const {
+    justification,
+    sourceRef,
+    uncertainty,
+    segmentLabel,
+    segmentAspect,
+    competitorLabel,
+    competitorAspect,
+    ...rest
+  } = parsed.data;
 
   const statement = await prisma.statement.create({
     data: {
@@ -100,6 +115,8 @@ export async function POST(request: Request) {
       uncertainty: uncertainty || null,
       segmentLabel: segmentLabel || null,
       segmentAspect: segmentAspect || null,
+      competitorLabel: competitorLabel || null,
+      competitorAspect: competitorAspect || null,
       // Adoption happens only through an explicit user action (F10/NF5).
       adopted: false,
     },

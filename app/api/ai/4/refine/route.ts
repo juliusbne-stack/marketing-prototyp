@@ -94,6 +94,8 @@ export async function POST(request: Request) {
       title: step.title,
       description: step.description,
       channel: step.channel,
+      timeframe: step.timeframe,
+      budgetFrame: step.budgetFrame,
       metrics: step.metrics,
     },
     userFeedback: parsed.data.feedback,

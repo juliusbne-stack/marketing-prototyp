@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { Phase4RefineResponse } from "@/lib/schemas/phase4Refine";
+import { StepImplementationFrame } from "@/components/steps/StepImplementationFrame";
 import type { StepData } from "./types";
 
 // One completed refinement round — kept ONLY in client state (deliberately
@@ -101,6 +102,8 @@ export function RefinementPanel({
           title: proposal.title,
           description: proposal.description,
           channel: proposal.channel ?? null,
+          timeframe: proposal.timeframe,
+          budgetFrame: proposal.budgetFrame,
           metrics: proposal.metrics,
         }),
       });
@@ -160,6 +163,11 @@ export function RefinementPanel({
               <h5 className="font-heading text-sm font-medium text-text">
                 {proposal.title}
               </h5>
+              <StepImplementationFrame
+                timeframe={proposal.timeframe}
+                budgetFrame={proposal.budgetFrame}
+                readOnly
+              />
               {proposal.channel && (
                 <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
                   <Radio className="h-3 w-3" aria-hidden />

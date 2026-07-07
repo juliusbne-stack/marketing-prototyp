@@ -17,6 +17,10 @@ REGELN:
 - Bei TARGET_SEGMENT: nur fehlende Segmentprofile oder fehlende Aspekte
   (segmentAspect) zu bestehenden segmentLabels ergänzen — keine bestehenden
   Aspekte neu formulieren.
+- Bei COMPETITOR: nur fehlende Wettbewerberprofile oder fehlende Aspekte
+  (competitorAspect) zu bestehenden competitorLabels ergänzen — keine
+  bestehenden Aspekte neu formulieren. Landschafts-Aussagen ohne competitorLabel
+  nur, wenn der Projektstand dort noch keine passende übergreifende Einschätzung hat.
 - Bei SWOT: verdichtende Synthese ist erlaubt, aber keine bloße Wiederholung
   bereits übernommener Aussagen aus anderen Kategorien.
 - pestelRelevance weiterhin für alle sechs Kategorien bewerten (Profil kann sich

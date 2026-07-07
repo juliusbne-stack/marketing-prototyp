@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Pencil, Sparkles } from "lucide-react";
+import { ProgressButton } from "@/components/ui/ProgressButton";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
 import {
   PhaseEmptyState,
@@ -173,17 +174,15 @@ export function Phase2View({
             Erkenntnisse aus Phase 5.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <button
+            <ProgressButton
               type="button"
               onClick={handleRevise}
-              disabled={isRevising}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              loading={isRevising}
+              loadingLabel="Überarbeitungsvorschlag wird erstellt …"
             >
               <Sparkles className="h-4 w-4" aria-hidden />
-              {isRevising
-                ? "Überarbeitungsvorschlag wird erstellt …"
-                : "Überarbeitungsvorschlag erstellen"}
-            </button>
+              Überarbeitungsvorschlag erstellen
+            </ProgressButton>
             <p className="inline-flex items-center gap-1 text-xs text-text-muted">
               <Pencil className="h-3 w-3" aria-hidden />
               Du kannst die Dimensionen auch manuell über das Stift-Symbol
@@ -202,19 +201,15 @@ export function Phase2View({
             ? "Neu entwickeln ersetzt nur Entwürfe — übernommene Optionen bleiben erhalten."
             : "Aus den übernommenen Aussagen deines Analysebilds entstehen 2–3 abgegrenzte Strategieoptionen."}
         </p>
-        <button
+        <ProgressButton
           type="button"
           onClick={handleGenerate}
-          disabled={isGenerating}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          loading={isGenerating}
+          loadingLabel="Optionen werden entwickelt …"
         >
           <Sparkles className="h-4 w-4" aria-hidden />
-          {isGenerating
-            ? "Optionen werden entwickelt …"
-            : hasOptions
-              ? "Optionen neu entwickeln"
-              : "Optionen entwickeln"}
-        </button>
+          {hasOptions ? "Optionen neu entwickeln" : "Optionen entwickeln"}
+        </ProgressButton>
       </div>
 
       {error && <PhaseErrorState message={error} />}

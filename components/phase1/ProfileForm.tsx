@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
+import { ProgressButton } from "@/components/ui/ProgressButton";
 
 export type ProfileData = {
   id: string;
@@ -299,18 +300,20 @@ export function ProfileForm({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
-        <button
+        <ProgressButton
           type="submit"
-          disabled={busy || !form.businessIdea.trim()}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+          loading={busy}
+          loadingPhase={isGenerating ? "generate" : "save"}
+          loadingLabel={
+            isGenerating
+              ? "Analyse wird erstellt …"
+              : "Profil wird gespeichert …"
+          }
+          disabled={!form.businessIdea.trim()}
         >
           <Sparkles className="h-4 w-4" aria-hidden />
-          {isGenerating
-            ? "Analyse wird erstellt …"
-            : isSaving
-              ? "Profil wird gespeichert …"
-              : "Analyse erstellen"}
-        </button>
+          Analyse erstellen
+        </ProgressButton>
         {hasResults && !busy && (
           <span className="text-xs text-text-muted">
             {hasAdopted

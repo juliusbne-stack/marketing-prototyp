@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SEGMENT_ASPECTS } from "@/lib/segmentAspects";
+import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
 
 export const PESTEL_CATEGORIES = [
   "PESTEL_POLITICAL",
@@ -38,6 +39,7 @@ const phase1Category = z.enum([
 ]);
 
 const segmentAspect = z.enum(SEGMENT_ASPECTS);
+const competitorAspect = z.enum(COMPETITOR_ASPECTS);
 
 const phase1StatementSchema = z
   .object({
@@ -50,21 +52,57 @@ const phase1StatementSchema = z
     uncertainty: z.string().trim().nullish(),
     segmentLabel: z.string().trim().min(1).nullish(),
     segmentAspect: segmentAspect.nullish(),
+    competitorLabel: z.string().trim().min(1).nullish(),
+    competitorAspect: competitorAspect.nullish(),
   })
   .superRefine((data, ctx) => {
-    if (data.category !== "TARGET_SEGMENT") return;
-    if (!data.segmentLabel?.trim()) {
+    if (data.category === "TARGET_SEGMENT") {
+      if (!data.segmentLabel?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "segmentLabel ist bei TARGET_SEGMENT Pflicht.",
+          path: ["segmentLabel"],
+        });
+      }
+      if (!data.segmentAspect) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "segmentAspect ist bei TARGET_SEGMENT Pflicht.",
+          path: ["segmentAspect"],
+        });
+      }
+    }
+
+    if (data.category === "COMPETITOR") {
+      const hasLabel = !!data.competitorLabel?.trim();
+      const hasAspect = !!data.competitorAspect;
+      if (hasLabel !== hasAspect) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "competitorLabel und competitorAspect müssen bei COMPETITOR-Profilen gemeinsam gesetzt sein.",
+          path: ["competitorLabel"],
+        });
+      }
+    }
+
+    if (data.category !== "TARGET_SEGMENT" && (data.segmentLabel || data.segmentAspect)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "segmentLabel ist bei TARGET_SEGMENT Pflicht.",
+        message: "segmentLabel/segmentAspect sind nur bei TARGET_SEGMENT erlaubt.",
         path: ["segmentLabel"],
       });
     }
-    if (!data.segmentAspect) {
+
+    if (
+      data.category !== "COMPETITOR" &&
+      (data.competitorLabel || data.competitorAspect)
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "segmentAspect ist bei TARGET_SEGMENT Pflicht.",
-        path: ["segmentAspect"],
+        message:
+          "competitorLabel/competitorAspect sind nur bei COMPETITOR erlaubt.",
+        path: ["competitorLabel"],
       });
     }
   });

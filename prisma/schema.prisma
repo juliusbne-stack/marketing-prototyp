@@ -106,8 +106,10 @@ model Statement {
   uncertainty    String?           @db.Text // Unsicherheitshinweis (NF2)
   isCritical     Boolean           @default(false) // kritische Annahme (Phase 4)
   adopted        Boolean           @default(false) // Übernahme-Prinzip (F10/NF3/NF5)
-  segmentLabel   String?           // Zielgruppensegment-Name (nur TARGET_SEGMENT)
-  segmentAspect  String?           // Segmentdimension: DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
+  segmentLabel     String?           // Zielgruppensegment-Name (nur TARGET_SEGMENT)
+  segmentAspect    String?           // Segmentdimension: DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
+  competitorLabel  String?           // Wettbewerber-/Alternativen-Name (nur COMPETITOR-Profile)
+  competitorAspect String?           // Profildimension: ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
@@ -192,11 +194,14 @@ model ValidationStep {
   title        String
   description  String         @db.Text // Maßnahme/Experiment/MVP-Schritt
   channel      String?        // z.B. Landingpage, Instagram, Interviews
+  timeframe    String?        // z.B. "3 Wochen" — begrenzter Umsetzungszeitraum
+  budgetFrame  String?        // z.B. "max. 150 € von 500 €/Monat"
   adopted      Boolean        @default(false)
   createdAt    DateTime       @default(now())
 
   metrics   Metric[]
   feedbacks MarketFeedback[]
+  tasks     Task[]
 }
 
 model Metric {
@@ -206,6 +211,37 @@ model Metric {
   name             String         // z.B. "Registrierungen in 2 Wochen"
   successCriterion String         // gilt als stützend, wenn ...
   failureCriterion String         // gilt als widerlegend, wenn ...
+
+  dataPoints KpiDataPoint[]
+}
+
+// ----------------------------------------------------------------------------
+// Umsetzungs-Cockpit: Begleitansicht der Umsetzungsperiode zwischen Phase 4 und 5
+// ----------------------------------------------------------------------------
+model Task {
+  id        String         @id @default(cuid())
+  stepId    String
+  step      ValidationStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  title     String         // kleinteilige Aufgabe in Verb-Form
+  hint      String?        // kurzer Praxistipp (1 Satz)
+  sortOrder Int            // chronologische Reihenfolge innerhalb des Schritts
+  done      Boolean        @default(false)
+}
+
+enum KpiAssessment {
+  SUPPORTING    // Wert stützt das Erfolgskriterium
+  NEUTRAL       // Wert ist uneindeutig
+  CONTRADICTING // Wert reißt das Misserfolgskriterium
+}
+
+model KpiDataPoint {
+  id          String        @id @default(cuid())
+  metricId    String
+  metric      Metric        @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  periodLabel String        // z.B. "Woche 1"
+  value       String        // fiktiver Perioden-Wert (Text, z.B. "12 Registrierungen")
+  assessment  KpiAssessment
+  createdAt   DateTime      @default(now())
 }
 
 // ----------------------------------------------------------------------------

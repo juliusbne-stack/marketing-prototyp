@@ -10,6 +10,9 @@ REGELN:
 - Halte den Ressourcenrahmen aus dem Profil ein (Budget, Teamgröße, Zeit,
   Fähigkeiten). Der Schritt bleibt konkret in 1–3 Wochen umsetzbar, kein
   breiter Rollout.
+- timeframe und budgetFrame MÜSSEN gesetzt sein und an das Feedback angepasst
+  werden, wenn es Ressourcen oder den Zeitraum betrifft (siehe Regeln oben in
+  Phase 4: begrenzter Zeitraum 1–4 Wochen, tragbarer Budgetanteil).
 - previousFeedbackRounds enthält die Nutzeranweisungen früherer
   Verfeinerungsrunden (mit dem Titel des jeweiligen Ergebnisses). Respektiere
   ALLE bisherigen Anweisungen weiterhin, sofern das aktuelle Feedback sie
@@ -27,6 +30,8 @@ AUSGABEFORMAT (JSON, exakt dieses Schema):
   "title": "string",
   "description": "string (Was wird gemacht, warum dieser Kanal, welcher Aufwand)",
   "channel": "string | null",
+  "timeframe": "string (begrenzter Zeitraum, z. B. 2 Wochen)",
+  "budgetFrame": "string (tragbarer Budgeteinsatz, z. B. 0 € — Zeiteinsatz ca. 4 Std./Woche)",
   "metrics": [
     {
       "name": "string",

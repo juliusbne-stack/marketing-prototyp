@@ -2,7 +2,7 @@
 
 Diese Datei definiert den globalen Systemprompt-Baustein und die fünf phasenspezifischen Prompts. In `lib/prompts/*.ts` als Template-Strings ablegen. Jeder LLM-Aufruf = `GLOBAL + PHASE_N + Projektkontext (JSON aus der DB)`. Antwortformat: `response_format: { type: "json_object" }`, Validierung mit Zod (Schemata unten spiegeln).
 
-**Kontext-Regel:** Als Projektkontext werden das Start-up-Profil (inkl. Ressourcenangaben) und ausschließlich `adopted=true` Statements der Vorphasen mitgegeben. Bei `TARGET_SEGMENT`-Statements aus Phase 1 werden `segmentLabel` und `segmentAspect` mit übergeben, damit die KI zusammengehörige Segmentprofile erkennt.
+**Kontext-Regel:** Als Projektkontext werden das Start-up-Profil (inkl. Ressourcenangaben) und ausschließlich `adopted=true` Statements der Vorphasen mitgegeben. Bei `TARGET_SEGMENT`-Statements aus Phase 1 werden `segmentLabel` und `segmentAspect` mit übergeben, damit die KI zusammengehörige Segmentprofile erkennt. Bei `COMPETITOR`-Profilen werden `competitorLabel` und `competitorAspect` mit übergeben.
 
 ---
 
@@ -42,6 +42,10 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   Jede Aussage gehört zu einem Segmentprofil (gemeinsames segmentLabel) und einer
   von fünf Dimensionen (segmentAspect). Der content muss die jeweilige Dimension
   als eigenständig prüfbare Behauptung formulieren — nicht nur den Segmentnamen
+  wiederholen. Bei Wettbewerberprofilen (COMPETITOR mit competitorLabel) gilt analog:
+  Jede Aussage gehört zu einem Profil (gemeinsames competitorLabel) und einer von
+  sechs Dimensionen (competitorAspect). Der content muss die jeweilige Dimension
+  als eigenständig prüfbare Behauptung formulieren — nicht nur den Akteursnamen
   wiederholen.
 
 RESSOURCENSENSIBILITÄT: Berücksichtige immer Budget, Teamgröße, Zeit und Fähigkeiten
@@ -94,8 +98,34 @@ Erzeuge Aussagen in diesen Bereichen:
    WILLINGNESS_TO_PAY (oft OPEN_QUESTION). Wenn der Nutzer keine Zielgruppe angegeben
    hat, leite die Segmente aus Geschäftsidee, Problem und Nutzenversprechen ab.
 3. CUSTOMER_PROBLEM: 2–4 Aussagen zu Kundenproblemen und deren Relevanz.
-4. COMPETITOR: 3–5 fiktive Wettbewerber/Alternativen/Ersatzlösungen (auch
-   Nicht-Nutzung oder manuelle Lösungen zählen als Alternative).
+4. COMPETITOR — ZWEI TEILE:
+
+   a) WETTBEWERBERPROFILE: Identifiziere 5–7 relevante Akteure nach der
+      Start-up-Definition: alle Unternehmen, Angebote oder Lösungen, die aus
+      Kundensicht dasselbe Problem lösen, dasselbe Bedürfnis erfüllen oder eine
+      ähnliche Alternative darstellen. Dazu gehören auch direkte Software-
+      Wettbewerber, indirekte Anbieter (z. B. Agenturen), Substitute (Excel,
+      manuelle Prozesse) und Status-quo-Alternativen (Nicht-Nutzung).
+
+      Pro Akteur GENAU 6 Aussagen (category COMPETITOR) mit demselben
+      competitorLabel (fiktiver Name, z. B. „SocialFlow Pro (fiktiv)") und je
+      einem competitorAspect:
+      - ENTITY_TYPE: Art aus Kundensicht (direkter Wettbewerber, indirekter
+        Wettbewerber, Substitut oder Status quo) — als prüfbarer Satz.
+      - OFFERING: Was das Angebot aus Kundensicht leistet.
+      - TARGET_CUSTOMERS: Für wen primär gedacht (Segment, Region).
+      - PRICING: Preismodell/Preisspanne — origin SIMULATED_RESEARCH mit
+        sourceRef, realistische Spannen statt Scheinpräzision.
+      - SCALE: Größe/Reichweite (z. B. Nutzer, Umsatzgrößenordnung, Team) —
+        origin SIMULATED_RESEARCH mit sourceRef, als Spanne oder Schätzung.
+      - RELEVANCE: Warum dieser Akteur für das Start-up relevant ist.
+
+      Jede Profil-Aussage bleibt ein eigenständig prüfbarer Aussagesatz mit
+      eigenem Evidenzstatus. Kennzahlen typischerweise ASSUMPTION oder
+      OPEN_QUESTION, wenn unsicher.
+
+   b) LANDSCHAFTS-AUSSAGEN: 2–3 übergreifende COMPETITOR-Statements OHNE
+      competitorLabel (Marktstruktur, typisches Kundenverhalten, Lücken).
 5. RESOURCE: 2–4 Aussagen zu internen Ressourcen/Fähigkeiten (aus dem Profil,
    meist FACT mit origin USER_INPUT).
 6. SWOT: je Quadrant (STRENGTH, WEAKNESS, OPPORTUNITY, THREAT) 2–3 Aussagen,
@@ -131,7 +161,9 @@ Konsistenzregeln:
       "sourceRef": "string | null  (Pflicht bei SIMULATED_RESEARCH, endet mit '(fiktiv)')",
       "uncertainty": "string | null",
       "segmentLabel": "string | null  (Pflicht bei TARGET_SEGMENT: Name des Segments, z. B. Studierende mit begrenztem Budget)",
-      "segmentAspect": "DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)"
+      "segmentAspect": "DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)",
+      "competitorLabel": "string | null  (Pflicht bei COMPETITOR-Profilen: fiktiver Akteursname, z. B. SocialFlow Pro (fiktiv))",
+      "competitorAspect": "ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE | null  (Pflicht bei COMPETITOR-Profilen)"
     }
   ]
 }
@@ -363,6 +395,97 @@ REGELN:
   }
 }
 ```
+
+---
+
+## UMSETZUNGS-COCKPIT — Aufgabenzerlegung (`lib/prompts/tasks.ts`, Route `api/ai/tasks`)
+
+```
+AUFGABE: Zerlege GENAU DEN übergebenen, übernommenen Umsetzungsschritt (step)
+in 3–7 kleinteilige, chronologisch geordnete Aufgaben für die Umsetzungsperiode.
+
+REGELN:
+- Die Aufgaben decken den Schritt vollständig ab: von der Vorbereitung über die
+  Durchführung bis zur Erfassung der definierten Messpunkte (metrics).
+- Chronologische Reihenfolge: Die erste Aufgabe ist sofort startbar, jede
+  weitere baut auf den vorherigen auf.
+- Halte den Ressourcenrahmen aus dem Profil ein (Budget, Teamgröße, Zeit,
+  Fähigkeiten). Keine Aufgabe darf Werkzeuge oder Ausgaben voraussetzen, die
+  das Profil offensichtlich übersteigen.
+- title: kurze, konkrete Verb-Formulierung ("Interviewleitfaden mit 5 Fragen
+  schreiben", "Landingpage-Text entwerfen") — keine vagen Sammelaufgaben wie
+  "Marketing vorbereiten".
+- hint: GENAU 1 Satz Praxistipp zur Umsetzung der Aufgabe (Werkzeug, Abkürzung,
+  typischer Fehler). Kein Marketing-Ton.
+- Jede Aufgabe ist in wenigen Stunden bis maximal wenigen Tagen erledigbar.
+```
+
+**JSON-Schema Aufgabenzerlegung:**
+```json
+{
+  "tasks": [
+    {
+      "title": "string (Verb-Form, konkret)",
+      "hint": "string (1 Satz Praxistipp)"
+    }
+  ]
+}
+```
+
+Persistierung: `Task` mit `sortOrder` in Array-Reihenfolge, `done=false`. Nur für übernommene Schritte; nur wenn noch keine Aufgaben existieren.
+
+---
+
+## UMSETZUNGS-COCKPIT — KPI-Simulation (`lib/prompts/kpiSimulation.ts`, Route `api/kpi/simulate`)
+
+Anfrage: `stepId` + Szenario (`SUPPORTING | MIXED | CONTRADICTING`, vom Nutzer per Chip gewählt — das Szenario wird nicht persistiert).
+
+```
+AUFGABE: Erzeuge für JEDE übergebene Metrik (metrics) des Umsetzungsschritts
+3–5 plausible, FIKTIVE Perioden-Werte, die zum gewählten Szenario (scenario)
+UND zu den definierten Schwellen der Metrik passen.
+
+REGELN:
+- Szenario-Treue (bezogen auf successCriterion und failureCriterion der Metrik):
+  - SUPPORTING: Die Werte liegen überwiegend über der Stütz-Schwelle
+    (successCriterion erfüllt); einzelne Perioden dürfen schwächer ausfallen,
+    der Gesamttrend stützt die Annahme.
+  - CONTRADICTING: Die Werte reißen überwiegend das Misserfolgskriterium
+    (failureCriterion erfüllt); der Gesamttrend widerspricht der Annahme.
+  - MIXED: Uneinheitliches Bild — Mischung aus stützenden, neutralen und
+    widersprechenden Perioden ohne klaren Trend.
+- assessment je Punkt EHRLICH aus dem Wert ableiten: SUPPORTING nur, wenn der
+  Wert das successCriterion erfüllt; CONTRADICTING nur, wenn er das
+  failureCriterion erfüllt; sonst NEUTRAL.
+- value: kurzer, konkreter Wert mit Einheit bzw. Bezugsgröße. Realistische
+  Größenordnungen für den Ressourcenrahmen des Profils — keine Scheinpräzision.
+- periodLabel: fortlaufende, gleichartige Perioden ("Woche 1", "Woche 2", …).
+  Wenn im Kontext existingPeriodLabels übergeben werden, setze die Zählung
+  nahtlos fort (nach "Woche 3" folgt "Woche 4") statt neu zu beginnen.
+- Alle Metriken erhalten dieselben Perioden-Labels (gleicher Zeitraum).
+- Die Werte sind Teil des Simulationsmodus und damit FIKTIV — erfinde keine
+  Quellen, es sind eigene (simulierte) Messwerte des Start-ups.
+```
+
+**JSON-Schema KPI-Simulation:**
+```json
+{
+  "series": [
+    {
+      "metricId": "string (aus dem Kontext übernehmen)",
+      "points": [
+        {
+          "periodLabel": "string (z. B. Woche 1)",
+          "value": "string",
+          "assessment": "SUPPORTING | NEUTRAL | CONTRADICTING"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Persistierung: `KpiDataPoint` je Punkt, neue Punkte werden ANGEHÄNGT (Verlauf über mehrere Simulationen). Die Brücke zu Phase 5 (`api/kpi/feedback`) ist bewusst LLM-frei: Ein Template (`lib/kpiSummary.ts`) fasst die Datenpunkte sachlich zusammen und legt ein `MarketFeedback` als Entwurf an — Auswertung erst durch den Nutzer in Phase 5.
 
 ---
 

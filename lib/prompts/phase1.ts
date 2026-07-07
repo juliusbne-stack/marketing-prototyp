@@ -34,8 +34,34 @@ Erzeuge Aussagen in diesen Bereichen:
    WILLINGNESS_TO_PAY (oft OPEN_QUESTION). Wenn der Nutzer keine Zielgruppe angegeben
    hat, leite die Segmente aus Geschäftsidee, Problem und Nutzenversprechen ab.
 3. CUSTOMER_PROBLEM: 2–4 Aussagen zu Kundenproblemen und deren Relevanz.
-4. COMPETITOR: 3–5 fiktive Wettbewerber/Alternativen/Ersatzlösungen (auch
-   Nicht-Nutzung oder manuelle Lösungen zählen als Alternative).
+4. COMPETITOR — ZWEI TEILE:
+
+   a) WETTBEWERBERPROFILE: Identifiziere 5–7 relevante Akteure nach der
+      Start-up-Definition: alle Unternehmen, Angebote oder Lösungen, die aus
+      Kundensicht dasselbe Problem lösen, dasselbe Bedürfnis erfüllen oder eine
+      ähnliche Alternative darstellen. Dazu gehören auch direkte Software-
+      Wettbewerber, indirekte Anbieter (z. B. Agenturen), Substitute (Excel,
+      manuelle Prozesse) und Status-quo-Alternativen (Nicht-Nutzung).
+
+      Pro Akteur GENAU 6 Aussagen (category COMPETITOR) mit demselben
+      competitorLabel (fiktiver Name, z. B. „SocialFlow Pro (fiktiv)") und je
+      einem competitorAspect:
+      - ENTITY_TYPE: Art aus Kundensicht (direkter Wettbewerber, indirekter
+        Wettbewerber, Substitut oder Status quo) — als prüfbarer Satz.
+      - OFFERING: Was das Angebot aus Kundensicht leistet.
+      - TARGET_CUSTOMERS: Für wen primär gedacht (Segment, Region).
+      - PRICING: Preismodell/Preisspanne — origin SIMULATED_RESEARCH mit
+        sourceRef, realistische Spannen statt Scheinpräzision.
+      - SCALE: Größe/Reichweite (z. B. Nutzer, Umsatzgrößenordnung, Team) —
+        origin SIMULATED_RESEARCH mit sourceRef, als Spanne oder Schätzung.
+      - RELEVANCE: Warum dieser Akteur für das Start-up relevant ist.
+
+      Jede Profil-Aussage bleibt ein eigenständig prüfbarer Aussagesatz mit
+      eigenem Evidenzstatus. Kennzahlen typischerweise ASSUMPTION oder
+      OPEN_QUESTION, wenn unsicher.
+
+   b) LANDSCHAFTS-AUSSAGEN: 2–3 übergreifende COMPETITOR-Statements OHNE
+      competitorLabel (Marktstruktur, typisches Kundenverhalten, Lücken).
 5. RESOURCE: 2–4 Aussagen zu internen Ressourcen/Fähigkeiten (aus dem Profil,
    meist FACT mit origin USER_INPUT).
 6. SWOT: je Quadrant (STRENGTH, WEAKNESS, OPPORTUNITY, THREAT) 2–3 Aussagen,
@@ -69,7 +95,9 @@ AUSGABEFORMAT (JSON, exakt dieses Schema):
       "sourceRef": "string | null  (Pflicht bei SIMULATED_RESEARCH, endet mit '(fiktiv)')",
       "uncertainty": "string | null",
       "segmentLabel": "string | null  (Pflicht bei TARGET_SEGMENT: Name des Segments, z. B. Studierende mit begrenztem Budget)",
-      "segmentAspect": "DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)"
+      "segmentAspect": "DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)",
+      "competitorLabel": "string | null  (Pflicht bei COMPETITOR-Profilen: fiktiver Akteursname, z. B. SocialFlow Pro (fiktiv))",
+      "competitorAspect": "ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE | null  (Pflicht bei COMPETITOR-Profilen)"
     }
   ]
 }`;

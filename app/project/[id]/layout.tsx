@@ -13,10 +13,14 @@ export default async function ProjectLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const project = await prisma.project.findUnique({
-    where: { id },
-    select: { id: true, name: true, currentPhase: true },
-  });
+  const [project, adoptedStepCount] = await Promise.all([
+    prisma.project.findUnique({
+      where: { id },
+      select: { id: true, name: true, currentPhase: true },
+    }),
+    // The implementation cockpit unlocks with the first adopted step.
+    prisma.validationStep.count({ where: { projectId: id, adopted: true } }),
+  ]);
 
   if (!project) {
     notFound();
@@ -44,6 +48,7 @@ export default async function ProjectLayout({
         <PhaseStepper
           projectId={project.id}
           currentPhase={project.currentPhase}
+          cockpitUnlocked={adoptedStepCount > 0}
         />
         <main className="w-full max-w-[960px] flex-1">{children}</main>
       </div>

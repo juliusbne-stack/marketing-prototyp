@@ -257,6 +257,8 @@ export async function POST(request: Request) {
           title: step.title,
           description: step.description,
           channel: step.channel ?? null,
+          timeframe: step.timeframe,
+          budgetFrame: step.budgetFrame,
           adopted: false,
           metrics: {
             create: step.metrics.map((metric) => ({
