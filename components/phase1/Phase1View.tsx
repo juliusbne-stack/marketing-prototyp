@@ -41,10 +41,12 @@ export function Phase1View({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAdoptingAll, setIsAdoptingAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [analysisInfo, setAnalysisInfo] = useState<string | null>(null);
 
   async function handleAnalyze() {
     setIsGenerating(true);
     setError(null);
+    setAnalysisInfo(null);
     try {
       const response = await fetch("/api/ai/1", {
         method: "POST",
@@ -58,6 +60,20 @@ export function Phase1View({
       setStatements(body.statements);
       if (Array.isArray(body.pestelRelevance)) {
         setPestelRelevance(body.pestelRelevance);
+      }
+      if (body.filteredDuplicateCount > 0) {
+        setAnalysisInfo(
+          `${body.filteredDuplicateCount} ähnliche Aussage${body.filteredDuplicateCount === 1 ? "" : "n"} wurden nicht ergänzt — sie sind bereits im Projektstand enthalten.`
+        );
+      } else if (body.incremental) {
+        const draftCount = (body.statements as StatementData[]).filter(
+          (statement) => !statement.adopted
+        ).length;
+        if (draftCount === 0) {
+          setAnalysisInfo(
+            "Keine neuen Aussagen ergänzt — der bestehende Projektstand deckt das Profil bereits ab."
+          );
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : AI_ERROR_FALLBACK);
@@ -142,8 +158,13 @@ export function Phase1View({
         project={project}
         isGenerating={isGenerating}
         hasResults={hasResults}
+        hasAdopted={hasAdopted}
         onAnalyze={handleAnalyze}
       />
+
+      {analysisInfo && !error && (
+        <p className="text-xs text-text-muted">{analysisInfo}</p>
+      )}
 
       {error && <PhaseErrorState message={error} />}
 

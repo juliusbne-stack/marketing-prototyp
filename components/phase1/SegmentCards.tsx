@@ -273,6 +273,7 @@ function CustomerProblemsCard({
               key={statement.id}
               statement={statement}
               showOriginInline
+              showAdoptInline
               validationHistory={validationHistoryByStatementId?.get(statement.id)}
               onChanged={onChanged}
               onDeleted={onDeleted}

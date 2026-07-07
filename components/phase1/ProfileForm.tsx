@@ -41,11 +41,13 @@ export function ProfileForm({
   project,
   isGenerating,
   hasResults,
+  hasAdopted,
   onAnalyze,
 }: {
   project: ProfileData;
   isGenerating: boolean;
   hasResults: boolean;
+  hasAdopted?: boolean;
   onAnalyze: () => Promise<void>;
 }) {
   const [form, setForm] = useState({
@@ -311,8 +313,9 @@ export function ProfileForm({
         </button>
         {hasResults && !busy && (
           <span className="text-xs text-text-muted">
-            Erneutes Erstellen ersetzt nicht übernommene Entwürfe — übernommene
-            Aussagen bleiben erhalten.
+            {hasAdopted
+              ? "Erneute Analyse ergänzt nur neue, noch nicht abgedeckte Aussagen — übernommene bleiben erhalten, nicht übernommene Entwürfe werden ersetzt."
+              : "Erneutes Erstellen ersetzt nicht übernommene Entwürfe — übernommene Aussagen bleiben erhalten."}
           </span>
         )}
         {error && <p className="text-xs text-danger-text">{error}</p>}

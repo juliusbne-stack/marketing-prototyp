@@ -12,6 +12,7 @@ export function CompactStatementRow({
   statement,
   aspectLabel,
   showOriginInline = false,
+  showAdoptInline = false,
   validationHistory,
   onChanged,
   onDeleted,
@@ -21,6 +22,8 @@ export function CompactStatementRow({
   statement?: StatementData;
   aspectLabel?: string;
   showOriginInline?: boolean;
+  /** Draft label + adopt button visible while collapsed (e.g. Kundenprobleme list). */
+  showAdoptInline?: boolean;
   validationHistory?: ValidationHistoryCounts | null;
   onChanged?: (statement: StatementData) => void;
   onDeleted?: (id: string) => void;
@@ -141,6 +144,24 @@ export function CompactStatementRow({
     "text-xs font-semibold uppercase tracking-wide text-text-muted";
   const rowPadding = layout === "column" ? "py-2" : "py-3";
 
+  const inlineAdoptAction =
+    showAdoptInline && !row.adopted && !expanded ? (
+      <>
+        <span className="text-xs font-medium uppercase tracking-wide text-accent">
+          Entwurf
+        </span>
+        <button
+          type="button"
+          onClick={() => patch({ adopted: true })}
+          disabled={isBusy}
+          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+        >
+          <Check className="h-3.5 w-3.5" aria-hidden />
+          Einzeln übernehmen
+        </button>
+      </>
+    ) : null;
+
   return (
     <div className={`min-w-0 ${rowPadding} ${isBusy ? "opacity-60" : ""}`}>
       <div className="flex min-w-0 items-start gap-1.5">
@@ -172,6 +193,7 @@ export function CompactStatementRow({
                     onChange={(status) => patch({ evidenceStatus: status })}
                     disabled={isBusy}
                   />
+                  {inlineAdoptAction}
                 </span>
               </div>
             </div>
@@ -196,10 +218,15 @@ export function CompactStatementRow({
                       onChange={(status) => patch({ evidenceStatus: status })}
                       disabled={isBusy}
                     />
+                    {inlineAdoptAction}
                   </span>
                 </div>
               </div>
             </div>
+          )}
+
+          {error && !expanded && (
+            <p className="mt-1.5 text-xs text-danger-text">{error}</p>
           )}
 
           {expanded && (

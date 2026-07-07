@@ -69,7 +69,7 @@ const phase1StatementSchema = z
     }
   });
 
-function validatePestelRelevanceConsistency(
+function validatePestelStructure(
   data: {
     pestelRelevance: PestelRelevance[];
     statements: z.infer<typeof phase1StatementSchema>[];
@@ -105,13 +105,33 @@ function validatePestelRelevanceConsistency(
       });
     }
   }
+}
 
+function validatePestelRelevanceConsistency(
+  data: {
+    pestelRelevance: PestelRelevance[];
+    statements: z.infer<typeof phase1StatementSchema>[];
+  },
+  ctx: z.RefinementCtx
+) {
+  validatePestelStructure(data, ctx);
+  validatePestelNewStatements(data, ctx, () => false);
+}
+
+function validatePestelNewStatements(
+  data: {
+    pestelRelevance: PestelRelevance[];
+    statements: z.infer<typeof phase1StatementSchema>[];
+  },
+  ctx: z.RefinementCtx,
+  hasAdoptedInCategory: (category: string) => boolean
+) {
   for (const entry of data.pestelRelevance) {
-    const hasStatements = data.statements.some(
+    const hasNewStatements = data.statements.some(
       (statement) => statement.category === entry.category
     );
 
-    if (!entry.relevant && hasStatements) {
+    if (!entry.relevant && hasNewStatements) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Für ${entry.category} ist relevant=false, aber es gibt Statements in dieser Kategorie.`,
@@ -119,7 +139,11 @@ function validatePestelRelevanceConsistency(
       });
     }
 
-    if (entry.relevant && !hasStatements) {
+    if (
+      entry.relevant &&
+      !hasNewStatements &&
+      !hasAdoptedInCategory(entry.category)
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Für ${entry.category} ist relevant=true, aber es fehlt mindestens eine Aussage in statements.`,
@@ -135,6 +159,38 @@ export const phase1ResponseSchema = z
     statements: z.array(phase1StatementSchema).min(1),
   })
   .superRefine(validatePestelRelevanceConsistency);
+
+function validatePestelRelevanceIncremental(
+  data: {
+    pestelRelevance: PestelRelevance[];
+    statements: z.infer<typeof phase1StatementSchema>[];
+  },
+  adoptedCategories: Set<string>,
+  ctx: z.RefinementCtx
+) {
+  validatePestelStructure(data, ctx);
+  validatePestelNewStatements(data, ctx, (category) =>
+    adoptedCategories.has(category)
+  );
+}
+
+/** Relaxed schema for follow-up analyses when adopted statements already exist. */
+export function createPhase1IncrementalResponseSchema(
+  adoptedStatements: Array<{ category: string }>
+) {
+  const adoptedCategories = new Set(
+    adoptedStatements.map((statement) => statement.category)
+  );
+
+  return z
+    .object({
+      pestelRelevance: z.array(pestelRelevanceEntrySchema),
+      statements: z.array(phase1StatementSchema),
+    })
+    .superRefine((data, ctx) =>
+      validatePestelRelevanceIncremental(data, adoptedCategories, ctx)
+    );
+}
 
 export type Phase1Response = z.infer<typeof phase1ResponseSchema>;
 export type Phase1Statement = z.infer<typeof phase1StatementSchema>;
