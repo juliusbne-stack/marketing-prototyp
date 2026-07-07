@@ -31,6 +31,7 @@ function SegmentProfileCard({
   onChanged,
   onDeleted,
   onAdded,
+  layout = "vertical",
 }: {
   projectId: string;
   segmentLabel: string;
@@ -38,6 +39,7 @@ function SegmentProfileCard({
   onChanged: (statement: StatementData) => void;
   onDeleted: (id: string) => void;
   onAdded: (statement: StatementData) => void;
+  layout?: "vertical" | "horizontal";
 }) {
   const { facts, assumptions, open } = evidenceCounts(statements);
   const hasDraft = statements.some((statement) => !statement.adopted);
@@ -185,22 +187,40 @@ function SegmentProfileCard({
         )}
       </header>
 
-      <div className="divide-y divide-border/70">
+      <div
+        className={
+          layout === "horizontal"
+            ? "mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2"
+            : "divide-y divide-border/70"
+        }
+      >
         {SEGMENT_ASPECTS.map((aspect) => {
           const statement = statements.find(
             (candidate) => candidate.segmentAspect === aspect
           );
 
-          return (
-            <CompactStatementRow
-              key={aspect}
-              statement={statement}
-              aspectLabel={SEGMENT_ASPECT_LABELS[aspect]}
-              onChanged={onChanged}
-              onDeleted={onDeleted}
-              emptyPlaceholder="Noch keine Aussage zu dieser Dimension."
-            />
-          );
+          const rowProps = {
+            statement,
+            aspectLabel: SEGMENT_ASPECT_LABELS[aspect],
+            onChanged,
+            onDeleted,
+            emptyPlaceholder: "Noch keine Aussage zu dieser Dimension.",
+          };
+
+          if (layout === "horizontal") {
+            return (
+              <div
+                key={aspect}
+                className={`min-w-0 rounded-md border border-border/60 bg-background/60 p-3 ${
+                  aspect === "DESCRIPTION" ? "sm:col-span-2" : ""
+                }`}
+              >
+                <CompactStatementRow {...rowProps} layout="column" />
+              </div>
+            );
+          }
+
+          return <CompactStatementRow key={aspect} {...rowProps} layout="row" />;
         })}
       </div>
     </article>
@@ -301,6 +321,8 @@ export function SegmentCards({
   }
 
   const hasAnySegments = segments.length > 0;
+  const segmentCardCount = profileGroups.size + legacySegments.length;
+  const useHorizontalLayout = segmentCardCount === 1;
 
   return (
     <section id="zielgruppen" className="scroll-mt-6">
@@ -308,7 +330,9 @@ export function SegmentCards({
         Zielgruppen & Kundenprobleme
       </h3>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div
+        className={`mt-3 grid gap-3 ${useHorizontalLayout ? "grid-cols-1" : "sm:grid-cols-2"}`}
+      >
         {!hasAnySegments && (
           <p className="text-xs text-text-muted sm:col-span-2">
             Keine Zielgruppenhypothesen vorhanden.
@@ -321,6 +345,7 @@ export function SegmentCards({
             projectId={projectId}
             segmentLabel={segmentLabel}
             statements={group}
+            layout={useHorizontalLayout ? "horizontal" : "vertical"}
             onChanged={onChanged}
             onDeleted={onDeleted}
             onAdded={onAdded}

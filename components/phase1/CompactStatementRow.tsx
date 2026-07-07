@@ -16,6 +16,7 @@ export function CompactStatementRow({
   onChanged,
   onDeleted,
   emptyPlaceholder,
+  layout = "row",
 }: {
   statement?: StatementData;
   aspectLabel?: string;
@@ -24,6 +25,7 @@ export function CompactStatementRow({
   onChanged?: (statement: StatementData) => void;
   onDeleted?: (id: string) => void;
   emptyPlaceholder?: string;
+  layout?: "row" | "column";
 }) {
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -33,17 +35,30 @@ export function CompactStatementRow({
 
   if (!statement) {
     return (
-      <div className="py-3">
-        <div className="flex items-start gap-2">
-          {aspectLabel && (
-            <span className="w-[7.5rem] shrink-0 pt-0.5 text-xs font-semibold uppercase tracking-wide text-text-muted">
-              {aspectLabel}
-            </span>
-          )}
-          <p className="text-sm text-text-muted">
-            {emptyPlaceholder ?? "Noch keine Aussage vorhanden."}
-          </p>
-        </div>
+      <div className={`min-w-0 ${layout === "column" ? "py-2" : "py-3"}`}>
+        {layout === "column" ? (
+          <div className="flex min-w-0 flex-col gap-1.5">
+            {aspectLabel && (
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                {aspectLabel}
+              </span>
+            )}
+            <p className="break-words text-sm text-text-muted">
+              {emptyPlaceholder ?? "Noch keine Aussage vorhanden."}
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2">
+            {aspectLabel && (
+              <span className="w-[7.5rem] shrink-0 pt-0.5 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                {aspectLabel}
+              </span>
+            )}
+            <p className="text-sm text-text-muted">
+              {emptyPlaceholder ?? "Noch keine Aussage vorhanden."}
+            </p>
+          </div>
+        )}
       </div>
     );
   }
@@ -122,9 +137,13 @@ export function CompactStatementRow({
     metaParts.push({ label: "Unsicher", text: row.uncertainty });
   }
 
+  const labelClasses =
+    "text-xs font-semibold uppercase tracking-wide text-text-muted";
+  const rowPadding = layout === "column" ? "py-2" : "py-3";
+
   return (
-    <div className={`py-3 ${isBusy ? "opacity-60" : ""}`}>
-      <div className="flex items-start gap-1.5">
+    <div className={`min-w-0 ${rowPadding} ${isBusy ? "opacity-60" : ""}`}>
+      <div className="flex min-w-0 items-start gap-1.5">
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
@@ -139,15 +158,11 @@ export function CompactStatementRow({
         </button>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-3">
-            {aspectLabel && (
-              <span className="w-[7.5rem] shrink-0 pt-0.5 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                {aspectLabel}
-              </span>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                <p className="text-sm leading-relaxed text-text">
+          {layout === "column" ? (
+            <div className="flex min-w-0 flex-col gap-1.5">
+              {aspectLabel && <span className={labelClasses}>{aspectLabel}</span>}
+              <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                <p className="min-w-0 break-words text-sm leading-relaxed text-text">
                   {row.content}
                 </p>
                 <span className="inline-flex shrink-0 flex-wrap items-center gap-1.5">
@@ -160,10 +175,39 @@ export function CompactStatementRow({
                 </span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              {aspectLabel && (
+                <span
+                  className={`w-[7.5rem] shrink-0 pt-0.5 ${labelClasses}`}
+                >
+                  {aspectLabel}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                  <p className="text-sm leading-relaxed text-text">
+                    {row.content}
+                  </p>
+                  <span className="inline-flex shrink-0 flex-wrap items-center gap-1.5">
+                    {showOriginInline && <OriginTag origin={row.origin} />}
+                    <EvidenceBadge
+                      status={row.evidenceStatus}
+                      onChange={(status) => patch({ evidenceStatus: status })}
+                      disabled={isBusy}
+                    />
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {expanded && (
-            <div className="mt-3 border-t border-border/70 pt-3 pl-5">
+            <div
+              className={`mt-3 border-t border-border/70 pt-3 ${
+                layout === "column" ? "" : "pl-5"
+              }`}
+            >
               {!showOriginInline && (
                 <div className="mb-2">
                   <OriginTag origin={row.origin} />
@@ -171,9 +215,9 @@ export function CompactStatementRow({
               )}
 
               {metaParts.length > 0 && (
-                <div className="space-y-1 text-[13px] text-text-muted">
+                <div className="space-y-1 break-words text-[13px] text-text-muted">
                   {metaParts.map((part) => (
-                    <p key={part.label}>
+                    <p key={part.label} className="break-words">
                       <span className="font-medium">{part.label}:</span> {part.text}
                     </p>
                   ))}

@@ -30,6 +30,7 @@ const TIME_OPTIONS = [
 
 const inputClasses =
   "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted";
+const textareaClasses = `${inputClasses} resize-none`;
 const labelClasses = "flex flex-col gap-1 text-xs font-medium text-text-muted";
 
 /**
@@ -138,10 +139,10 @@ export function ProfileForm({
           <textarea
             value={form.businessIdea}
             onChange={set("businessIdea")}
-            rows={3}
+            rows={4}
             required
             placeholder="Was bietest du an, für wen, und was ist daran besonders?"
-            className={inputClasses}
+            className={textareaClasses}
             disabled={busy}
           />
         </label>
@@ -180,9 +181,9 @@ export function ProfileForm({
           <textarea
             value={form.assumedTarget}
             onChange={set("assumedTarget")}
-            rows={2}
+            rows={3}
             placeholder="Leer lassen, wenn noch unklar — die KI schlägt Zielgruppenhypothesen vor"
-            className={inputClasses}
+            className={textareaClasses}
             disabled={busy}
           />
         </label>
@@ -192,9 +193,9 @@ export function ProfileForm({
           <textarea
             value={form.assumedProblem}
             onChange={set("assumedProblem")}
-            rows={2}
+            rows={3}
             placeholder="Welches Problem löst dein Angebot?"
-            className={inputClasses}
+            className={textareaClasses}
             disabled={busy}
           />
         </label>
@@ -204,9 +205,9 @@ export function ProfileForm({
           <textarea
             value={form.valuePropDraft}
             onChange={set("valuePropDraft")}
-            rows={2}
+            rows={3}
             placeholder="Warum sollten Kunden zu dir kommen?"
-            className={inputClasses}
+            className={textareaClasses}
             disabled={busy}
           />
         </label>
@@ -216,9 +217,9 @@ export function ProfileForm({
           <textarea
             value={form.revenueIdea}
             onChange={set("revenueIdea")}
-            rows={2}
+            rows={3}
             placeholder="Wie soll Geld verdient werden? (z. B. Abo, Kursgebühr)"
-            className={inputClasses}
+            className={textareaClasses}
             disabled={busy}
           />
         </label>
@@ -275,9 +276,9 @@ export function ProfileForm({
           <textarea
             value={form.skills}
             onChange={set("skills")}
-            rows={2}
+            rows={3}
             placeholder="Was kannst du gut, welche Kanäle oder Netzwerke hast du schon?"
-            className={inputClasses}
+            className={textareaClasses}
             disabled={busy}
           />
         </label>
@@ -287,9 +288,9 @@ export function ProfileForm({
           <textarea
             value={form.existingInsights}
             onChange={set("existingInsights")}
-            rows={2}
+            rows={3}
             placeholder="Rückmeldungen, Gespräche, erste Verkäufe — falls vorhanden"
-            className={inputClasses}
+            className={textareaClasses}
             disabled={busy}
           />
         </label>
