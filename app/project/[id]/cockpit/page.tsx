@@ -16,6 +16,7 @@ import {
 } from "@/lib/cockpitPeriod";
 import { prisma } from "@/lib/prisma";
 import { taskSelect } from "@/lib/tasks";
+import { reassessDataPoints } from "@/lib/kpiAssessment";
 import { buildImplementationStatements } from "@/lib/implementationStatements";
 import { taskElaborationResponseSchema } from "@/lib/schemas/taskElaboration";
 
@@ -163,9 +164,10 @@ export default async function CockpitPage({
       metrics: step.metrics.map((metric) => ({
         id: metric.id,
         name: metric.name,
+        metricType: metric.metricType,
         successCriterion: metric.successCriterion,
         failureCriterion: metric.failureCriterion,
-        dataPoints: metric.dataPoints,
+        dataPoints: reassessDataPoints(metric, metric.dataPoints),
       })),
       tasks: step.tasks.map((task) => {
         const parsedElaboration = task.elaboration

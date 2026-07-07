@@ -20,6 +20,9 @@ REGELN:
 - Je Schritt 1–2 Metriken mit klarem Erfolgs- UND Misserfolgskriterium
   (vorab festgelegt, quantifiziert als Spanne oder Schwelle). Passe die
   Metriken an, wenn die Überarbeitung sie betrifft.
+- metricType je Metrik (PFLICHT): RATE = Periodenwert je Woche/Periode;
+  CUMULATIVE = Zähler über die gesamte Prüfperiode (Kriterien beziehen sich
+  auf die Gesamtsumme).
 - Wenn der Kanal geändert wird, muss der neue Kanal zur Zielgruppe passen —
   begründe das kurz in der description.
 - changeSummary: 1–2 Sätze, was gegenüber dem bisherigen Entwurf geändert
@@ -35,6 +38,7 @@ AUSGABEFORMAT (JSON, exakt dieses Schema):
   "metrics": [
     {
       "name": "string",
+      "metricType": "RATE | CUMULATIVE",
       "successCriterion": "string (gilt als stützend, wenn ...)",
       "failureCriterion": "string (gilt als widerlegend, wenn ...)"
     }

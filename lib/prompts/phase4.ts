@@ -26,6 +26,12 @@ REGELN:
     der Profil-Zeitangabe (timePerWeek).
 - Je Schritt 1–2 Metriken mit klarem Erfolgs- UND Misserfolgskriterium
   (vorab festgelegt, quantifiziert als Spanne oder Schwelle).
+- metricType je Metrik (PFLICHT):
+  - RATE: Periodenwert, der je Messperiode bewertet wird (z. B. Interaktionsrate,
+    Conversion-Rate, Anteil in %).
+  - CUMULATIVE: Zähler, der über die gesamte Prüfperiode aufsummiert wird
+    (z. B. „Neue Anfragen in 3 Wochen", Registrierungen, Interviews). Die
+    Kriterien beziehen sich auf die Gesamtsumme — nicht auf einzelne Wochen.
 - Der Kanal muss zur Zielgruppe der Option passen — begründe das kurz in der
   description.
 
@@ -44,6 +50,7 @@ id-Werte aus dem Kontext, unverändert übernehmen):
       "metrics": [
         {
           "name": "string",
+          "metricType": "RATE | CUMULATIVE",
           "successCriterion": "string (gilt als stützend, wenn ...)",
           "failureCriterion": "string (gilt als widerlegend, wenn ...)"
         }

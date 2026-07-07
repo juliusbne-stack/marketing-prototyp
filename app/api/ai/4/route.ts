@@ -14,6 +14,7 @@ const stepInclude = {
     select: {
       id: true,
       name: true,
+      metricType: true,
       successCriterion: true,
       failureCriterion: true,
     },
@@ -263,6 +264,7 @@ export async function POST(request: Request) {
           metrics: {
             create: step.metrics.map((metric) => ({
               name: metric.name,
+              metricType: metric.metricType,
               successCriterion: metric.successCriterion,
               failureCriterion: metric.failureCriterion,
             })),

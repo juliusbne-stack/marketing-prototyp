@@ -269,6 +269,7 @@ export default async function PhasePage({
               select: {
                 id: true,
                 name: true,
+                metricType: true,
                 successCriterion: true,
                 failureCriterion: true,
               },
@@ -362,6 +363,7 @@ export default async function PhasePage({
               select: {
                 id: true,
                 name: true,
+                metricType: true,
                 successCriterion: true,
                 failureCriterion: true,
               },
@@ -398,6 +400,7 @@ export default async function PhasePage({
         select: {
           stepId: true,
           name: true,
+          metricType: true,
           successCriterion: true,
           failureCriterion: true,
           dataPoints: {

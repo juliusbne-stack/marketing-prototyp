@@ -14,6 +14,13 @@ import { StepImplementationFrame } from "@/components/steps/StepImplementationFr
 import { ProgressButton } from "@/components/ui/ProgressButton";
 import { formatImplementationGoals } from "@/lib/formatImplementationGoals";
 import {
+  formatCumulativeTotal,
+  formatRunningTotal,
+  parseNumericValue,
+  reassessDataPoints,
+  resolveMetricType,
+} from "@/lib/kpiAssessment";
+import {
   deriveStepReadiness,
   TIMEFRAME_ENDPOINT_TOOLTIP,
 } from "@/lib/cockpitPeriod";
@@ -228,12 +235,15 @@ export function CockpitStepCard({
       }
       const dataPoints: KpiDataPointData[] = body.dataPoints;
       setMetrics((current) =>
-        current.map((metric) => ({
-          ...metric,
-          dataPoints: dataPoints.filter(
+        current.map((metric) => {
+          const rawPoints = dataPoints.filter(
             (point) => point.metricId === metric.id
-          ),
-        }))
+          );
+          return {
+            ...metric,
+            dataPoints: reassessDataPoints(metric, rawPoints),
+          };
+        })
       );
     } catch (err) {
       setError(
@@ -395,20 +405,34 @@ export function CockpitStepCard({
 
         <div className="mt-2 flex flex-col gap-3">
           {metrics.map((metric) => {
-            const latest = metric.dataPoints.at(-1);
+            const reassessed = reassessDataPoints(metric, metric.dataPoints);
+            const latest = reassessed.at(-1);
             const latestConfig = latest
               ? KPI_ASSESSMENT_CONFIG[latest.assessment]
               : null;
+            const isCumulative = resolveMetricType(metric) === "CUMULATIVE";
+            const chipLabel =
+              latest && isCumulative
+                ? `Gesamt: ${formatCumulativeTotal(metric, reassessed)}`
+                : latest
+                  ? `${latest.periodLabel}: ${latest.value}`
+                  : null;
+            const chipTitle =
+              latest && latestConfig
+                ? isCumulative
+                  ? `Gesamt über die Periode: ${formatCumulativeTotal(metric, reassessed)} (${latestConfig.label})`
+                  : `${latest.periodLabel}: ${latest.value} (${latestConfig.label})`
+                : undefined;
             return (
               <div key={metric.id}>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-xs font-medium text-text">{metric.name}</p>
-                  {latest && latestConfig ? (
+                  {latest && latestConfig && chipLabel ? (
                     <span
-                      title={`${latest.periodLabel}: ${latest.value} (${latestConfig.label})`}
+                      title={chipTitle}
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${latestConfig.chipClassName}`}
                     >
-                      {latest.periodLabel}: {latest.value}
+                      {chipLabel}
                     </span>
                   ) : (
                     <span className="text-xs text-text-muted">
@@ -416,17 +440,27 @@ export function CockpitStepCard({
                     </span>
                   )}
                 </div>
-                {metric.dataPoints.length > 0 && (
+                {reassessed.length > 0 && (
                   <div
                     className="mt-1.5 flex items-center gap-1.5"
                     aria-label={`Verlauf ${metric.name}`}
                   >
-                    {metric.dataPoints.map((point) => {
+                    {reassessed.map((point, index) => {
                       const config = KPI_ASSESSMENT_CONFIG[point.assessment];
+                      let runningTotal = 0;
+                      if (isCumulative) {
+                        for (let i = 0; i <= index; i++) {
+                          runningTotal +=
+                            parseNumericValue(reassessed[i]!.value) ?? 0;
+                        }
+                      }
+                      const dotTitle = isCumulative
+                        ? `${point.periodLabel}: ${point.value}, Zwischenstand ${formatRunningTotal(metric, runningTotal)} (${config.label})`
+                        : `${point.periodLabel}: ${point.value} (${config.label})`;
                       return (
                         <span
                           key={point.id}
-                          title={`${point.periodLabel}: ${point.value} (${config.label})`}
+                          title={dotTitle}
                           className={`h-2 w-2 rounded-full ${config.dotClassName}`}
                         />
                       );

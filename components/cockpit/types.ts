@@ -2,6 +2,7 @@ import type {
   EvidenceStatus,
   FeedbackResult,
   KpiAssessment,
+  MetricType,
 } from "@prisma/client";
 import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
 
@@ -39,6 +40,7 @@ export type KpiDataPointData = {
 export type CockpitMetricData = {
   id: string;
   name: string;
+  metricType: MetricType;
   successCriterion: string;
   failureCriterion: string;
   dataPoints: KpiDataPointData[];

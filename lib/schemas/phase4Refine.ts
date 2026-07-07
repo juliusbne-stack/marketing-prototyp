@@ -1,12 +1,9 @@
 import { z } from "zod";
+import { metricInputSchema } from "@/lib/schemas/metric";
 
 // Zod schema mirroring the phase 4 refinement JSON output format
 // (lib/prompts/phase4Refine.ts).
-const metricSchema = z.object({
-  name: z.string().trim().min(1),
-  successCriterion: z.string().trim().min(1),
-  failureCriterion: z.string().trim().min(1),
-});
+const metricSchema = metricInputSchema;
 
 export const phase4RefineResponseSchema = z.object({
   title: z.string().trim().min(1),

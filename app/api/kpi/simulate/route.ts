@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { KPI_SIMULATION_PROMPT } from "@/lib/prompts/kpiSimulation";
+import { reassessDataPoints } from "@/lib/kpiAssessment";
 import {
   kpiScenarioSchema,
   kpiSimulationResponseSchema,
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
     metrics: step.metrics.map((metric) => ({
       id: metric.id,
       name: metric.name,
+      metricType: metric.metricType,
       successCriterion: metric.successCriterion,
       failureCriterion: metric.failureCriterion,
     })),
@@ -150,15 +152,22 @@ export async function POST(request: Request) {
     );
   }
 
+  const metricById = new Map(step.metrics.map((metric) => [metric.id, metric]));
+
+  const pointsToCreate = result.series.flatMap((series) => {
+    const metric = metricById.get(series.metricId);
+    if (!metric) return [];
+    const reassessed = reassessDataPoints(metric, series.points);
+    return reassessed.map((point) => ({
+      metricId: series.metricId,
+      periodLabel: point.periodLabel,
+      value: point.value,
+      assessment: point.assessment,
+    }));
+  });
+
   await prisma.kpiDataPoint.createMany({
-    data: result.series.flatMap((series) =>
-      series.points.map((point) => ({
-        metricId: series.metricId,
-        periodLabel: point.periodLabel,
-        value: point.value,
-        assessment: point.assessment,
-      }))
-    ),
+    data: pointsToCreate,
   });
 
   // Full history per metric (cuid ids are monotonic, so id breaks ties of

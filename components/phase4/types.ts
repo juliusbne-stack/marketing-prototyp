@@ -1,3 +1,4 @@
+import type { MetricType } from "@prisma/client";
 import type { StatementData } from "@/components/statements/types";
 
 // Client-side shape of a validation step, matching app/api/ai/4/route.ts
@@ -5,6 +6,7 @@ import type { StatementData } from "@/components/statements/types";
 export type MetricData = {
   id: string;
   name: string;
+  metricType: MetricType;
   successCriterion: string;
   failureCriterion: string;
 };

@@ -1,11 +1,8 @@
 import { z } from "zod";
+import { metricInputSchema } from "@/lib/schemas/metric";
 
 // Zod schema mirroring the phase 4 JSON output format from docs/PROMPTS.md.
-const metricSchema = z.object({
-  name: z.string().trim().min(1),
-  successCriterion: z.string().trim().min(1),
-  failureCriterion: z.string().trim().min(1),
-});
+const metricSchema = metricInputSchema;
 
 const stepSchema = z.object({
   assumptionId: z.string().trim().min(1),

@@ -205,11 +205,17 @@ model ValidationStep {
   tasks     Task[]
 }
 
+enum MetricType {
+  RATE        // Periodenwert (z. B. %, Rate) — Bewertung je Periode
+  CUMULATIVE  // Zähler über die Prüfperiode — Bewertung über kumulierte Summe
+}
+
 model Metric {
   id               String         @id @default(cuid())
   stepId           String
   step             ValidationStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
   name             String         // z.B. "Registrierungen in 2 Wochen"
+  metricType       MetricType     @default(RATE)
   successCriterion String         // gilt als stützend, wenn ...
   failureCriterion String         // gilt als widerlegend, wenn ...
 

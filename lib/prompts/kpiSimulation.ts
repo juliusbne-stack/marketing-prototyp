@@ -13,9 +13,19 @@ REGELN:
     (failureCriterion erfüllt); der Gesamttrend widerspricht der Annahme.
   - MIXED: Uneinheitliches Bild — Mischung aus stützenden, neutralen und
     widersprechenden Perioden ohne klaren Trend.
-- assessment je Punkt EHRLICH aus dem Wert ableiten: SUPPORTING nur, wenn der
-  Wert das successCriterion erfüllt; CONTRADICTING nur, wenn er das
-  failureCriterion erfüllt; sonst NEUTRAL.
+- metricType je Metrik (aus dem Kontext):
+  - RATE: Gib den Periodenwert an (z. B. „2,5 %", „3,2 %"). Die Bewertung
+    erfolgt je Periode gegen die Schwellen.
+  - CUMULATIVE: Gib den Zuwachs JE Periode an (z. B. „12 neue Anfragen" in
+    Woche 1, „8 neue Anfragen" in Woche 2) — NICHT den kumulierten Stand.
+    Die Gesamtsumme über alle Perioden wird serverseitig gegen die Kriterien
+    geprüft; Einzelwochen mit niedrigem Zuwachs sind kein Misserfolg, solange
+    die Summe am Ende die Schwelle erreicht.
+- assessment je Punkt: Für RATE wie bisher — SUPPORTING nur, wenn der
+  Periodenwert das successCriterion erfüllt; CONTRADICTING nur, wenn er das
+  failureCriterion erfüllt; sonst NEUTRAL. Für CUMULATIVE setze vorerst
+  NEUTRAL auf Zwischenperioden; die endgültige Bewertung erfolgt serverseitig
+  über die kumulierte Summe.
 - value: kurzer, konkreter Wert mit Einheit bzw. Bezugsgröße (z. B.
   "14 Registrierungen", "3 von 5 Interviews bestätigen das Problem",
   "Conversion 1,8 %"). Realistische Größenordnungen für den Ressourcenrahmen

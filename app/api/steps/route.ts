@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { metricInputSchema } from "@/lib/schemas/metric";
 
 const stepSelect = {
   id: true,
@@ -17,6 +18,7 @@ const stepSelect = {
     select: {
       id: true,
       name: true,
+      metricType: true,
       successCriterion: true,
       failureCriterion: true,
     },
@@ -35,13 +37,7 @@ const updateStepSchema = z
     adopted: z.boolean().optional(),
     // Full replacement of the step's metrics (AI refinement adoption).
     metrics: z
-      .array(
-        z.object({
-          name: z.string().trim().min(1),
-          successCriterion: z.string().trim().min(1),
-          failureCriterion: z.string().trim().min(1),
-        })
-      )
+      .array(metricInputSchema)
       .min(1)
       .max(2)
       .optional(),
