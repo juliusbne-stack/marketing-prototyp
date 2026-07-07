@@ -7,11 +7,13 @@ export function StepImplementationFrame({
   timeframe,
   budgetFrame,
   readOnly = false,
+  timeframeTooltip,
   onSave,
 }: {
   timeframe: string | null;
   budgetFrame: string | null;
   readOnly?: boolean;
+  timeframeTooltip?: string;
   onSave?: (data: {
     timeframe: string | null;
     budgetFrame: string | null;
@@ -94,7 +96,10 @@ export function StepImplementationFrame({
     <div className="mt-1.5 flex items-start justify-between gap-2">
       <p className="text-[13px] text-text-muted">
         {timeframe && (
-          <span className="inline-flex items-center gap-1">
+          <span
+            className="inline-flex items-center gap-1"
+            title={timeframeTooltip}
+          >
             <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
             {timeframe}
           </span>

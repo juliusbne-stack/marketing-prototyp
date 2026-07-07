@@ -59,6 +59,12 @@ export function Phase5View({
   const hasAssessments = feedbacks.some(
     (feedback) => feedback.interpretation !== null
   );
+  const stepsWithFeedback = steps.filter((step) =>
+    feedbacks.some((feedback) => feedback.stepId === step.id)
+  ).length;
+  const stepsWithoutFeedback = steps.length - stepsWithFeedback;
+  const showPartialFeedbackHint =
+    hasFeedback && stepsWithoutFeedback > 0 && steps.length > 0;
 
   const openSteps = steps.filter(
     (step) => !isStepCompleted(step.id, feedbacks)
@@ -218,13 +224,21 @@ export function Phase5View({
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-border bg-surface px-4 py-3">
-        <p className="text-sm text-text-muted">
-          {hasAssessments
-            ? "Erneutes Auswerten ersetzt die bisherige Interpretation und erzeugt einen neuen Vorschlag."
-            : hasFeedback
-              ? "Die KI verknüpft die Rückmeldungen mit den geprüften Annahmen und schlägt Evidenz-Updates vor."
-              : "Erfasse zuerst mindestens eine Rückmeldung."}
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-text-muted">
+            {hasAssessments
+              ? "Erneutes Auswerten ersetzt die bisherige Interpretation und erzeugt einen neuen Vorschlag."
+              : hasFeedback
+                ? "Die KI verknüpft die Rückmeldungen mit den geprüften Annahmen und schlägt Evidenz-Updates vor."
+                : "Erfasse zuerst mindestens eine Rückmeldung."}
+          </p>
+          {showPartialFeedbackHint && (
+            <p className="text-xs text-text-muted">
+              {stepsWithoutFeedback} von {steps.length} Schritten haben noch
+              keine Rückmeldung — du kannst trotzdem auswerten
+            </p>
+          )}
+        </div>
         <ProgressButton
           type="button"
           onClick={handleEvaluate}

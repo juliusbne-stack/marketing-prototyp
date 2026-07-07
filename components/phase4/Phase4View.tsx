@@ -7,7 +7,7 @@ import type { FeedbackData } from "@/components/phase5/types";
 import type { StatementData } from "@/components/statements/types";
 import { StatementCard } from "@/components/statements/StatementCard";
 import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
-import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
+import { CockpitNavigateButton } from "@/components/wizard/CockpitNavigateButton";
 import {
   PhaseEmptyState,
   PhaseErrorState,
@@ -52,12 +52,11 @@ export function Phase4View({
   const hasDrafts = steps.some((step) => !step.adopted);
   const hasAdoptedStep = steps.some((step) => step.adopted);
 
-  const advanceButton = (
-    <PhaseAdvanceButton
+  const cockpitButton = (
+    <CockpitNavigateButton
       projectId={projectId}
-      nextPhase={5}
       enabled={hasAdoptedStep}
-      disabledHint="Übernimm zuerst mindestens einen Umsetzungsschritt in den Projektstand."
+      disabledHint="Übernimm zuerst mindestens einen Umsetzungsschritt in den Projektstand — dann startest du die Umsetzung im Cockpit."
     />
   );
 
@@ -147,7 +146,7 @@ export function Phase4View({
           Option in prüfbare Umsetzungsschritte übersetzt. Priorisiere zuerst
           in Phase 3 eine Option.
         </PhaseEmptyState>
-        {advanceButton}
+        {cockpitButton}
       </div>
     );
   }
@@ -258,8 +257,8 @@ export function Phase4View({
                 </h3>
                 <p className="mt-1 text-sm text-text-muted">
                   {hasDrafts
-                    ? "Prüfe die Entwürfe, passe sie bei Bedarf an und übernimm die Schritte in den Projektstand — erst dann stehen sie in Phase 5 für Rückmeldungen bereit."
-                    : "Übernimm die Schritte in den Projektstand und erfasse in Phase 5 die Marktrückmeldungen."}
+                    ? "Prüfe die Entwürfe, passe sie bei Bedarf an und übernimm die Schritte in den Projektstand — die Umsetzung erfolgt danach im Umsetzungs-Cockpit."
+                    : "Alle Schritte sind übernommen — setze sie im Umsetzungs-Cockpit um und gehe anschließend zu Phase 5 für die Auswertung."}
                 </p>
               </div>
               {openGroups.map((group) => (
@@ -332,7 +331,7 @@ export function Phase4View({
         </PhaseEmptyState>
       )}
 
-      {advanceButton}
+      {cockpitButton}
     </div>
   );
 }

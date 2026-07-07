@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
@@ -298,42 +299,70 @@ export async function POST(request: Request) {
   // Re-running replaces draft steps; adopted steps (incl. the completed
   // validation steps) are never touched. The referenced assumptions are
   // already marked critical — isCritical stays as it is.
-  const steps = await prisma.$transaction(async (tx) => {
-    await tx.validationStep.deleteMany({
-      where: { optionId: option.id, adopted: false },
-    });
-
-    // AI drafts: scaling steps with adopted=false (rule 3) — they go through
-    // the normal adoption, refinement and phase 5 mechanics.
-    for (const step of result.steps) {
-      await tx.validationStep.create({
-        data: {
-          projectId: project.id,
-          optionId: option.id,
-          assumptionId: step.assumptionId,
-          title: step.title,
-          description: step.description,
-          channel: step.channel ?? null,
-          timeframe: step.timeframe,
-          budgetFrame: step.budgetFrame,
-          adopted: false,
-          metrics: {
-            create: step.metrics.map((metric) => ({
-              name: metric.name,
-              successCriterion: metric.successCriterion,
-              failureCriterion: metric.failureCriterion,
-            })),
-          },
-        },
+  let steps;
+  try {
+    steps = await prisma.$transaction(async (tx) => {
+      await tx.validationStep.deleteMany({
+        where: { optionId: option.id, adopted: false },
       });
-    }
 
-    return tx.validationStep.findMany({
-      where: { optionId: option.id },
-      orderBy: { createdAt: "asc" },
-      include: stepInclude,
+      // AI drafts: scaling steps with adopted=false (rule 3) — they go through
+      // the normal adoption, refinement and phase 5 mechanics.
+      for (const step of result.steps) {
+        await tx.validationStep.create({
+          data: {
+            projectId: project.id,
+            optionId: option.id,
+            assumptionId: step.assumptionId,
+            title: step.title,
+            description: step.description,
+            channel: step.channel ?? null,
+            timeframe: step.timeframe,
+            budgetFrame: step.budgetFrame,
+            adopted: false,
+            metrics: {
+              create: step.metrics.map((metric) => ({
+                name: metric.name,
+                successCriterion: metric.successCriterion,
+                failureCriterion: metric.failureCriterion,
+              })),
+            },
+          },
+        });
+      }
+
+      return tx.validationStep.findMany({
+        where: { optionId: option.id },
+        orderBy: { createdAt: "asc" },
+        include: stepInclude,
+      });
     });
-  });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientValidationError &&
+      /timeframe|budgetFrame/.test(error.message)
+    ) {
+      console.error(
+        "Phase 4 scale persistence failed (stale Prisma client):",
+        error
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Der Datenbank-Client ist veraltet. Bitte den Entwicklungsserver stoppen, „npx prisma generate“ ausführen und den Server neu starten — dann erneut versuchen.",
+        },
+        { status: 503 }
+      );
+    }
+    console.error("Phase 4 scale persistence failed:", error);
+    return NextResponse.json(
+      {
+        error:
+          "Die Skalierungsschritte konnten nicht gespeichert werden. Erneut versuchen — deine Fortführungsentscheidung bleibt erhalten.",
+      },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ steps }, { status: 201 });
 }

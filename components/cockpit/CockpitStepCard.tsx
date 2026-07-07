@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ChartLine,
   ListChecks,
@@ -12,6 +13,11 @@ import {
 import { StepImplementationFrame } from "@/components/steps/StepImplementationFrame";
 import { ProgressButton } from "@/components/ui/ProgressButton";
 import { formatImplementationGoals } from "@/lib/formatImplementationGoals";
+import {
+  deriveStepReadiness,
+  TIMEFRAME_ENDPOINT_TOOLTIP,
+} from "@/lib/cockpitPeriod";
+import { StepReadinessChip } from "./StepReadinessChip";
 import { RESULT_CONFIG } from "@/components/phase5/types";
 import type { KpiScenario } from "@/lib/schemas/kpiSimulation";
 import {
@@ -58,6 +64,7 @@ export function CockpitStepCard({
   highlightNextTask?: boolean;
   embedded?: boolean;
 }) {
+  const router = useRouter();
   const [tasks, setTasks] = useState<TaskData[]>(step.tasks);
   const [metrics, setMetrics] = useState(step.metrics);
   const [hasFeedback, setHasFeedback] = useState(step.hasFeedback);
@@ -72,6 +79,8 @@ export function CockpitStepCard({
 
   const doneCount = tasks.filter((task) => task.done).length;
   const hasDataPoints = metrics.some((metric) => metric.dataPoints.length > 0);
+  const readiness = deriveStepReadiness(tasks, metrics, hasFeedback);
+  const isReadyForFeedback = readiness === "READY_FOR_FEEDBACK";
   const nextTaskIndex = highlightNextTask
     ? tasks.findIndex((task) => !task.done)
     : -1;
@@ -216,6 +225,12 @@ export function CockpitStepCard({
       }
       setHasFeedback(true);
       setFeedbackCreated(true);
+      router.refresh();
+      window.setTimeout(() => {
+        document
+          .getElementById("cockpit-jetzt-dran")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
     } catch (err) {
       setError(
         err instanceof Error
@@ -239,6 +254,7 @@ export function CockpitStepCard({
         <h4 className="font-heading text-sm font-medium text-text">
           {step.title}
         </h4>
+        {readiness && <StepReadinessChip readiness={readiness} />}
         {step.channel && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
             <Radio className="h-3 w-3" aria-hidden />
@@ -253,6 +269,7 @@ export function CockpitStepCard({
         timeframe={timeframe}
         budgetFrame={budgetFrame}
         readOnly={readOnly}
+        timeframeTooltip={TIMEFRAME_ENDPOINT_TOOLTIP}
         onSave={readOnly ? undefined : handleSaveFrame}
       />
 
@@ -508,28 +525,49 @@ export function CockpitStepCard({
             .
           </p>
         ) : (
-          <>
-            <p className="text-[13px] text-text-muted">
-              Erzeugt aus den Kennzahlen einen sachlichen Rückmeldungs-Entwurf
-              für Phase 5 — ohne automatische Auswertung.
-            </p>
-            <ProgressButton
-              type="button"
-              onClick={handleBridgeToFeedback}
-              loading={isBridging}
-              loadingPhase="save"
-              disabled={!hasDataPoints}
-              title={
-                hasDataPoints
-                  ? undefined
-                  : "Simuliere zuerst Kennzahlen für diesen Schritt."
-              }
-              loadingLabel="Rückmeldung wird angelegt …"
-            >
-              <MessageSquareText className="h-4 w-4" aria-hidden />
-              Kennzahlen als Rückmeldung übernehmen
-            </ProgressButton>
-          </>
+          isReadyForFeedback ? (
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <p className="text-[13px] text-text-muted sm:mr-auto">
+                Alle Aufgaben erledigt und Kennzahlen vorhanden — übernimm sie
+                als Rückmeldungs-Entwurf für Phase 5.
+              </p>
+              <ProgressButton
+                type="button"
+                onClick={handleBridgeToFeedback}
+                loading={isBridging}
+                loadingPhase="save"
+                disabled={!hasDataPoints}
+                loadingLabel="Rückmeldung wird angelegt …"
+                className="w-full shrink-0 sm:w-auto"
+              >
+                <MessageSquareText className="h-4 w-4" aria-hidden />
+                Kennzahlen als Rückmeldung übernehmen
+              </ProgressButton>
+            </div>
+          ) : (
+            <>
+              <p className="text-[13px] text-text-muted">
+                Erzeugt aus den Kennzahlen einen sachlichen Rückmeldungs-Entwurf
+                für Phase 5 — ohne automatische Auswertung.
+              </p>
+              <button
+                type="button"
+                onClick={handleBridgeToFeedback}
+                disabled={!hasDataPoints || isBridging}
+                title={
+                  hasDataPoints
+                    ? undefined
+                    : "Simuliere zuerst Kennzahlen für diesen Schritt."
+                }
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <MessageSquareText className="h-4 w-4" aria-hidden />
+                {isBridging
+                  ? "Rückmeldung wird angelegt …"
+                  : "Kennzahlen als Rückmeldung übernehmen"}
+              </button>
+            </>
+          )
         )}
       </div>
 

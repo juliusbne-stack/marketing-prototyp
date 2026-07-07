@@ -13,11 +13,13 @@ export function PhaseAdvanceButton({
   nextPhase,
   enabled,
   disabledHint,
+  enabledHint,
 }: {
   projectId: string;
   nextPhase: 2 | 3 | 4 | 5;
   enabled: boolean;
   disabledHint?: string;
+  enabledHint?: string;
 }) {
   const router = useRouter();
   const [isAdvancing, setIsAdvancing] = useState(false);
@@ -57,6 +59,9 @@ export function PhaseAdvanceButton({
   return (
     <div className="mt-2 flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
       {error && <p className="text-sm text-danger-text">{error}</p>}
+      {enabled && enabledHint && (
+        <p className="mr-auto text-sm text-text-muted">{enabledHint}</p>
+      )}
       {!enabled && disabledHint && (
         <p className="text-sm text-text-muted">{disabledHint}</p>
       )}

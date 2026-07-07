@@ -4,6 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Radio } from "lucide-react";
 import { CockpitStepCard } from "./CockpitStepCard";
+import { StepReadinessChip } from "./StepReadinessChip";
+import {
+  deriveStepReadiness,
+  type StepReadiness,
+} from "@/lib/cockpitPeriod";
 import {
   getStepKpiIndicator,
   KPI_ASSESSMENT_CONFIG,
@@ -25,6 +30,9 @@ export function CockpitStepCompactRow({
   const [expanded, setExpanded] = useState(false);
   const progress = taskProgress(step);
   const kpiIndicator = getStepKpiIndicator(step);
+  const readiness: StepReadiness | null = readOnly
+    ? null
+    : deriveStepReadiness(step.tasks, step.metrics, step.hasFeedback);
 
   const statusContent =
     readOnly && step.feedbackEvaluated && step.feedbackResult ? (
@@ -72,6 +80,7 @@ export function CockpitStepCompactRow({
               {step.channel}
             </span>
           )}
+          {!readOnly && readiness && <StepReadinessChip readiness={readiness} />}
           {!readOnly && (
             <span className="text-xs text-text-muted">
               {progress.total > 0 ? `${progress.done}/${progress.total}` : "—"}

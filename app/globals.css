@@ -31,6 +31,10 @@
   --kpi-supporting-bg: #eaf4e5;
   --kpi-contradicting-text: #9a3b1f;
   --kpi-contradicting-bg: #fdeee6;
+
+  /* Cockpit readiness (amber tone — not the reserved evidence colors) */
+  --cockpit-signal-text: #7a5210;
+  --cockpit-signal-bg: #fff4e5;
 }
 
 @theme inline {
@@ -59,6 +63,9 @@
   --color-kpi-supporting-bg: var(--kpi-supporting-bg);
   --color-kpi-contradicting-text: var(--kpi-contradicting-text);
   --color-kpi-contradicting-bg: var(--kpi-contradicting-bg);
+
+  --color-cockpit-signal-text: var(--cockpit-signal-text);
+  --color-cockpit-signal-bg: var(--cockpit-signal-bg);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;

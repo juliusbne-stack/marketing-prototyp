@@ -1,12 +1,19 @@
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import { CockpitZones } from "@/components/cockpit/CockpitZones";
+import { CockpitFooter } from "@/components/cockpit/CockpitFooter";
+import { CockpitCompletionBanner } from "@/components/cockpit/CockpitCompletionBanner";
 import type { CockpitStepData } from "@/components/cockpit/types";
 import {
   cockpitTaskTotals,
   recommendFocusStep,
   sortActiveSteps,
 } from "@/lib/cockpitRecommendation";
+import {
+  allStepsHaveFeedback,
+  getImplementationPeriodProgress,
+  getLongestActiveTimeframe,
+} from "@/lib/cockpitPeriod";
 import { prisma } from "@/lib/prisma";
 
 // Implementation cockpit — companion view for the implementation period
@@ -146,6 +153,9 @@ export default async function CockpitPage({
     ? activeSteps.filter((step) => step.id !== focusStep.id)
     : [];
   const taskTotals = cockpitTaskTotals(cockpitSteps);
+  const periodProgress = getImplementationPeriodProgress(cockpitSteps);
+  const longestTimeframe = getLongestActiveTimeframe(cockpitSteps);
+  const periodComplete = allStepsHaveFeedback(cockpitSteps);
 
   return (
     <div>
@@ -168,6 +178,8 @@ export default async function CockpitPage({
         </div>
       ) : (
         <div className="flex flex-col gap-6">
+          {periodComplete && <CockpitCompletionBanner projectId={id} />}
+
           <div className="rounded-[10px] border-2 border-accent bg-surface p-4">
             <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
               <Star className="h-3.5 w-3.5" aria-hidden />
@@ -186,6 +198,11 @@ export default async function CockpitPage({
               {balance.openQuestion}{" "}
               {balance.openQuestion === 1 ? "offene Frage" : "offene Fragen"}
               <span className="mx-1.5 text-border">·</span>
+              Umsetzungsperiode: {periodProgress.withFeedback} von{" "}
+              {periodProgress.total} Schritten mit Rückmeldung
+              <span className="mx-1.5 text-border">·</span>
+              Richtdauer: {longestTimeframe ?? "—"}
+              <span className="mx-1.5 text-border">·</span>
               {activeSteps.length}{" "}
               {activeSteps.length === 1 ? "aktiver Schritt" : "aktive Schritte"}{" "}
               · {completedSteps.length} abgeschlossen · Aufgaben{" "}
@@ -199,6 +216,12 @@ export default async function CockpitPage({
             focusReason={focusReason}
             otherActiveSteps={otherActiveSteps}
             completedSteps={completedSteps}
+          />
+
+          <CockpitFooter
+            projectId={id}
+            hasAdoptedSteps
+            periodComplete={periodComplete}
           />
         </div>
       )}

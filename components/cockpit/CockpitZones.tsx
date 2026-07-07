@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { CockpitStepCard } from "./CockpitStepCard";
 import { CockpitStepCompactRow } from "./CockpitStepCompactRow";
 import type { CockpitStepData } from "./types";
@@ -20,11 +21,15 @@ export function CockpitZones({
   completedSteps: CockpitStepData[];
 }) {
   const [completedOpen, setCompletedOpen] = useState(false);
+  const allStepsComplete =
+    !focusStep &&
+    otherActiveSteps.length === 0 &&
+    completedSteps.length > 0;
 
   return (
     <div className="flex flex-col gap-8">
-      {focusStep && (
-        <section aria-label="Jetzt dran">
+      {focusStep ? (
+        <section id="cockpit-jetzt-dran" aria-label="Jetzt dran">
           <h3 className="font-heading text-base font-medium text-text">
             Jetzt dran
           </h3>
@@ -39,7 +44,28 @@ export function CockpitZones({
             />
           </div>
         </section>
-      )}
+      ) : allStepsComplete ? (
+        <section
+          id="cockpit-jetzt-dran"
+          aria-label="Umsetzung abgeschlossen"
+          className="rounded-[10px] border border-dashed border-border bg-background px-6 py-8 text-center"
+        >
+          <h3 className="font-heading text-base font-medium text-text">
+            Alle Umsetzungsschritte abgeschlossen
+          </h3>
+          <p className="mt-2 text-sm text-text-muted">
+            Für jeden Schritt liegt eine Rückmeldung vor. Werte sie in Phase 5
+            aus und triff die Anpassungsentscheidung.
+          </p>
+          <Link
+            href={`/project/${projectId}/phase/5`}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+          >
+            Zu Phase 5: Rückmeldungen auswerten
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </section>
+      ) : null}
 
       {otherActiveSteps.length > 0 && (
         <section aria-label="Weitere aktive Schritte">
