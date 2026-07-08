@@ -1,38 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { ProgressButton } from "@/components/ui/ProgressButton";
+import {
+  BUDGET_OPTIONS,
+  formValuesToPatchBody,
+  PRODUCT_STATUS_OPTIONS,
+  PROFILE_QUESTIONS,
+  projectToFormValues,
+  TIME_OPTIONS,
+  type ProfileData,
+} from "@/lib/profileQuestions";
+import { inputClasses, labelClasses, textareaClasses } from "@/lib/profileFieldStyles";
 
-export type ProfileData = {
-  id: string;
-  businessIdea: string | null;
-  productStatus: string | null;
-  assumedTarget: string | null;
-  assumedProblem: string | null;
-  valuePropDraft: string | null;
-  revenueIdea: string | null;
-  region: string | null;
-  teamSize: number | null;
-  budgetMonthly: string | null;
-  timePerWeek: string | null;
-  skills: string | null;
-  existingInsights: string | null;
-};
-
-const PRODUCT_STATUS_OPTIONS = ["Idee", "MVP", "am Markt"];
-const BUDGET_OPTIONS = ["unter 500 €", "500–2000 €", "über 2000 €"];
-const TIME_OPTIONS = [
-  "unter 5 Stunden",
-  "5–10 Stunden",
-  "10–20 Stunden",
-  "über 20 Stunden",
-];
-
-const inputClasses =
-  "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted";
-const textareaClasses = `${inputClasses} resize-none`;
-const labelClasses = "flex flex-col gap-1 text-xs font-medium text-text-muted";
+export type { ProfileData } from "@/lib/profileQuestions";
 
 /**
  * Structured start-up profile inputs (UI_KONZEPT phase 1). Submitting saves
@@ -44,29 +27,22 @@ export function ProfileForm({
   hasResults,
   hasAdopted,
   onAnalyze,
+  layoutId,
 }: {
   project: ProfileData;
   isGenerating: boolean;
   hasResults: boolean;
   hasAdopted?: boolean;
   onAnalyze: () => Promise<void>;
+  layoutId?: string;
 }) {
-  const [form, setForm] = useState({
-    businessIdea: project.businessIdea ?? "",
-    productStatus: project.productStatus ?? "",
-    assumedTarget: project.assumedTarget ?? "",
-    assumedProblem: project.assumedProblem ?? "",
-    valuePropDraft: project.valuePropDraft ?? "",
-    revenueIdea: project.revenueIdea ?? "",
-    region: project.region ?? "",
-    teamSize: project.teamSize != null ? String(project.teamSize) : "",
-    budgetMonthly: project.budgetMonthly ?? "",
-    timePerWeek: project.timePerWeek ?? "",
-    skills: project.skills ?? "",
-    existingInsights: project.existingInsights ?? "",
-  });
+  const [form, setForm] = useState(() => projectToFormValues(project));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const labelByField = Object.fromEntries(
+    PROFILE_QUESTIONS.map((question) => [question.field, question.label])
+  ) as Record<(typeof PROFILE_QUESTIONS)[number]["field"], string>;
 
   function set(field: keyof typeof form) {
     return (
@@ -86,21 +62,11 @@ export function ProfileForm({
       const response = await fetch("/api/projects", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: project.id,
-          businessIdea: form.businessIdea.trim(),
-          productStatus: form.productStatus || null,
-          assumedTarget: form.assumedTarget.trim() || null,
-          assumedProblem: form.assumedProblem.trim() || null,
-          valuePropDraft: form.valuePropDraft.trim() || null,
-          revenueIdea: form.revenueIdea.trim() || null,
-          region: form.region.trim() || null,
-          teamSize: form.teamSize ? Number(form.teamSize) : null,
-          budgetMonthly: form.budgetMonthly || null,
-          timePerWeek: form.timePerWeek || null,
-          skills: form.skills.trim() || null,
-          existingInsights: form.existingInsights.trim() || null,
-        }),
+        body: JSON.stringify(
+          formValuesToPatchBody(project.id, form, {
+            profileOnboardingComplete: true,
+          })
+        ),
       });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
@@ -124,7 +90,8 @@ export function ProfileForm({
   const busy = isSaving || isGenerating;
 
   return (
-    <form
+    <motion.form
+      layoutId={layoutId}
       onSubmit={handleSubmit}
       className="rounded-[10px] border border-border bg-surface p-4"
     >
@@ -138,7 +105,7 @@ export function ProfileForm({
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className={`${labelClasses} sm:col-span-2`}>
-          Geschäftsidee / Angebot *
+          {labelByField.businessIdea} *
           <textarea
             value={form.businessIdea}
             onChange={set("businessIdea")}
@@ -151,7 +118,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Produktstatus
+          {labelByField.productStatus}
           <select
             value={form.productStatus}
             onChange={set("productStatus")}
@@ -168,7 +135,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Region / geplanter Markt
+          {labelByField.region}
           <input
             type="text"
             value={form.region}
@@ -180,7 +147,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Vermutete Zielgruppe
+          {labelByField.assumedTarget}
           <textarea
             value={form.assumedTarget}
             onChange={set("assumedTarget")}
@@ -192,7 +159,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Vermutetes Kundenproblem
+          {labelByField.assumedProblem}
           <textarea
             value={form.assumedProblem}
             onChange={set("assumedProblem")}
@@ -204,7 +171,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Nutzenversprechen
+          {labelByField.valuePropDraft}
           <textarea
             value={form.valuePropDraft}
             onChange={set("valuePropDraft")}
@@ -216,7 +183,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Erlösidee
+          {labelByField.revenueIdea}
           <textarea
             value={form.revenueIdea}
             onChange={set("revenueIdea")}
@@ -228,7 +195,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Teamgröße
+          {labelByField.teamSize}
           <input
             type="number"
             min={1}
@@ -241,7 +208,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Budget pro Monat
+          {labelByField.budgetMonthly}
           <select
             value={form.budgetMonthly}
             onChange={set("budgetMonthly")}
@@ -258,7 +225,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Zeit pro Woche fürs Marketing
+          {labelByField.timePerWeek}
           <select
             value={form.timePerWeek}
             onChange={set("timePerWeek")}
@@ -275,7 +242,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Fähigkeiten & Kanäle
+          {labelByField.skills}
           <textarea
             value={form.skills}
             onChange={set("skills")}
@@ -287,7 +254,7 @@ export function ProfileForm({
         </label>
 
         <label className={labelClasses}>
-          Bisherige Kundenerkenntnisse
+          {labelByField.existingInsights}
           <textarea
             value={form.existingInsights}
             onChange={set("existingInsights")}
@@ -323,6 +290,6 @@ export function ProfileForm({
         )}
         {error && <p className="text-xs text-danger-text">{error}</p>}
       </div>
-    </form>
+    </motion.form>
   );
 }

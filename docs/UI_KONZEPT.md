@@ -76,8 +76,8 @@ Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Ak
 ## 4. Phasenansichten
 
 ### Phase 1 — Situationsanalyse
-1. **Eingabeformular (ProfileForm)**, 2-spaltig, Felder aus dem Project-Modell: Geschäftsidee* (Textarea), Produktstatus (Select: Idee/MVP/am Markt), vermutete Zielgruppe (optional — Platzhalter: „Leer lassen, wenn noch unklar — die KI schlägt Zielgruppenhypothesen vor"), vermutetes Kundenproblem, Nutzenversprechen, Erlösidee, Region, Teamgröße, Budget/Monat (Select), Zeit/Woche (Select), Fähigkeiten & Kanäle, bisherige Kundenerkenntnisse. Nur Geschäftsidee ist Pflicht.
-2. Primärbutton **„Analyse erstellen"** → Ladezustand (Skeleton-Karten + Text „Die KI erstellt einen Analyse-Entwurf mit simulierten Recherchedaten …").
+1. **Profil-Onboarding (ProfileOnboardingWizard)** — bei neuen Projekten (`profileOnboardingComplete=false`): geführtes 12-Schritte-Interview in 3 Kapiteln (Angebot · Markt & Kunden · Ressourcen), eine Frage pro Screen, ein Kapitel-Hinweis auf der ersten Frage jedes Kapitels (z. B. „In diesem Kapitel kannst du Annahmen machen — die Analyse prüft sie später."), Live-Vorschau des Start-up-Profils rechts (Desktop) bzw. aufklappbar (Mobil), Fortschrittspunkte, „Später klären" für optionale Felder (violetter „Offen"-Chip in der Vorschau), Kapitel-Abschluss nach Frage 3/7, Abschluss-Morph in die Profil-Karte. Inkrementelles Speichern nach jedem Schritt (`profileOnboardingStep`). Nur Geschäftsidee ist Pflicht.
+2. **Eingabeformular (ProfileForm)** — nach abgeschlossenem Onboarding oder bei Bestandsprojekten: 2-spaltig, dieselben Felder wie im Interview, editierbar. Primärbutton **„Analyse erstellen"** → Ladezustand (Skeleton-Karten + Text „Die KI erstellt einen Analyse-Entwurf mit simulierten Recherchedaten …").
 3. **Ergebnis in 4 Abschnitten** (untereinander, mit Anker-Navigation):
    - **PESTEL-Raster:** 6 Felder im 3×2-Grid, Kategorie-Titel + StatementCards
    - **Zielgruppen & Kundenprobleme:** Segment-Karten nebeneinander (2–4), darunter Problem-Statements

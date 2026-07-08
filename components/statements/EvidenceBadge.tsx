@@ -30,15 +30,21 @@ const EVIDENCE_CONFIG: Record<
 
 const ALL_STATUSES: EvidenceStatus[] = ["FACT", "ASSUMPTION", "OPEN_QUESTION"];
 
+export const SIMULATED_FACT_TOOLTIP =
+  "Fakt bedeutet hier: innerhalb der simulierten Recherche als belegt dargestellt; keine reale externe Prüfung.";
+
 export function EvidenceBadge({
   status,
   onChange,
   disabled = false,
+  factTooltip,
 }: {
   status: EvidenceStatus;
   /** Klick auf das Badge öffnet ein Dropdown zum Umstufen (F5/NF2). */
   onChange?: (status: EvidenceStatus) => void;
   disabled?: boolean;
+  /** Tooltip nur bei status FACT (z. B. Wettbewerbsbereich). */
+  factTooltip?: string;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,6 +65,7 @@ export function EvidenceBadge({
   const pill = (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${config.className}`}
+      title={status === "FACT" && factTooltip ? factTooltip : undefined}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${config.dotClassName}`}
@@ -81,6 +88,7 @@ export function EvidenceBadge({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Evidenzstatus ändern, aktuell: ${config.label}`}
+        title={status === "FACT" && factTooltip ? factTooltip : undefined}
         className="cursor-pointer rounded-full"
       >
         {pill}

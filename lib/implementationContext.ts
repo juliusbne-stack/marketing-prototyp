@@ -1,5 +1,6 @@
 import type { EvidenceStatus, StatementCategory } from "@prisma/client";
 import type { ImplementationStatement } from "./implementationStatements";
+import { taskElaborationResponseSchema } from "./schemas/taskElaboration";
 
 const COPY_TARGET_GROUP_CATEGORIES: StatementCategory[] = [
   "OPT_TARGET_GROUP",
@@ -99,7 +100,13 @@ export function buildTaskElaborationContext(input: {
   adoptedStatements: ImplementationStatement[];
   missingCategories: string[];
   startupProfile: Record<string, unknown>;
-  siblingTaskTitles: string[];
+  stepTasks: Array<{
+    id: string;
+    title: string;
+    hint: string | null;
+    sortOrder: number;
+    elaboration: unknown;
+  }>;
 }) {
   const copyBasis = buildCopyBasis(
     input.adoptedStatements,
@@ -138,7 +145,10 @@ export function buildTaskElaborationContext(input: {
     fehlendeAussagenKategorien: input.missingCategories,
     startupKontext: input.startupProfile,
     copyBasis,
-    geschwisterAufgabenTitel: input.siblingTaskTitles,
+    aufgabenReihenfolgeImSchritt: buildCopyRefineStepContext(
+      input.task.id,
+      input.stepTasks
+    ),
   };
 }
 
@@ -155,6 +165,42 @@ export function getMissingImplementationCategories(
     missing.push("Zielgruppe");
   }
   return missing;
+}
+
+/** Ordered step tasks with prior copy for copy-refinement relevance checks. */
+export function buildCopyRefineStepContext(
+  currentTaskId: string,
+  stepTasks: Array<{
+    id: string;
+    title: string;
+    hint: string | null;
+    sortOrder: number;
+    elaboration: unknown;
+  }>
+) {
+  const ordered = [...stepTasks].sort((a, b) => a.sortOrder - b.sortOrder);
+  const currentIndex = ordered.findIndex((task) => task.id === currentTaskId);
+
+  const extractFormulierungen = (elaboration: unknown) => {
+    const parsed = taskElaborationResponseSchema.safeParse(elaboration);
+    return parsed.success ? parsed.data.formulierungsvorschlaege : [];
+  };
+
+  return {
+    position: currentIndex + 1,
+    gesamtAnzahl: ordered.length,
+    vorherigeAufgaben: ordered.slice(0, currentIndex).map((task, index) => ({
+      position: index + 1,
+      titel: task.title,
+      unterzeile: task.hint,
+      formulierungsvorschlaege: extractFormulierungen(task.elaboration),
+    })),
+    nachfolgendeAufgaben: ordered.slice(currentIndex + 1).map((task, index) => ({
+      position: currentIndex + index + 2,
+      titel: task.title,
+      unterzeile: task.hint,
+    })),
+  };
 }
 
 export function buildStartupProfile(project: {

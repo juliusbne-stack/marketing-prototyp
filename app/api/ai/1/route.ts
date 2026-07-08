@@ -3,14 +3,25 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
-import { PHASE1_PROMPT } from "@/lib/prompts/phase1";
-import { PHASE1_INCREMENTAL_PROMPT } from "@/lib/prompts/phase1Incremental";
+import {
+  countAdoptedCompetitorLabels,
+  pickRandomTargetCompetitorCount,
+  requiredNewCompetitorProfiles,
+} from "@/lib/competitorCount";
+import { buildPhase1Prompt } from "@/lib/prompts/phase1";
+import { buildPhase1IncrementalPrompt } from "@/lib/prompts/phase1Incremental";
 import {
   createPhase1IncrementalResponseSchema,
-  phase1ResponseSchema,
+  createPhase1ResponseSchema,
   type Phase1Statement,
 } from "@/lib/schemas/phase1";
 import { filterDuplicateStatements } from "@/lib/statementDedup";
+
+/** Phase 1 can return 100+ statements — allow long runs locally and on Vercel. */
+export const maxDuration = 300;
+
+/** Large JSON output for many competitor profiles (9–17 actors × 6 aspects). */
+const PHASE1_MAX_TOKENS = 16_384;
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -86,7 +97,17 @@ export async function POST(request: Request) {
 
   const isIncremental = adoptedAnalysis.length > 0;
 
+  // Per-run random actor target (9–17); passed to prompt and Zod validation.
+  const targetCompetitorCount = pickRandomTargetCompetitorCount();
+  const adoptedCompetitorLabelCount =
+    countAdoptedCompetitorLabels(adoptedAnalysis);
+  const requiredNewProfiles = requiredNewCompetitorProfiles(
+    targetCompetitorCount,
+    adoptedCompetitorLabelCount
+  );
+
   const context = {
+    targetCompetitorCount,
     startupProfile: {
       businessIdea: project.businessIdea,
       productStatus: project.productStatus,
@@ -105,22 +126,43 @@ export async function POST(request: Request) {
   };
 
   const phasePrompt = isIncremental
-    ? `${PHASE1_PROMPT}\n\n${PHASE1_INCREMENTAL_PROMPT}`
-    : PHASE1_PROMPT;
+    ? `${buildPhase1Prompt(targetCompetitorCount)}\n\n${buildPhase1IncrementalPrompt({
+        targetCompetitorCount,
+        adoptedCompetitorLabelCount,
+        requiredNewProfiles,
+      })}`
+    : buildPhase1Prompt(targetCompetitorCount);
 
   const responseSchema = isIncremental
-    ? createPhase1IncrementalResponseSchema(adoptedAnalysis)
-    : phase1ResponseSchema;
+    ? createPhase1IncrementalResponseSchema(adoptedAnalysis, {
+        targetCompetitorCount,
+        requiredNewProfiles,
+      })
+    : createPhase1ResponseSchema(targetCompetitorCount);
 
   let result;
   try {
-    result = await callLLM(phasePrompt, context, responseSchema);
+    result = await callLLM(phasePrompt, context, responseSchema, {
+      maxTokens: PHASE1_MAX_TOKENS,
+      validationRetries: 2,
+      retryPreamble: [
+        `PFLICHT-CHECK WETTBEWERB (targetCompetitorCount=${targetCompetitorCount} im Projektkontext):`,
+        `- GENAU ${targetCompetitorCount} verschiedene competitorLabels`,
+        `- Je Label GENAU 6 COMPETITOR-Statements (alle competitorAspect-Werte)`,
+        `- ZUSÄTZLICH 1–3 COMPETITOR-Landschafts-Aussagen OHNE competitorLabel`,
+        "- COMPETITOR-Bereich nicht kürzen — auch wenn andere Bereiche schon vollständig sind",
+      ].join("\n"),
+    });
   } catch (error) {
     if (error instanceof LlmValidationError) {
+      console.error("Phase 1 LLM validation failed:", error.message);
       return NextResponse.json(
         {
           error:
             "Die KI-Antwort konnte nicht verarbeitet werden. Erneut versuchen — deine Eingaben bleiben erhalten.",
+          ...(process.env.NODE_ENV === "development"
+            ? { details: error.message }
+            : {}),
         },
         { status: 502 }
       );

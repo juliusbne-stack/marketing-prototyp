@@ -8,6 +8,8 @@ den Nutzer. WICHTIG: Alle "Recherche"-Daten sind SIMULIERT (LLM erzeugt plausibl
 Marktdaten mit fiktiven Quellen) — das System kennzeichnet das transparent im UI.
 
 Referenzdokumente (IMMER beachten):
+- docs/THESIS_ALIGNMENT.md — Abgleich mit Bachelorarbeit (F1–F11, NF1–NF9, Prozessmodell)
+- docs/PrototypBeschreibung_KONTEXT.txt — Gesamtkontext des Prototyps
 - docs/IMPLEMENTIERUNGSPLAN.md — Projektstruktur und Meilensteine
 - docs/UI_KONZEPT.md — Layout, Komponenten, Design-Tokens
 - docs/PROMPTS.md — Systemprompts und JSON-Ausgabeformate je Phase

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionDimensionEvidenceStatus } from "./evidenceStatus";
+import { validateStatementContentNotIntention } from "./statementContent";
 
 // Zod schema mirroring the phase 5 JSON output format from docs/PROMPTS.md.
 const assessmentSchema = z.object({
@@ -30,10 +31,21 @@ const adaptationSchema = z
     "Bei LOOP_BACK muss loopBackToPhase (1–3) angegeben sein."
   );
 
-export const phase5ResponseSchema = z.object({
-  feedbackAssessments: z.array(assessmentSchema).min(1),
-  newStatements: z.array(newStatementSchema).max(3),
-  adaptation: adaptationSchema,
-});
+export const phase5ResponseSchema = z
+  .object({
+    feedbackAssessments: z.array(assessmentSchema).min(1),
+    newStatements: z.array(newStatementSchema).max(3),
+    adaptation: adaptationSchema,
+  })
+  .superRefine((data, ctx) => {
+    data.newStatements.forEach((statement, index) => {
+      validateStatementContentNotIntention(
+        statement.content,
+        ctx,
+        ["newStatements", index, "content"],
+        `Aussage ${index + 1}`
+      );
+    });
+  });
 
 export type Phase5Response = z.infer<typeof phase5ResponseSchema>;

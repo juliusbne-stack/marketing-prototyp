@@ -1,0 +1,643 @@
+================================================================================
+KONTEXTDOKUMENT: KI-GESTÜTZTES MARKETINGSTRATEGIE-SYSTEM FÜR START-UPS
+(Bachelorarbeit-Prototyp)
+================================================================================
+
+1. ÜBERGEORDNETER ZWECK UND WISSENSCHAFTLICHER KONTEXT
+--------------------------------------------------------------------------------
+
+Dieses Projekt ist ein Prototyp für eine Bachelorarbeit. Es implementiert ein
+prozessgeführtes Unterstützungssystem zur Entwicklung einer hypothesen- und
+evidenzbasierten Marketingstrategie für Start-ups.
+
+Kernidee: Start-ups sollen nicht von einer KI „eine fertige Strategie" bekommen,
+sondern durch einen strukturierten 5-Phasen-Wizard geführt werden. Die KI
+erzeugt Entwürfe (Analysen, Optionen, Bewertungen, Umsetzungsschritte,
+Interpretationen). Der Nutzer prüft, bearbeitet, stuft Evidenz um und übernimmt
+bewusst in den Projektstand. Entscheidungen liegen immer beim Nutzer, nicht bei
+der KI.
+
+Wichtig: Das System ist kein Chatbot. Es gibt keine freie Konversation, sondern
+feste Phasen, strukturierte Formulare, JSON-validierte KI-Ausgaben und ein
+einheitliches Datenmodell um das zentrale Objekt „Aussage" (Statement).
+
+Prototyp-Einschränkung (transparent im UI): Alle „Recherche"- und Marktdaten
+werden von der KI simuliert — plausible, aber fiktive Marktinformationen mit
+fiktiven Quellen (z. B. „Fitnessmarkt-Report 2025 (fiktiv)"). Es gibt keinen
+Internetzugang, keine echten Marktdatenbanken, keine Authentifizierung, keine
+Nutzerverwaltung, keine Versionshistorie (genau ein Projektstand).
+
+
+2. WAS DAS TOOL MACHT — IN EINEM SATZ
+--------------------------------------------------------------------------------
+
+Ein Start-up legt ein Projekt an, beschreibt sein Profil, erhält ein KI-
+generiertes Analysebild, entwickelt daraus Strategieoptionen, priorisiert eine
+Option, plant validierende Umsetzungsschritte mit Messpunkten, simuliert
+Umsetzung und Marktrückmeldungen, und lernt daraus mit Evidenz-Updates und
+einer strategischen Anpassungsentscheidung — alles evidenzmarkiert und
+nutzerkontrolliert.
+
+
+3. DER 5-PHASEN-PROZESS (+ UMSETZUNGS-COCKPIT)
+--------------------------------------------------------------------------------
+
+Phase 1 — Situationsanalyse
+  Start-up-Profil → KI-Analysebild (PESTEL, Zielgruppen, Wettbewerb, SWOT,
+  Marktpfade)
+
+Phase 2 — Strategieoptionen
+  2–3 Hypothesenbündel (je 6 strategische Dimensionen)
+
+Phase 3 — Bewertung & Priorisierung
+  6-Kriterien-Matrix + nutzerbestätigte Priorisierung
+
+Phase 4 — Validierende Umsetzung
+  Kritische Annahmen → begrenzte Experimente mit Messpunkten
+
+Umsetzungs-Cockpit (zwischen Phase 4 und 5)
+  Aufgaben, KPI-Simulation, Brücke zu Rückmeldungen
+
+Phase 5 — Lernen & Anpassung
+  Marktrückmeldungen → Evidenz-Updates → Anpassungsentscheidung (inkl.
+  Rückkopplung)
+
+Der PhaseStepper (Sidebar, 240px Desktop / horizontale Leiste mobil) zeigt
+Status: aktiv (Petrol), abgeschlossen (grün mit Häkchen), gesperrt (grau).
+Phasen bis currentPhase sind erreichbar; Rücksprünge in abgeschlossene Phasen
+sind erlaubt und editierbar. currentPhase kann nur steigen, nie wieder sinken.
+
+
+4. ZENTRALE FACHKONZEPTE
+--------------------------------------------------------------------------------
+
+4.1 Statement (Aussage) — das Kerndatenobjekt
+
+Jede inhaltliche Behauptung im System ist ein Statement mit Pflichtfeldern:
+
+- content: Vollständiger, eigenständig prüfbarer Aussagesatz (keine Stichwörter)
+- evidenceStatus (Evidenzstatus):
+    FACT           — Fakt (belegt)
+    ASSUMPTION     — plausible Annahme
+    OPEN_QUESTION  — offene Frage
+- origin (Herkunft):
+    USER_INPUT         — Nutzereingabe
+    SIMULATED_RESEARCH — simulierte Recherche (mit fiktiver sourceRef)
+    AI_DERIVATION      — KI-Ableitung aus Kontext
+- justification: Begründung (1–2 Sätze)
+- sourceRef: Fiktive Quelle bei simulierter Recherche (endet mit „(fiktiv)")
+- uncertainty: Unsicherheitshinweis bei Annahmen/offenen Fragen
+- adopted: false = KI-Entwurf, true = in Projektstand übernommen
+- phase: Entstehungsphase (1–5)
+- category: Fachliche Verortung (z. B. PESTEL_SOCIAL, TARGET_SEGMENT,
+  OPT_VALUE_PROPOSITION, LEARNING)
+- isCritical: Markierung als kritische Annahme (Phase 4)
+
+Segmentprofile (Phase 1): TARGET_SEGMENT-Statements haben segmentLabel +
+segmentAspect (DESCRIPTION, PROBLEM_NEED, BEHAVIOR_CONTEXT, WILLINGNESS_TO_PAY,
+REACHABILITY) — je Segment genau 5 Aussagen.
+
+Wettbewerberprofile (Phase 1): COMPETITOR-Statements haben competitorLabel +
+competitorAspect (ENTITY_TYPE, OFFERING, TARGET_CUSTOMERS, PRICING, SCALE,
+RELEVANCE) — je Akteur genau 6 Aussagen.
+
+4.2 Übernahme-Prinzip (Adoption)
+
+- KI erzeugt Entwürfe mit adopted=false
+- Nutzer klickt „In Projektstand übernehmen" (einzeln oder „Alle übernehmen")
+- Erst dann adopted=true
+- Nachfolgende Phasen und KI-Kontext nutzen NUR adopted=true Statements
+- Visuell: Entwürfe = gestrichelter Rahmen, heller Petrol-Hintergrund, Label
+  „Entwurf"; Übernommen = solider Rahmen, weiß
+
+4.3 Strategieoption = Hypothesenbündel
+
+Eine StrategyOption besteht aus 6 Dimensions-Statements (je 1 pro Dimension):
+  OPT_TARGET_GROUP, OPT_CUSTOMER_PROBLEM, OPT_VALUE_PROPOSITION,
+  OPT_POSITIONING, OPT_MARKET_ACCESS, OPT_REVENUE_GROWTH
+
+Verknüpft über OptionStatement. Status: DRAFT → ADOPTED → PRIORITIZED /
+DEFERRED / DISCARDED.
+
+In Phase 2 werden ganze Optionen übernommen (nicht einzelne Dimensionen).
+
+4.4 Bewertung (Phase 3)
+
+6 Kriterien (Criterion), Score 1–5:
+  ATTRACTIVENESS, RESOURCE_FIT, RISK, VALIDATION_EFFORT, LEARNING_VALUE,
+  EVIDENCE
+
+KI liefert Vorschlag mit Begründung + Gegenargumenten; Nutzer bestätigt oder
+übersteuert.
+
+4.5 Validierung (Phase 4)
+
+ValidationStep pro kritischer Annahme: Titel, Beschreibung, Kanal, Zeitrahmen,
+Budgetrahmen, adopted, verknüpfte Metric(s) mit Erfolgs-/Misserfolgskriterium.
+
+4.6 Lernen (Phase 5)
+
+MarketFeedback pro Rückmeldung: Inhalt, result (SUPPORTED,
+PARTIALLY_SUPPORTED, REFUTED, AMBIGUOUS), KI-Interpretation, vorgeschlagener
+neuer Evidenzstatus.
+
+AdaptationDecision: CONTINUE, ADAPT, DEFER, DISCARD, LOOP_BACK (mit
+loopBackToPhase 1–3).
+
+
+5. TECHNISCHER STACK
+--------------------------------------------------------------------------------
+
+Frontend/Backend:  Next.js 16 (App Router), TypeScript, React 19
+Styling:          Tailwind CSS 4, eigene Design-Tokens in globals.css
+Datenbank:        PostgreSQL via Supabase
+ORM:              Prisma 6
+KI:               OpenAI SDK, Modell gpt-4o, JSON-Mode
+Validierung:      Zod 4 (LLM-Ausgaben + API-Requests)
+Icons:            lucide-react
+Animation:        framer-motion (Onboarding)
+
+Architekturregeln:
+1. OpenAI-Aufrufe nur serverseitig in app/api/ai/... — OPENAI_API_KEY nie im
+   Client
+2. Jeder LLM-Aufruf: GLOBAL_PROMPT + Phasenprompt + Projektkontext (JSON) →
+   Zod-Validierung → bei Fehler genau 1 Retry → sonst Fehlermeldung ans UI
+3. UI-Texte: Deutsch; Code/DB-Felder: Englisch
+4. Keine Auth, kein Multi-User
+
+
+6. PROJEKTSTRUKTUR (ORDNER)
+--------------------------------------------------------------------------------
+
+marketing-strategie-prototyp/
+├── .cursorrules
+├── .env                      (DATABASE_URL, DIRECT_URL, OPENAI_API_KEY)
+├── docs/
+│   ├── IMPLEMENTIERUNGSPLAN.md
+│   ├── UI_KONZEPT.md
+│   ├── PROMPTS.md
+│   ├── PrototypBeschreibung_KONTEXT.txt  (diese Datei)
+│   └── THESIS_ALIGNMENT.md               (F/NF-Abgleich mit Bachelorarbeit)
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── project/[id]/
+│   │   ├── layout.tsx
+│   │   ├── phase/[n]/page.tsx
+│   │   └── cockpit/page.tsx
+│   └── api/
+├── components/
+│   ├── ui/, wizard/, statements/
+│   ├── phase1/ … phase5/
+│   └── cockpit/
+└── lib/
+    ├── prisma.ts, openai.ts
+    ├── prompts/
+    └── schemas/
+
+
+7. DATENMODELL (PRISMA — ÜBERSICHT)
+--------------------------------------------------------------------------------
+
+Project: Ein Strategiedurchlauf; Felder für Start-up-Profil, currentPhase (1–5),
+pestelRelevance (JSON), Onboarding-Status (profileOnboardingComplete,
+profileOnboardingStep 0–11).
+
+Profilfelder am Project:
+  businessIdea, productStatus, assumedTarget, assumedProblem, valuePropDraft,
+  revenueIdea, region, teamSize, budgetMonthly, timePerWeek, skills,
+  existingInsights
+
+Statement: Zentrales Objekt (siehe Abschnitt 4.1).
+
+StrategyOption + OptionStatement: Hypothesenbündel.
+
+Evaluation: Bewertung je Option × Kriterium.
+
+ValidationStep + Metric + Task + KpiDataPoint: Umsetzung und Cockpit.
+
+MarketFeedback: Marktrückmeldungen.
+
+AdaptationDecision: Strategische Anpassung.
+
+DB-Verbindung:
+- DATABASE_URL → Supabase Transaction Pooler (Port 6543, pgbouncer=true)
+- DIRECT_URL → Direct Connection (Port 5432, für Migrationen)
+
+
+8. SETUP UND INSTALLATION
+--------------------------------------------------------------------------------
+
+8.1 Voraussetzungen
+- Node.js (npm)
+- Supabase-Projekt (PostgreSQL)
+- OpenAI API Key
+
+8.2 Projekt einrichten
+  cd marketing-strategie-prototyp
+  npm install
+
+8.3 Umgebungsvariablen (.env im Projektroot)
+  DATABASE_URL   — PostgreSQL über Supabase Pooler (Port 6543)
+  DIRECT_URL     — Direkte Verbindung für Prisma-Migrationen (Port 5432)
+  OPENAI_API_KEY — OpenAI API-Schlüssel (serverseitig)
+
+8.4 Datenbank initialisieren
+  npx prisma migrate dev
+
+8.5 Entwicklungsserver
+  npm run dev
+  → http://localhost:3000
+
+8.6 Produktion
+  npm run build
+  npm start
+
+
+9. UI/UX-GRUNDLAGEN
+--------------------------------------------------------------------------------
+
+Design: Ruhiges Arbeitswerkzeug, kein Marketing-Dashboard.
+Hintergrund: warmes Off-White #FAFAF7
+Akzent: Petrol #0E5A63
+Evidenzfarben reserviert: Grün (Fakt), Amber (Annahme), Violett (Offene Frage)
+Schriften: Space Grotesk (Überschriften), Inter (Body)
+
+Layout:
+- Oben: permanentes Prototyp-Banner (amber): „Prototyp — alle Recherche- und
+  Marktdaten werden zu Demonstrationszwecken von der KI simuliert und sind
+  fiktiv."
+- Projektansicht: Sidebar-Stepper + Hauptbereich (max. 960px)
+- StatementCard überall: EvidenceBadge (klickbar), OriginTag, Begründung/Quelle/
+  Unsicherheit, Bearbeiten/Löschen, Übernehmen
+
+Zustände: Skeleton beim Laden, erklärende Leerzustände, konkrete Fehlermeldungen.
+
+
+10. API-ENDPUNKTE (ÜBERSICHT)
+--------------------------------------------------------------------------------
+
+GET/POST/PATCH     /api/projects              Projekte, Profil
+PATCH              /api/projects/[id]/phase   Phase freischalten
+GET/POST/PATCH/PUT/DELETE  /api/statements    Statements CRUD, adopt all
+POST               /api/ai/1                  Phase-1-Analyse
+POST               /api/ai/2                  Strategieoptionen
+POST               /api/ai/2/revise           Optionen überarbeiten (ADAPT)
+POST               /api/ai/3                  Bewertung + Priorisierung
+POST               /api/ai/4                  Validierungsschritte
+POST               /api/ai/4/scale            Skalierung (CONTINUE)
+POST               /api/ai/4/refine           Schritt verfeinern
+POST               /api/ai/5                  Rückmeldungen auswerten
+PATCH/PUT          /api/options               Option bearbeiten/priorisieren
+POST               /api/options/revision      Revision übernehmen
+PATCH/DELETE       /api/steps                 ValidationSteps
+POST/PATCH         /api/feedback              Marktrückmeldungen
+POST               /api/adaptation            Anpassungsentscheidung
+POST               /api/ai/tasks              Cockpit-Aufgaben
+PATCH              /api/tasks                 Aufgaben abhaken
+POST               /api/kpi/simulate          KPI simulieren
+POST               /api/kpi/feedback          KPI → MarketFeedback (LLM-frei)
+POST/PATCH         /api/implementation/tasks/...  Aufgaben-Ausarbeitung
+
+
+11. KI-ARCHITEKTUR
+--------------------------------------------------------------------------------
+
+Ablauf jedes KI-Aufrufs:
+1. Server lädt Projekt + nur adopted=true Kontext aus DB
+2. Baut JSON-Kontext (Profil inkl. Ressourcen, Statements mit segmentLabel,
+   competitorLabel etc.)
+3. Systemprompt = GLOBAL_PROMPT + PHASE_N_PROMPT (aus lib/prompts/ und
+   docs/PROMPTS.md)
+4. callLLM() in lib/openai.ts: gpt-4o, JSON-Mode (response_format: json_object)
+5. Zod-Schema validiert Antwort
+6. Bei Parse-Fehler: genau 1 Retry mit Fehlerhinweis
+7. Ergebnis als Entwurf in DB (adopted=false)
+
+GLOBAL_PROMPT — Kernregeln:
+- Simulationsmodus: keine echten Studien/Firmen/URLs; fiktive Quellen mit
+  „(fiktiv)"-Suffix
+- Evidenzlogik für jede Aussage (FACT nur bei direkter Ableitung aus Nutzerinput
+  oder logisch zwingend; ASSUMPTION als Standard; OPEN_QUESTION wenn unklar)
+- Jede Aussage muss ein vollständiger, prüfbarer Behauptungssatz sein
+- Ressourcensensibilität (Budget, Team, Zeit, Skills)
+- Deutsch, klar, keine Marketing-Floskeln
+- Nur gültiges JSON, kein Text davor oder danach
+
+Kontext-Regel: Nur übernommene (adopted=true) Statements der Vorphasen fließen
+in nachfolgende KI-Aufrufe ein.
+
+
+12. KOMPLETTER NUTZERFLUSS — SCHRITT FÜR SCHRITT
+--------------------------------------------------------------------------------
+
+SCHRITT 0: Startseite (/)
+- Nutzer sieht Titel und Kurzbeschreibung
+- Neues Projekt: Name eingeben → POST /api/projects → Weiterleitung zu
+  /project/[id]/phase/1
+- Bestehende Projekte: Liste mit Name, Phase, Datum → Klick öffnet Phase 1
+
+SCHRITT 1: Phase 1 — Situationsanalyse
+
+1a. Profil-Onboarding (12 Fragen in 3 Kapiteln, nur bei neuen Projekten,
+    profileOnboardingComplete=false)
+
+Kapitel 1 — Dein Angebot (Fragen 1–3):
+  1. Geschäftsidee / Angebot (Pflicht)
+  2. Produktstatus (Choice: Idee / MVP / am Markt)
+  3. Region / geplanter Markt
+
+Kapitel 2 — Markt & Kunden (Fragen 4–7):
+  4. Vermutete Zielgruppe (optional — „Später klären" möglich)
+  5. Vermutetes Kundenproblem
+  6. Nutzenversprechen
+  7. Erlösidee
+
+Kapitel 3 — Deine Ressourcen (Fragen 8–12):
+  8. Teamgröße (Zahl)
+  9. Budget pro Monat (Choice: unter 500 € / 500–2000 € / über 2000 €)
+  10. Zeit pro Woche fürs Marketing (Choice)
+  11. Fähigkeiten & Kanäle
+  12. Bisherige Kundenerkenntnisse
+
+Onboarding-Verhalten:
+- Inkrementelles Speichern nach jedem Schritt (PATCH /api/projects,
+  profileOnboardingStep)
+- Live-Vorschau des Profils (Desktop rechts, Mobil aufklappbar)
+- „Später klären" bei optionalen Feldern → violetter „Offen"-Chip
+- Kapitel-Abschluss-Screens nach Frage 3 und 7
+- Fortsetzen bei Unterbrechung (profileOnboardingStep)
+- Abschluss → profileOnboardingComplete=true → Wechsel zu ProfileForm
+
+1b. ProfileForm (nach Onboarding oder bei Bestandsprojekten)
+- Alle Profilfelder editierbar (2-spaltig)
+- Speichern per PATCH
+- Button „Analyse erstellen"
+
+1c. KI-Analyse (POST /api/ai/1)
+
+Erstgenerierung: Vollständiges Analysebild aus Profil.
+
+Inkrementell (wenn schon adopted Phase-1-Statements existieren):
+- Nur neue Aussagen ergänzen
+- Nicht-adoptierte Entwürfe werden ersetzt
+- Duplikate gefiltert
+
+KI erzeugt:
+1. PESTEL-Relevanz je 6 Kategorien (relevant ja/nein + Begründung)
+2. PESTEL-Statements nur für relevante Dimensionen
+3. 2–3 Zielgruppensegmente × 5 Aspekte = je 5 TARGET_SEGMENT-Statements
+4. 2–4 CUSTOMER_PROBLEM-Statements
+5. 5–7 Wettbewerberprofile × 6 Aspekte + 2–3 Landschafts-Aussagen
+6. 2–4 RESOURCE-Statements (meist aus Profil)
+7. SWOT je 2–3 pro Quadrant
+8. 2–3 MARKET_PATH-Statements
+
+Alles als Statements mit adopted=false.
+
+1d. Ergebnisdarstellung (4 Abschnitte + Anker-Navigation)
+1. PESTEL-Raster (3×2 Grid)
+2. Zielgruppen & Kundenprobleme (Segment-Karten + Problem-Statements)
+3. Wettbewerb & Alternativen (Akteursliste aufklappbar + Landschaft)
+4. SWOT-Matrix (2×2) + Marktpfade
+
+Kopfzeile: Evidenz-Zusammenfassung („X Fakten · Y Annahmen · Z offene Fragen")
+
+1e. Nutzeraktionen in Phase 1
+- Jede StatementCard: Evidenzstatus per Badge ändern, Inhalt bearbeiten, löschen
+- „+ Aussage hinzufügen" pro Abschnitt (origin=USER_INPUT)
+- Einzeln „Übernehmen" oder „Alle Entwürfe übernehmen"
+
+1f. Weiter zu Phase 2
+- Button „Weiter zu Phase 2: Optionen"
+- Aktiviert wenn mindestens ein adopted Statement in Phase 1 existiert
+- PATCH /api/projects/[id]/phase mit phase: 2
+
+SCHRITT 2: Phase 2 — Strategieoptionen
+
+Voraussetzung: Mindestens ein übernommenes Analyse-Statement.
+
+1. Button „Optionen entwickeln" → POST /api/ai/2
+2. KI erzeugt 2–3 StrategyOptions als Hypothesenbündel:
+   - Je Option: Titel, Summary, 6 Dimensions-Statements
+   - Mindestens eine marktbezogene, mindestens eine ressourcenorientierte Option
+   - OPT_TARGET_GROUP referenziert ein segmentLabel aus Phase 1
+   - Keine Bewertung (erst Phase 3)
+3. Darstellung als OptionCards nebeneinander
+4. Unter Zielgruppe: aufklappbares Segmentprofil (read-only aus Phase 1)
+5. Nutzer bearbeitet Optionen/Statements
+6. Ganze Option übernehmen (setzt Option auf ADOPTED + alle Dimensions-Statements
+   adopted)
+7. Weiter zu Phase 3 wenn mindestens 2 Optionen übernommen
+
+Revision-Modus (nach ADAPT in Phase 5):
+- POST /api/ai/2/revise schlägt gezielte Dimensions-Änderungen vor
+- POST /api/options/revision übernimmt Revision
+
+SCHRITT 3: Phase 3 — Bewertung & Priorisierung
+
+Voraussetzung: Mindestens 2 übernommene Optionen (Status ADOPTED).
+
+1. Button „Bewertung starten" → POST /api/ai/3
+2. EvaluationMatrix: 6 Kriterien × Optionen, Score 1–5 + Begründung
+3. PrioritizationPanel: KI-Vorschlag mit Begründung + „Was dagegen sprechen
+   könnte"
+4. Nutzer wählt:
+   - „Vorschlag übernehmen" ODER
+   - „Andere Option priorisieren" (eigene Begründung Pflicht)
+5. Nicht gewählte Optionen → DEFERRED (zurückgestellt, bleiben verfügbar)
+6. Gewählte Option → PRIORITIZED
+7. Weiter zu Phase 4 wenn eine Option priorisiert
+
+SCHRITT 4: Phase 4 — Validierende Umsetzung
+
+Arbeitet nur mit der PRIORITIZED Option.
+
+1. Kopf: priorisierte Option kompakt
+2. Button „Umsetzungsschritte entwickeln" → POST /api/ai/4
+3. KI identifiziert 2–4 kritischste Annahmen (isCritical=true)
+4. Pro Annahme ein ValidationStep mit 1–2 Metrics (Erfolgs-/Misserfolgskriterium)
+5. ValidationStepCards: Kanal-Chip, Zeitrahmen, Budgetrahmen, Metriken
+6. Nutzer bearbeitet, übernimmt Schritte einzeln (adopted=true)
+7. Bei übernommenem Schritt: Chip „Aufgaben X/Y" (wenn Tasks existieren)
+8. Button „Zum Umsetzungs-Cockpit" (wenn mindestens 1 Schritt übernommen)
+
+Continuation-Modus (nach CONTINUE in Phase 5):
+- POST /api/ai/4/scale — kontrollierte Skalierung statt neuer Experimente
+
+Refinement:
+- POST /api/ai/4/refine — einzelnen Schritt verfeinern
+
+SCHRITT 4b: Umsetzungs-Cockpit (/project/[id]/cockpit)
+
+Freigeschaltet wenn mindestens ein ValidationStep adopted=true.
+
+Zweck: Begleitansicht der Umsetzungsperiode zwischen Phase 4 und 5.
+
+Pro übernommenem Schritt eine Karte mit:
+
+A) Aufgaben
+- „Aufgaben mit KI erstellen" → POST /api/ai/tasks (3–7 chronologische Tasks)
+- Checkboxen, sofort persistiert (PATCH /api/tasks)
+- Optional: Aufgaben-Ausarbeitung (POST …/elaborate) — detailliertes Arbeitspaket
+- Copy-Refinement für Texte
+
+B) Kennzahlen (fiktiv)
+- Szenario-Chips: Stützend / Gemischt / Widersprechend
+- „Kennzahlen simulieren" → POST /api/kpi/simulate
+- LLM erzeugt 3–5 Perioden-Werte pro Metric → KpiDataPoint
+- Bewertung: SUPPORTING / NEUTRAL / CONTRADICTING
+- Verlauf als Punktreihe
+
+C) Brücke zu Phase 5
+- „Kennzahlen als Rückmeldung übernehmen" → POST /api/kpi/feedback
+- LLM-freies Template fasst KPIs zusammen → MarketFeedback als Entwurf
+
+Footer: „Weiter zu Phase 5: Lernen" (freigeschaltet wenn adopted Steps existieren)
+
+SCHRITT 5: Phase 5 — Lernen & Anpassung
+
+Arbeitet mit adopted ValidationSteps der priorisierten Option.
+
+5a. Marktrückmeldungen erfassen
+- Pro ValidationStep ein FeedbackForm
+- Textarea: „Was ist passiert? (fiktive Rückmeldung eintragen)"
+- Optional: KPI-Zusammenfassung aus Cockpit vorausfüllen
+- POST /api/feedback speichert Rückmeldung
+
+5b. Auswertung
+- Button „Rückmeldungen auswerten" → POST /api/ai/5
+- EvidenceUpdateList: je Annahme Vorher→Nachher-Badge, Ergebnis-Chip,
+  KI-Interpretation
+- Nutzer klickt „Statusänderung übernehmen" pro Feedback
+- Neue LEARNING-Statements möglich
+
+5c. Anpassungsentscheidung
+- AdaptationPanel: KI-Vorschlag (CONTINUE / ADAPT / DEFER / DISCARD / LOOP_BACK)
+- Nutzer wählt per Radio + bestätigt → POST /api/adaptation
+- Bei LOOP_BACK: Link zurück zu Phase 1–3
+- Bei ADAPT: Phase 2 Revision-Modus
+- Bei CONTINUE: Phase 4 Continuation-Modus (Skalierung)
+- Bei DEFER/DISCARD: Option wird zurückgestellt/verworfen
+
+
+13. LERNSCHLEIFE / RÜCKKOPPLUNG
+--------------------------------------------------------------------------------
+
+CONTINUE  → Phase 4 Skalierungsmodus (api/ai/4/scale)
+ADAPT     → Phase 2 Revisionsmodus (api/ai/2/revise)
+LOOP_BACK → Rücksprung zu Phase 1–3, Analysebild/Optionen überarbeiten
+DEFER     → Option status=DEFERRED
+DISCARD   → Option status=DISCARDED
+
+Evidenzstatus von Statements wird über alle Phasen fortgeschrieben.
+Validierungshistorie wird in StatementCards als Chip angezeigt.
+
+
+14. PHASEN-FREISCHALT-LOGIK
+--------------------------------------------------------------------------------
+
+→ Phase 2:  ≥1 adopted Statement Phase 1
+→ Phase 3:  ≥2 übernommene Optionen
+→ Phase 4:  1 priorisierte Option
+Cockpit:     ≥1 adopted ValidationStep
+→ Phase 5:  ≥1 adopted ValidationStep (über Cockpit-Footer)
+
+currentPhase steigt nur via „Weiter zu Phase X"-Buttons und kann nie sinken.
+Rücksprünge in frühere Phasen sind jederzeit möglich (editierbar).
+
+
+15. BEISPIEL-SZENARIO (DEMONSTRATION)
+--------------------------------------------------------------------------------
+
+Typisches Test-Szenario: Yoga-Start-up (z. B. Buchungs-App für Yogastudios).
+
+1. Profil: Geschäftsidee Yoga-Buchung, Zielgruppe Studios, begrenztes Budget
+2. Phase 1: Fiktive PESTEL-Trends, Segment „Großstadt-Studios", Wettbewerber
+   „StudioBook Pro (fiktiv)"
+3. Phase 2: z. B. „Fokus Boutique-Studios" vs. „Freelance-Yogalehrer"
+4. Phase 3: Matrix zeigt Ressourcenpassung, Nutzer priorisiert eine Option
+5. Phase 4: z. B. Landingpage-Test für Zahlungsbereitschaft
+6. Cockpit: Aufgaben + simulierte KPIs
+7. Phase 5: Rückmeldung „12 Registrierungen in 2 Wochen" → Annahme teilweise
+   gestützt → CONTINUE
+
+
+16. IMPLEMENTIERUNGSSTAND (MEILENSTEINE M0–M6)
+--------------------------------------------------------------------------------
+
+M0: Setup (Next.js, Supabase, Prisma, .env)
+M1: Projektanlage, Grundlayout, Stepper
+M2: StatementCard, Badges, Statements-API, Übernahme
+M3: Phase 1 komplett inkl. Onboarding + KI-Analyse
+M4: Phasen 2 und 3
+M5: Phasen 4 und 5
+M6: Politur, dynamischer Stepper, leere/Lade/Fehlerzustände, Konsistenz
+
+Zusätzliche Erweiterungen:
+- Profil-Onboarding-Wizard (12 Schritte, 3 Kapitel)
+- Segment- und Wettbewerberprofile
+- Umsetzungs-Cockpit mit Tasks, KPI-Simulation, KPI→Feedback-Brücke
+- Task-Elaboration und Copy-Refinement
+- Lernschleifen (CONTINUE/ADAPT/LOOP_BACK)
+
+
+17. BEKANNTE PROTOTYP-EINSCHRÄNKUNGEN (THESIS KAPITEL 5.3)
+--------------------------------------------------------------------------------
+
+1. Simulierte Recherche — keine echten Marktdaten
+2. Keine Authentifizierung / kein Multi-User
+3. Ein Projektstand ohne Versionierung
+4. Kein echter Internetzugang der KI
+5. KPI-Simulation und Marktrückmeldungen sind fiktiv
+6. Prototypischer Reifegrad — Fokus auf Prozessmodell und Evidenzführung
+
+
+18. BEGRIFFSZUORDNUNG DEUTSCH ↔ CODE
+--------------------------------------------------------------------------------
+
+Aussage                 → Statement
+Evidenzstatus           → evidenceStatus
+Fakt                    → FACT
+Annahme                 → ASSUMPTION
+Offene Frage            → OPEN_QUESTION
+Herkunft                → origin
+Strategieoption         → StrategyOption
+Hypothesenbündel        → Option + verknüpfte Statements (OptionStatement)
+Bewertung               → Evaluation
+Priorisierung           → status=PRIORITIZED + prioritizationRationale
+Kritische Annahme       → isCritical=true
+Umsetzungsschritt       → ValidationStep
+Messpunkt               → Metric
+Marktrückmeldung        → MarketFeedback
+Anpassungsentscheidung  → AdaptationDecision
+
+
+19. WICHTIGE DESIGN-PRINZIPIEN
+--------------------------------------------------------------------------------
+
+1. KI schlägt vor, Nutzer entscheidet — nirgends automatische Übernahme
+2. Evidenz ist immer sichtbar — Badges, Herkunft, Unsicherheit
+3. Nur adopted=true fließt weiter — harte Kontextregel für KI
+4. Ressourcensensibilität — Budget/Zeit/Team in allen Prompts
+5. Transparenz über Simulation — Banner + „(fiktiv)" an Quellen
+6. Rücksprünge erlaubt — Prozess nicht linear-gesperrt nach Freischaltung
+7. Statement als durchgängiges Objekt — von Analyse bis Lernen
+
+
+20. REFERENZDOKUMENTE IM PROJEKT
+--------------------------------------------------------------------------------
+
+- .cursorrules                        — Projektregeln für Entwicklung
+- docs/THESIS_ALIGNMENT.md            — Abgleich Tool ↔ Bachelorarbeit (F1–F11, NF1–NF9)
+- docs/IMPLEMENTIERUNGSPLAN.md        — Meilensteine M0–M6, Projektstruktur
+- docs/UI_KONZEPT.md                  — Layout, Komponenten, Design-Tokens
+- docs/PROMPTS.md                     — Systemprompts und JSON-Schemas je Phase
+- prisma/schema.prisma                — Datenmodell (nicht eigenmächtig ändern)
+
+================================================================================
+Ende des Kontextdokuments
+================================================================================

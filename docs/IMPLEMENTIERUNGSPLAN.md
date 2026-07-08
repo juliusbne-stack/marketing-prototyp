@@ -27,7 +27,7 @@ marketing-strategie-prototyp/
 │   │   ├── StatementCard.tsx     # Kernkomponente: Inhalt + EvidenceBadge + OriginTag + Aktionen
 │   │   ├── EvidenceBadge.tsx     # Fakt / Annahme / Offene Frage (klickbar → Status ändern)
 │   │   └── OriginTag.tsx         # Nutzer / Recherche (simuliert) / KI-Ableitung
-│   ├── phase1/                   # ProfileForm, PestelGrid, SegmentCards, CompetitorCards, SwotMatrix
+│   ├── phase1/                   # ProfileOnboardingWizard, ProfileForm, PestelGrid, …
 │   ├── phase2/OptionCard.tsx     # Strategieoption als Karte mit 6 Dimensionen
 │   ├── phase3/                   # EvaluationMatrix, PrioritizationPanel
 │   ├── phase4/                   # CriticalAssumptionList, ValidationStepCard (mit Metrics)
@@ -58,7 +58,8 @@ Next.js-Projekt, Dependencies, Supabase, `.env`, `prisma migrate dev`. Siehe REA
 **Fertig wenn:** Statements können angelegt, bearbeitet, umgestuft und übernommen werden; Änderungen persistieren.
 
 ### M3 — Phase 1 komplett: Eingaben, KI-Anbindung, Analysebild
-- ProfileForm (strukturierte Eingaben laut UI_KONZEPT, inkl. Ressourcenangaben; Speichern im Project)
+- ProfileOnboardingWizard (geführtes 12-Schritte-Interview für neue Projekte; inkrementelles Speichern, Live-Vorschau, Kapitel-Abschlüsse; `profileOnboardingComplete`/`profileOnboardingStep` am Project)
+- ProfileForm (strukturierte Eingaben laut UI_KONZEPT nach abgeschlossenem Onboarding; inkl. Ressourcenangaben; Speichern im Project)
 - `lib/openai.ts` + `app/api/ai/1/route.ts` mit Phase-1-Prompt und Zod-Validierung
 - Ergebnisdarstellung: PestelGrid, SegmentCards, CompetitorCards, SwotMatrix — alle Zellen bestehen aus StatementCards
 - Entwurfs-/Übernahmelogik: Entwürfe (adopted=false) visuell abgesetzt, Übernahme einzeln + "Alle übernehmen"

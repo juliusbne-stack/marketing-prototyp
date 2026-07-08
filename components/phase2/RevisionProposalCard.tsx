@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, X } from "lucide-react";
+import { useConfirm } from "@/components/ui/DialogProvider";
 import { EvidenceBadge } from "@/components/statements/EvidenceBadge";
 import { OriginTag } from "@/components/statements/OriginTag";
 import type { StatementData } from "@/components/statements/types";
@@ -25,6 +26,7 @@ export function RevisionProposalCard({
 }) {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   async function handleAdopt() {
     setIsBusy(true);
@@ -58,6 +60,15 @@ export function RevisionProposalCard({
   }
 
   async function handleDiscard() {
+    const confirmed = await confirm({
+      title: "Vorschlag verwerfen?",
+      message:
+        "Diesen Überarbeitungsvorschlag verwerfen? Er wird gelöscht und die bisherige Dimension bleibt unverändert.",
+      confirmLabel: "Verwerfen",
+      cancelLabel: "Abbrechen",
+    });
+    if (!confirmed) return;
+
     setIsBusy(true);
     setError(null);
     try {

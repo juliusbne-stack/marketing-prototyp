@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import type { ValidationHistoryCounts } from "@/lib/validation";
+import { useConfirm } from "@/components/ui/DialogProvider";
 import { EvidenceBadge } from "@/components/statements/EvidenceBadge";
 import { OriginTag } from "@/components/statements/OriginTag";
 import type { StatementData } from "@/components/statements/types";
@@ -18,6 +19,7 @@ export function CompactStatementRow({
   onDeleted,
   emptyPlaceholder,
   layout = "row",
+  factTooltip,
 }: {
   statement?: StatementData;
   aspectLabel?: string;
@@ -29,12 +31,15 @@ export function CompactStatementRow({
   onDeleted?: (id: string) => void;
   emptyPlaceholder?: string;
   layout?: "row" | "column";
+  /** Tooltip für FACT-Badge (z. B. im Wettbewerbsbereich). */
+  factTooltip?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [draftContent, setDraftContent] = useState(statement?.content ?? "");
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   if (!statement) {
     return (
@@ -101,6 +106,16 @@ export function CompactStatementRow({
 
   async function handleDelete() {
     if (!onDeleted) return;
+    const confirmed = await confirm({
+      title: "Aussage löschen?",
+      message:
+        "Diese Aussage endgültig löschen? Der Vorgang kann nicht rückgängig gemacht werden.",
+      confirmLabel: "Löschen",
+      cancelLabel: "Abbrechen",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
     setIsBusy(true);
     setError(null);
     try {
@@ -192,6 +207,7 @@ export function CompactStatementRow({
                     status={row.evidenceStatus}
                     onChange={(status) => patch({ evidenceStatus: status })}
                     disabled={isBusy}
+                    factTooltip={factTooltip}
                   />
                   {inlineAdoptAction}
                 </span>
@@ -217,6 +233,7 @@ export function CompactStatementRow({
                       status={row.evidenceStatus}
                       onChange={(status) => patch({ evidenceStatus: status })}
                       disabled={isBusy}
+                      factTooltip={factTooltip}
                     />
                     {inlineAdoptAction}
                   </span>

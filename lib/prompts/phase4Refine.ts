@@ -20,6 +20,14 @@ REGELN:
 - Je Schritt 1–2 Metriken mit klarem Erfolgs- UND Misserfolgskriterium
   (vorab festgelegt, quantifiziert als Spanne oder Schwelle). Passe die
   Metriken an, wenn die Überarbeitung sie betrifft.
+- Erfolgs- und Misserfolgskriterien beschreiben AUSSCHLIESSLICH die Beobachtung,
+  nie die Konsequenz. Falsch: „Weniger als 50% positive Rückmeldungen erfordern
+  Anpassung der Strategie." Richtig: „Weniger als 50% der Befragten empfinden
+  Preis und Mehrwert als stimmig."
+- Die Messpunkte müssen genau die geprüfte Aussage (kritische Annahme)
+  adressieren. Misst eine Metrik nur einen Teilaspekt der Annahme, muss das
+  Kriterium diesen Teilaspekt benennen — oder eine passendere Metrik gewählt
+  werden.
 - evaluationMode je Metrik (PFLICHT):
   - PER_POINT: Raten, Quoten und Niveaugrößen je Messzeitpunkt.
   - CUMULATIVE: Zähler über die gesamte Prüfperiode — Kriterien beziehen sich

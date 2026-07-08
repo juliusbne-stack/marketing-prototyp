@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionDimensionEvidenceStatus, optionDimensionOrigin } from "./evidenceStatus";
+import { validateStatementContentNotIntention } from "./statementContent";
 
 // Zod schema mirroring the phase 2 JSON output format from docs/PROMPTS.md.
 export const OPTION_DIMENSION_CATEGORIES = [
@@ -41,9 +42,22 @@ const optionSchema = z.object({
     ),
 });
 
-export const phase2ResponseSchema = z.object({
-  options: z.array(optionSchema).min(2).max(3),
-});
+export const phase2ResponseSchema = z
+  .object({
+    options: z.array(optionSchema).min(2).max(3),
+  })
+  .superRefine((data, ctx) => {
+    data.options.forEach((option, optionIndex) => {
+      option.dimensions.forEach((dimension, dimensionIndex) => {
+        validateStatementContentNotIntention(
+          dimension.content,
+          ctx,
+          ["options", optionIndex, "dimensions", dimensionIndex, "content"],
+          `Aussage (Option ${optionIndex + 1}, ${dimension.category})`
+        );
+      });
+    });
+  });
 
 export type Phase2Response = z.infer<typeof phase2ResponseSchema>;
 export type Phase2Option = z.infer<typeof optionSchema>;

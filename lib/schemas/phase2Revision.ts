@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { OPTION_DIMENSION_CATEGORIES } from "./phase2";
 import { optionDimensionEvidenceStatus } from "./evidenceStatus";
+import { validateStatementContentNotIntention } from "./statementContent";
 
 // Zod schema for the phase 2 revision mode (after an ADAPT decision in phase 5).
 const dimensionCategory = z.enum(OPTION_DIMENSION_CATEGORIES);
@@ -38,7 +39,17 @@ export const phase2RevisionResponseSchema = z
         categories.includes(category)
       )
     );
-  }, "Jede der 6 Dimensionen muss genau einmal vorkommen — entweder in revisions oder in unchanged.");
+  }, "Jede der 6 Dimensionen muss genau einmal vorkommen — entweder in revisions oder in unchanged.")
+  .superRefine((data, ctx) => {
+    data.revisions.forEach((revision, index) => {
+      validateStatementContentNotIntention(
+        revision.content,
+        ctx,
+        ["revisions", index, "content"],
+        `Aussage ${index + 1} (${revision.dimensionCategory})`
+      );
+    });
+  });
 
 export type Phase2RevisionResponse = z.infer<
   typeof phase2RevisionResponseSchema

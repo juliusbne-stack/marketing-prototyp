@@ -10,6 +10,11 @@ REGELN:
 - Jede Option enthält GENAU 6 Dimensionen (je 1 Aussage): OPT_TARGET_GROUP,
   OPT_CUSTOMER_PROBLEM, OPT_VALUE_PROPOSITION, OPT_POSITIONING,
   OPT_MARKET_ACCESS, OPT_REVENUE_GROWTH.
+- Die Strategieoption beschreibt die Stoßrichtung (title, summary). Ihre
+  Dimensionen sind die prüfbaren Behauptungen, auf denen diese Stoßrichtung
+  beruht — nicht das Vorhaben selbst. Jeder content einer Dimension muss eine
+  überprüfbare Markt- oder Zielgruppenbehauptung sein (siehe globale
+  Aussagenqualitäts-Regeln), keine Absichts- oder Zielformulierung.
 - Der Evidenzstatus jeder Dimension leitet sich aus dem Analysebild ab: Baut die
   Dimension auf übernommenen FACTs auf → ASSUMPTION mit Verweis darauf in der
   justification; baut sie auf OPEN_QUESTIONs auf → OPEN_QUESTION. Verwende

@@ -17,6 +17,14 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   ergeben oder logisch zwingend sind. "ASSUMPTION" für begründete, aber ungeprüfte
   Einschätzungen (Standardfall). "OPEN_QUESTION" für Punkte ohne belastbare
   Anhaltspunkte, die vor Ressourcenbindung geklärt werden müssen.
+  Erlaubte Werte für evidenceStatus sind EXAKT: FACT, ASSUMPTION, OPEN_QUESTION
+  (niemals AI_DERIVATION oder SIMULATED_RESEARCH — das sind origin-Werte).
+- Im Wettbewerbsbereich (COMPETITOR) darf die KI innerhalb der fiktiven Recherche
+  simulieren, dass einzelne objektnahe Angaben als belegt gelten. "FACT" bedeutet
+  in diesem Prototyp: im Rahmen der simulierten Recherche als belegt dargestellt,
+  nicht real extern geprüft. Interpretierende Aussagen wie Zielgruppenableitungen,
+  Reichweitenschätzungen und strategische Relevanz bleiben in der Regel ASSUMPTION
+  oder AI_DERIVATION. Details siehe Phase-1-Prompt (COMPETITOR-Evidenzregeln).
 - origin: "USER_INPUT" (direkt aus Nutzereingabe übernommen/umformuliert),
   "SIMULATED_RESEARCH" (fiktive Markt-/Wettbewerbsinformation mit sourceRef),
   "AI_DERIVATION" (deine Schlussfolgerung aus dem Kontext).
@@ -28,7 +36,17 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   Namen oder Stichwörter. Falsch: "Einzelunternehmerische Yogalehrer und
   kleine Yogaschulen". Richtig: "Einzelunternehmerische Yogalehrer und kleine
   Yogaschulen haben Bedarf an einem kostengünstigen Buchungstool und sind
-  bereit, dafür zu zahlen."   Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
+  bereit, dafür zu zahlen."
+- Eine Aussage behauptet etwas über die Welt, das durch Marktrückmeldung
+  gestützt oder widerlegt werden kann. Absichten, Ziele, Vorhaben und
+  Maßnahmen sind KEINE Aussagen. Verboten sind Formulierungen wie „Ziel ist
+  es, …", „Wir wollen …", „… soll … werden", „… abzuschöpfen". Falsch:
+  „Ziel ist es, durch wertbasierte Preisargumentation die Zahlungsbereitschaft
+  von 60 bis 150 € abzuschöpfen." Richtig: „Die Zielgruppe ist bereit, im
+  Online-Direktverkauf 60 bis 150 € zu zahlen, wenn Preis und Mehrwert
+  schlüssig argumentiert werden." Faustregel: Lässt sich an den Satz nicht
+  sinnvoll die Frage „Stimmt das?" anschließen, ist es keine Aussage.
+  Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
   Jede Aussage gehört zu einem Segmentprofil (gemeinsames segmentLabel) und einer
   von fünf Dimensionen (segmentAspect). Der content muss die jeweilige Dimension
   als eigenständig prüfbare Behauptung formulieren — nicht nur den Segmentnamen

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LayoutGroup } from "framer-motion";
 import { CheckCheck } from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
 import type { StatementData } from "@/components/statements/types";
@@ -11,7 +12,9 @@ import {
   PhaseErrorState,
   PhaseLoadingState,
 } from "@/components/wizard/phaseStates";
+import { isOnboardingNeeded } from "@/lib/profileQuestions";
 import { ProfileForm, type ProfileData } from "./ProfileForm";
+import { ProfileOnboardingWizard } from "./onboarding/ProfileOnboardingWizard";
 import { AddStatementForm } from "./AddStatementForm";
 import { PestelGrid } from "./PestelGrid";
 import { SegmentCards } from "./SegmentCards";
@@ -42,20 +45,29 @@ export function Phase1View({
   const [isAdoptingAll, setIsAdoptingAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisInfo, setAnalysisInfo] = useState<string | null>(null);
+  const [profile, setProfile] = useState(project);
+  const [showOnboarding, setShowOnboarding] = useState(
+    isOnboardingNeeded(project)
+  );
 
   async function handleAnalyze() {
     setIsGenerating(true);
     setError(null);
     setAnalysisInfo(null);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000);
     try {
       const response = await fetch("/api/ai/1", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: project.id }),
+        signal: controller.signal,
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(body?.error ?? AI_ERROR_FALLBACK);
+        const detail =
+          typeof body?.details === "string" ? `\n\nTechnisch: ${body.details}` : "";
+        throw new Error((body?.error ?? AI_ERROR_FALLBACK) + detail);
       }
       setStatements(body.statements);
       if (Array.isArray(body.pestelRelevance)) {
@@ -76,8 +88,15 @@ export function Phase1View({
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : AI_ERROR_FALLBACK);
+      if (err instanceof Error && err.name === "AbortError") {
+        setError(
+          "Die Analyse hat zu lange gedauert (über 10 Minuten). Erneut versuchen — deine Eingaben bleiben erhalten."
+        );
+      } else {
+        setError(err instanceof Error ? err.message : AI_ERROR_FALLBACK);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setIsGenerating(false);
     }
   }
@@ -153,14 +172,26 @@ export function Phase1View({
   const hasAdopted = statements.some((statement) => statement.adopted);
 
   return (
+    <LayoutGroup>
     <div className="flex flex-col gap-8">
-      <ProfileForm
-        project={project}
-        isGenerating={isGenerating}
-        hasResults={hasResults}
-        hasAdopted={hasAdopted}
-        onAnalyze={handleAnalyze}
-      />
+      {showOnboarding ? (
+        <ProfileOnboardingWizard
+          project={profile}
+          onComplete={(updated) => {
+            setProfile(updated);
+            setShowOnboarding(false);
+          }}
+        />
+      ) : (
+        <ProfileForm
+          project={profile}
+          isGenerating={isGenerating}
+          hasResults={hasResults}
+          hasAdopted={hasAdopted}
+          onAnalyze={handleAnalyze}
+          layoutId="profile-card"
+        />
+      )}
 
       {analysisInfo && !error && (
         <p className="text-xs text-text-muted">{analysisInfo}</p>
@@ -295,5 +326,6 @@ export function Phase1View({
         disabledHint="Übernimm zuerst mindestens eine Aussage in den Projektstand."
       />
     </div>
+    </LayoutGroup>
   );
 }

@@ -1,4 +1,9 @@
 // Feedback-based revision of ONE task elaboration (GLOBAL_PROMPT rules apply).
+import {
+  COPY_QUALITY_PROMPT,
+  COPY_TASK_RELEVANCE_PROMPT,
+} from "./copyTaskRelevance";
+
 export const TASK_ELABORATION_REFINE_PROMPT = `AUFGABE: Überarbeite GENAU DIESES Arbeitspaket (aktuelleAusarbeitung)
 gemäß dem aktuellen Nutzerfeedback (nutzerFeedback). Erfinde kein neues,
 unabhängiges Arbeitspaket — es geht um eine gerichtete Überarbeitung des
@@ -54,6 +59,13 @@ changeSummary):
 
 Hinweis targeting.vorhanden = false → nur "vorhanden": false senden.
 formulierungsvorschlaege und offeneFragen dürfen leere Arrays sein.
-COPY-REGELN für formulierungsvorschlaege gelten unverändert (werbliche
-Textbausteine, 2–3 bei kommunikationsbezogenen Aufgaben, spezifisch aus
-copyBasis/targetingGrundlage).`;
+
+COPY-REGELN für formulierungsvorschlaege:
+
+${COPY_TASK_RELEVANCE_PROMPT}
+
+${COPY_QUALITY_PROMPT}
+
+Bei Überarbeitung: Wenn vorherige Aufgaben im Schritt bereits Copy geliefert haben,
+darf diese Aufgabe keine parallele Werbebotschaft neu erfinden — Rolle
+COPY_ADAPTATION oder OPERATIONAL wählen.`;

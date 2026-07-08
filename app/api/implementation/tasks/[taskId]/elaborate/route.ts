@@ -70,7 +70,13 @@ export async function POST(
           },
           tasks: {
             orderBy: { sortOrder: "asc" },
-            select: { id: true, title: true },
+            select: {
+              id: true,
+              title: true,
+              hint: true,
+              sortOrder: true,
+              elaboration: true,
+            },
           },
         },
       },
@@ -155,9 +161,7 @@ export async function POST(
     adoptedStatements,
     missingCategories: getMissingImplementationCategories(adoptedStatements),
     startupProfile: buildStartupProfile(task.step.project),
-    siblingTaskTitles: task.step.tasks
-      .filter((entry) => entry.id !== task.id)
-      .map((entry) => entry.title),
+    stepTasks: task.step.tasks,
   });
 
   let result;

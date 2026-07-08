@@ -12,6 +12,7 @@ import {
   isCompetitorAspect,
   type CompetitorAspect,
 } from "@/lib/competitorAspects";
+import { SIMULATED_FACT_TOOLTIP } from "@/components/statements/EvidenceBadge";
 
 function evidenceCounts(statements: StatementData[]) {
   return {
@@ -281,6 +282,7 @@ function CompetitorAccordionRow({
                   onChanged={onChanged}
                   onDeleted={onDeleted}
                   emptyPlaceholder="Noch keine Aussage zu dieser Dimension."
+                  factTooltip={SIMULATED_FACT_TOOLTIP}
                 />
               </div>
             ))}
@@ -319,12 +321,12 @@ function CompetitorListPanel({
           Relevante Akteure ({profileGroups.size})
         </h4>
         <p className="mt-0.5 text-xs text-text-muted">
-          {facts} Fakten · {assumptions} Annahmen · {open} offen — zum
-          Aufklappen anklicken
+          {facts} Fakten · {assumptions} Annahmen · {open} offen — Wettbewerber,
+          Substitute & Alternativen; zum Aufklappen anklicken
         </p>
       </header>
 
-      <div>
+      <div className="max-h-[min(70vh,36rem)] overflow-y-auto">
         {Array.from(profileGroups.entries()).map(([competitorLabel, group]) => (
           <CompetitorAccordionRow
             key={competitorLabel}
@@ -404,6 +406,7 @@ function LandscapeCard({
                 showAdoptInline
                 onChanged={onChanged}
                 onDeleted={onDeleted}
+                factTooltip={SIMULATED_FACT_TOOLTIP}
               />
             ))}
           </div>
@@ -459,12 +462,17 @@ export function CompetitorCards({
         Wettbewerb & Alternativen
       </h3>
       <p className="mt-1 text-xs text-text-muted">
-        Relevante Akteure aus Kundensicht — mit simulierten Kennzahlen (fiktiv).
+        Wettbewerbsumfeld aus Kundensicht — direkte & indirekte Akteure,
+        Substitute und Alternativen (simulierte Kennzahlen, fiktiv).{" "}
+        <span title={SIMULATED_FACT_TOOLTIP} className="cursor-help underline decoration-dotted underline-offset-2">
+          Fakt
+        </span>{" "}
+        = simuliert belegt, nicht extern geprüft.
       </p>
 
       {!hasProfiles && legacyStatements.length === 0 && (
         <p className="mt-3 text-xs text-text-muted">
-          Keine Wettbewerberprofile vorhanden.
+          Noch keine Akteure im Wettbewerbsumfeld erfasst.
         </p>
       )}
 

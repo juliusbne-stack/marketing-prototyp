@@ -7,9 +7,8 @@ const createProjectSchema = z.object({
 });
 
 // Start-up profile fields (phase 1 inputs, see prisma/schema.prisma).
-const updateProfileSchema = z.object({
-  id: z.string().min(1),
-  businessIdea: z.string().trim().min(1, "Die Geschäftsidee ist Pflicht."),
+const profileFieldSchema = z.object({
+  businessIdea: z.string().trim().min(1, "Die Geschäftsidee ist Pflicht.").optional(),
   productStatus: z.string().trim().nullable().optional(),
   assumedTarget: z.string().trim().nullable().optional(),
   assumedProblem: z.string().trim().nullable().optional(),
@@ -21,7 +20,22 @@ const updateProfileSchema = z.object({
   timePerWeek: z.string().trim().nullable().optional(),
   skills: z.string().trim().nullable().optional(),
   existingInsights: z.string().trim().nullable().optional(),
+  profileOnboardingStep: z.number().int().min(0).max(12).optional(),
+  profileOnboardingComplete: z.boolean().optional(),
 });
+
+const updateProfileSchema = z
+  .object({
+    id: z.string().min(1),
+  })
+  .merge(profileFieldSchema)
+  .refine(
+    (data) => {
+      const { id: _id, ...fields } = data;
+      return Object.values(fields).some((value) => value !== undefined);
+    },
+    { message: "Mindestens ein Feld zum Aktualisieren angeben." }
+  );
 
 export async function GET() {
   const projects = await prisma.project.findMany({
@@ -62,12 +76,11 @@ export async function PATCH(request: Request) {
 
   const { id, ...profile } = parsed.data;
 
-  // Empty strings become null so optional fields stay clean in the DB.
+  // Only persist fields present in the request; empty strings become null.
   const data = Object.fromEntries(
-    Object.entries(profile).map(([key, value]) => [
-      key,
-      value === "" ? null : value,
-    ])
+    Object.entries(profile)
+      .filter(([, value]) => value !== undefined)
+      .map(([key, value]) => [key, value === "" ? null : value])
   );
 
   try {

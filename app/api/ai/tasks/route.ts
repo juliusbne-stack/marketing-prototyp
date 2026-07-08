@@ -49,9 +49,22 @@ export async function POST(request: Request) {
           },
         },
       },
-      assumption: { select: { content: true, evidenceStatus: true } },
+      assumption: {
+        select: {
+          content: true,
+          evidenceStatus: true,
+          category: true,
+          segmentAspect: true,
+        },
+      },
       metrics: {
-        select: { name: true, successCriterion: true, failureCriterion: true },
+        select: {
+          name: true,
+          successCriterion: true,
+          failureCriterion: true,
+          metricRole: true,
+          evaluationMode: true,
+        },
       },
       tasks: { select: { id: true } },
     },
@@ -114,11 +127,16 @@ export async function POST(request: Request) {
     })),
     step: {
       title: step.title,
+      validationQuestion: step.validationQuestion,
+      testDesign: step.testDesign,
+      marketingActivities: step.marketingActivities,
       description: step.description,
       channel: step.channel,
       timeframe: step.timeframe,
       budgetFrame: step.budgetFrame,
       testedAssumption: step.assumption.content,
+      assumptionCategory: step.assumption.category,
+      assumptionSegmentAspect: step.assumption.segmentAspect,
       metrics: step.metrics,
     },
   };

@@ -9,6 +9,11 @@ REGELN:
 - Schlage überarbeitete Fassungen NUR für die Dimensionen vor, die von den
   Lernergebnissen tatsächlich betroffen sind. Keine Anpassung ohne konkreten
   Anlass in den übergebenen Rückmeldungen oder Erkenntnissen.
+- Die Strategieoption beschreibt die Stoßrichtung. Ihre Dimensionen sind die
+  prüfbaren Behauptungen, auf denen diese Stoßrichtung beruht — nicht das
+  Vorhaben selbst. Jeder überarbeitete content muss eine überprüfbare
+  Markt- oder Zielgruppenbehauptung sein (siehe globale Aussagenqualitäts-
+  Regeln), keine Absichts- oder Zielformulierung.
 - revisions: je betroffener Dimension GENAU eine überarbeitete Aussage:
   - content: die überarbeitete Formulierung der Dimension (vollständiger
     Ersatz der bisherigen Aussage, nicht nur ein Änderungshinweis).

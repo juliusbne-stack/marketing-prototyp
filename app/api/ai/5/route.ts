@@ -98,9 +98,25 @@ export async function POST(request: Request) {
     orderBy: { createdAt: "asc" },
     include: {
       metrics: {
-        select: { name: true, successCriterion: true, failureCriterion: true },
+        select: {
+          name: true,
+          successCriterion: true,
+          failureCriterion: true,
+          metricRole: true,
+          evaluationMode: true,
+        },
       },
-      assumption: { select: statementSelect },
+      assumption: {
+        select: {
+          id: true,
+          category: true,
+          segmentAspect: true,
+          content: true,
+          evidenceStatus: true,
+          justification: true,
+          uncertainty: true,
+        },
+      },
     },
   });
 
@@ -216,11 +232,15 @@ export async function POST(request: Request) {
     validationSteps: steps.map((step) => ({
       stepId: step.id,
       title: step.title,
+      validationQuestion: step.validationQuestion,
+      testDesign: step.testDesign,
       description: step.description,
       channel: step.channel,
       metrics: step.metrics,
       testedAssumption: {
         id: step.assumption.id,
+        category: step.assumption.category,
+        segmentAspect: step.assumption.segmentAspect,
         content: step.assumption.content,
         evidenceStatus: step.assumption.evidenceStatus,
         justification: step.assumption.justification,

@@ -84,7 +84,15 @@ export function ElaborationContent({
           </dl>
           <p className="mt-2 text-xs text-text-muted">{content.targeting.hinweis}</p>
           {content.targeting.basiertAufAussageIds.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2">
+              <p className="mb-1.5 text-[11px] text-text-muted">
+                Grundlagen aus der Analyse
+                <span className="text-text-muted/75">
+                  {" "}
+                  · Für den Wortlaut mit der Maus über die Badges fahren
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-1.5">
               {content.targeting.basiertAufAussageIds.map((id) => {
                 const statement = statementMap.get(id);
                 if (!statement) return null;
@@ -98,6 +106,7 @@ export function ElaborationContent({
                   />
                 );
               })}
+              </div>
             </div>
           )}
         </div>

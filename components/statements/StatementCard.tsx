@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Pencil, Trash2 } from "lucide-react";
 import type { EvidenceStatus } from "@prisma/client";
 import type { ValidationHistoryCounts } from "@/lib/validation";
+import { useConfirm } from "@/components/ui/DialogProvider";
 import { EvidenceBadge } from "./EvidenceBadge";
 import { OriginTag } from "./OriginTag";
 import type { StatementData } from "./types";
@@ -35,6 +36,7 @@ export function StatementCard({
   const [metaExpanded, setMetaExpanded] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   async function patch(data: Record<string, unknown>) {
     setIsBusy(true);
@@ -67,6 +69,16 @@ export function StatementCard({
   }
 
   async function handleDelete() {
+    const confirmed = await confirm({
+      title: "Aussage löschen?",
+      message:
+        "Diese Aussage endgültig löschen? Der Vorgang kann nicht rückgängig gemacht werden.",
+      confirmLabel: "Löschen",
+      cancelLabel: "Abbrechen",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
     setIsBusy(true);
     setError(null);
     try {

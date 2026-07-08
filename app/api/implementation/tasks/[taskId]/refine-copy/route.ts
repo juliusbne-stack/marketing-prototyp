@@ -10,6 +10,7 @@ import { taskElaborationResponseSchema } from "@/lib/schemas/taskElaboration";
 import { buildImplementationStatements } from "@/lib/implementationStatements";
 import {
   buildCopyBasis,
+  buildCopyRefineStepContext,
   buildStartupProfile,
 } from "@/lib/implementationContext";
 import { taskSelect } from "@/lib/tasks";
@@ -34,6 +35,19 @@ export async function POST(
     include: {
       step: {
         include: {
+          assumption: {
+            select: { content: true },
+          },
+          tasks: {
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              title: true,
+              hint: true,
+              sortOrder: true,
+              elaboration: true,
+            },
+          },
           project: true,
           option: {
             include: {
@@ -121,11 +135,17 @@ export async function POST(
     aufgabe: {
       titel: task.title,
       unterzeile: task.hint,
+      erfolgskriterium: task.erfolgskriterium,
     },
     massnahmenkarte: {
       titel: task.step.title,
       kanal: task.step.channel,
+      gepruefteAnnahme: task.step.assumption.content,
     },
+    aufgabenReihenfolgeImSchritt: buildCopyRefineStepContext(
+      task.id,
+      task.step.tasks
+    ),
     copyBasis,
     bisherigeFormulierungsvorschlaege: elaboration.data.formulierungsvorschlaege,
     nutzerFeedback: parsed.data.feedback,

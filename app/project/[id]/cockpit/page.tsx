@@ -19,6 +19,7 @@ import { taskSelect } from "@/lib/tasks";
 import { reassessDataPoints } from "@/lib/kpiAssessment";
 import { buildImplementationStatements } from "@/lib/implementationStatements";
 import { taskElaborationResponseSchema } from "@/lib/schemas/taskElaboration";
+import { activeValidationStepWhere } from "@/lib/validationStep";
 
 // Implementation cockpit — companion view for the implementation period
 // between phase 4 (adopted steps) and phase 5 (market feedback).
@@ -69,10 +70,10 @@ export default async function CockpitPage({
         include: optionInclude,
       });
 
-  // The cockpit accompanies only adopted steps (project state).
+  // The cockpit accompanies only active adopted steps (project state).
   const steps = option
     ? await prisma.validationStep.findMany({
-        where: { optionId: option.id, adopted: true },
+        where: { optionId: option.id, adopted: true, ...activeValidationStepWhere },
         orderBy: { createdAt: "asc" },
         include: {
           assumption: {

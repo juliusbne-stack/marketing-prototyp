@@ -13,6 +13,7 @@ import {
 } from "@/lib/implementationStatements";
 import {
   buildCopyBasis,
+  buildCopyRefineStepContext,
   buildStartupProfile,
 } from "@/lib/implementationContext";
 import { formatImplementationGoals } from "@/lib/formatImplementationGoals";
@@ -65,6 +66,16 @@ export async function POST(
               name: true,
               successCriterion: true,
               failureCriterion: true,
+            },
+          },
+          tasks: {
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              title: true,
+              hint: true,
+              sortOrder: true,
+              elaboration: true,
             },
           },
         },
@@ -163,6 +174,10 @@ export async function POST(
     aktuelleAusarbeitung: elaboration.data,
     targetingGrundlage,
     copyBasis,
+    aufgabenReihenfolgeImSchritt: buildCopyRefineStepContext(
+      task.id,
+      task.step.tasks
+    ),
     nutzerFeedback: parsed.data.feedback,
     previousFeedbackRounds: parsed.data.previousRounds,
   };
