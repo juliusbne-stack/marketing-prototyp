@@ -37,6 +37,10 @@ model Project {
   skills           String? @db.Text // vorhandene Fähigkeiten/Kanäle/Netzwerk
   existingInsights String? @db.Text // bisherige Kundenerkenntnisse/Rückmeldungen
 
+  // Profil-Onboarding (geführtes Interview vor dem ersten ProfileForm)
+  profileOnboardingComplete Boolean @default(false)
+  profileOnboardingStep     Int     @default(0) // 0–11: Index der nächsten Frage
+
   // Phase-1-Metadaten: KI-Relevanzentscheidungen je PESTEL-Dimension (JSON-Array)
   pestelRelevance Json?
 
@@ -184,6 +188,37 @@ model Evaluation {
 // ----------------------------------------------------------------------------
 // Validierende Umsetzung (Phase 4, F8)
 // ----------------------------------------------------------------------------
+enum StepType {
+  VALIDATION
+  SCALING
+}
+
+enum StrategyDimension {
+  TARGET_GROUP
+  CUSTOMER_PROBLEM
+  VALUE_PROPOSITION
+  POSITIONING
+  MARKET_ACCESS
+  REVENUE_GROWTH
+}
+
+enum TestSubject {
+  WILLINGNESS_TO_PAY
+  REACHABILITY
+  PROBLEM_RELEVANCE
+  VALUE_UNDERSTANDING
+  DIFFERENTIATION
+  REVENUE_MECHANICS
+  OTHER
+}
+
+enum SignalCategory {
+  COMMITMENT
+  BEHAVIOR
+  ATTENTION
+  QUALITATIVE
+}
+
 model ValidationStep {
   id           String         @id @default(cuid())
   projectId    String
@@ -194,10 +229,21 @@ model ValidationStep {
   assumption   Statement      @relation("StepAssumption", fields: [assumptionId], references: [id], onDelete: Cascade)
   title        String
   description  String         @db.Text // Maßnahme/Experiment/MVP-Schritt
+  // Validierungskern: was wird beobachtet und wie wird getestet (Phase 4 Sprint 2)
+  validationQuestion  String? @db.Text
+  testDesign          String? @db.Text
+  marketingActivities Json?   // string[] — Durchführungsmaßnahmen
   channel      String?        // z.B. Landingpage, Instagram, Interviews
   timeframe    String?        // z.B. "3 Wochen" — begrenzter Umsetzungszeitraum
   budgetFrame  String?        // z.B. "max. 150 € von 500 €/Monat"
+  stepType           StepType            @default(VALIDATION)
+  strategyDimension  StrategyDimension?
+  testSubject        TestSubject?
+  methodWarning      String?             @db.Text
   adopted      Boolean        @default(false)
+  // Soft discard for adopted steps — preserves tasks, KPIs and feedback for
+  // traceability; hard DELETE is only allowed for non-adopted drafts.
+  discardedAt  DateTime?
   createdAt    DateTime       @default(now())
 
   metrics   Metric[]
@@ -210,12 +256,19 @@ enum EvaluationMode {
   CUMULATIVE  // Zähler über die Prüfperiode — Bewertung über kumulierte Summe
 }
 
+enum MetricRole {
+  DECISIVE    // adressiert die Annahme direkt — zählt für Evidenz in Phase 5
+  SUPPORTING  // Nebensignal (Traffic, Reichweite) — nicht allein entscheidend
+}
+
 model Metric {
   id               String         @id @default(cuid())
   stepId           String
   step             ValidationStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
   name             String         // z.B. "Registrierungen in 2 Wochen"
   evaluationMode   EvaluationMode @default(PER_POINT)
+  metricRole       MetricRole     @default(DECISIVE)
+  signalCategory   SignalCategory?
   successCriterion String         // gilt als stützend, wenn ...
   failureCriterion String         // gilt als widerlegend, wenn ...
 

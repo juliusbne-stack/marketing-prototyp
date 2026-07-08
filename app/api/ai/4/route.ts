@@ -1,41 +1,27 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { callLLM, LlmValidationError } from "@/lib/openai";
+import { callLLM, LlmValidationError, mapLlmCallError } from "@/lib/openai";
+import {
+  buildAddressedSegmentProfile,
+  loadAdoptedAnalysis,
+  loadStartupProfile,
+  whitelistToContext,
+} from "@/lib/phase4/context";
+import {
+  buildCandidateWhitelist,
+  computeWhitelistSingleDimension,
+  processLlmResult,
+} from "@/lib/phase4/guards";
+import { getPhase4Mode } from "@/lib/phase4/mode";
+import { phase4StepInclude, persistPhase4Steps } from "@/lib/phase4/persist";
+import { EMPTY_WHITELIST_VALIDATION } from "@/lib/labels/phase4";
 import { PHASE4_PROMPT } from "@/lib/prompts/phase4";
 import { phase4ResponseSchema } from "@/lib/schemas/phase4";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
 });
-
-const stepInclude = {
-  metrics: {
-    select: {
-      id: true,
-      name: true,
-      evaluationMode: true,
-      successCriterion: true,
-      failureCriterion: true,
-    },
-  },
-  assumption: {
-    select: {
-      id: true,
-      projectId: true,
-      phase: true,
-      category: true,
-      content: true,
-      evidenceStatus: true,
-      origin: true,
-      justification: true,
-      sourceRef: true,
-      uncertainty: true,
-      isCritical: true,
-      adopted: true,
-    },
-  },
-} as const;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -48,10 +34,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const project = await prisma.project.findUnique({
-    where: { id: parsed.data.projectId },
-  });
+  const { projectId } = parsed.data;
+  const mode = await getPhase4Mode(projectId);
 
+  if (mode !== "VALIDATION") {
+    return NextResponse.json(
+      {
+        error:
+          "Neue Validierungsschritte sind im Fortführungsmodus nicht vorgesehen. Leite Skalierungsschritte ab oder wähle in Phase 5 „Anpassen (ADAPT)“, um neue Annahmen zu prüfen.",
+      },
+      { status: 400 }
+    );
+  }
+
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) {
     return NextResponse.json(
       { error: "Das Projekt wurde nicht gefunden." },
@@ -59,9 +55,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // Phase 4 works exclusively on the prioritized option (M5).
   const option = await prisma.strategyOption.findFirst({
-    where: { projectId: project.id, status: "PRIORITIZED" },
+    where: { projectId, status: "PRIORITIZED" },
     include: {
       statements: {
         include: {
@@ -70,11 +65,6 @@ export async function POST(request: Request) {
               id: true,
               category: true,
               content: true,
-              evidenceStatus: true,
-              origin: true,
-              justification: true,
-              uncertainty: true,
-              adopted: true,
               segmentLabel: true,
             },
           },
@@ -93,91 +83,56 @@ export async function POST(request: Request) {
     );
   }
 
-  // Context rule: profile + ONLY adopted statements (option dimensions +
-  // phase 1 analysis). Statement ids are passed so the AI can reference them.
-  const adoptedAnalysis = await prisma.statement.findMany({
-    where: { projectId: project.id, phase: 1, adopted: true },
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      category: true,
-      content: true,
-      evidenceStatus: true,
-      origin: true,
-      justification: true,
-      sourceRef: true,
-      uncertainty: true,
-      segmentLabel: true,
-      segmentAspect: true,
-    },
-  });
+  const whitelist = await buildCandidateWhitelist(projectId, "VALIDATION");
+  if (whitelist.length === 0) {
+    console.log("[phase4] Whitelist leer (VALIDATION) — kein LLM-Call.");
+    const steps = await prisma.validationStep.findMany({
+      where: { optionId: option.id, discardedAt: null },
+      orderBy: { createdAt: "asc" },
+      include: phase4StepInclude,
+    });
+    return NextResponse.json({
+      steps,
+      diversityNote: null,
+      modeNote: null,
+      emptyState: EMPTY_WHITELIST_VALIDATION,
+    });
+  }
 
-  const adoptedDimensions = option.statements
-    .map((link) => link.statement)
-    .filter((statement) => statement.adopted);
-
-  // Full profile of the segment addressed by the prioritized option (single
-  // source in phase 1) — critical assumptions should preferably come from its
-  // weakly supported aspects.
+  const adoptedAnalysis = await loadAdoptedAnalysis(projectId);
   const addressedSegmentLabel =
-    adoptedDimensions.find(
-      (statement) => statement.category === "OPT_TARGET_GROUP"
-    )?.segmentLabel ?? null;
-  const addressedSegmentProfile = addressedSegmentLabel
-    ? {
-        segmentLabel: addressedSegmentLabel,
-        aspects: adoptedAnalysis
-          .filter(
-            (statement) =>
-              statement.category === "TARGET_SEGMENT" &&
-              statement.segmentLabel === addressedSegmentLabel
-          )
-          .map((statement) => ({
-            statementId: statement.id,
-            segmentAspect: statement.segmentAspect,
-            content: statement.content,
-            evidenceStatus: statement.evidenceStatus,
-            uncertainty: statement.uncertainty,
-          })),
-      }
-    : null;
+    option.statements
+      .map((link) => link.statement)
+      .find((statement) => statement.category === "OPT_TARGET_GROUP")
+      ?.segmentLabel ?? null;
 
   const context = {
-    startupProfile: {
-      businessIdea: project.businessIdea,
-      productStatus: project.productStatus,
-      assumedTarget: project.assumedTarget,
-      assumedProblem: project.assumedProblem,
-      valueProposition: project.valuePropDraft,
-      revenueIdea: project.revenueIdea,
-      region: project.region,
-      teamSize: project.teamSize,
-      budgetMonthly: project.budgetMonthly,
-      timePerWeek: project.timePerWeek,
-      skillsAndChannels: project.skills,
-      existingCustomerInsights: project.existingInsights,
-    },
+    modus: "VALIDATION",
+    whitelist: whitelistToContext(whitelist),
+    validatedChannels: [],
+    startupProfile: await loadStartupProfile(projectId),
     prioritizedOption: {
       title: option.title,
       summary: option.summary,
       prioritizationRationale: option.prioritizationRationale,
-      dimensions: adoptedDimensions.map((statement) => ({
-        id: statement.id,
-        category: statement.category,
-        content: statement.content,
-        evidenceStatus: statement.evidenceStatus,
-        origin: statement.origin,
-        justification: statement.justification,
-        uncertainty: statement.uncertainty,
-      })),
     },
-    addressedSegmentProfile,
+    addressedSegmentProfile: buildAddressedSegmentProfile(
+      adoptedAnalysis,
+      addressedSegmentLabel
+    ),
     adoptedAnalysisStatements: adoptedAnalysis,
   };
 
-  let result;
+  const guardCtx = {
+    mode: "VALIDATION" as const,
+    whitelist,
+    validatedChannels: [],
+    whitelistSingleDimension: computeWhitelistSingleDimension(whitelist),
+  };
+
+  let llmResult;
   try {
-    result = await callLLM(PHASE4_PROMPT, context, phase4ResponseSchema);
+    llmResult = await callLLM(PHASE4_PROMPT, context, phase4ResponseSchema);
   } catch (error) {
     if (error instanceof LlmValidationError) {
       return NextResponse.json(
@@ -191,94 +146,35 @@ export async function POST(request: Request) {
     console.error("Phase 4 LLM call failed:", error);
     return NextResponse.json(
       {
-        error:
-          "Die Umsetzungsschritte konnten nicht abgeleitet werden. Erneut versuchen — deine Priorisierung bleibt erhalten.",
+        error: mapLlmCallError(
+          error,
+          "Die Umsetzungsschritte konnten nicht abgeleitet werden. Erneut versuchen — deine Priorisierung bleibt erhalten."
+        ),
       },
       { status: 502 }
     );
   }
 
-  // The schema cannot know valid statement ids — verify them explicitly.
-  const knownIds = new Set([
-    ...adoptedDimensions.map((statement) => statement.id),
-    ...adoptedAnalysis.map((statement) => statement.id),
-  ]);
-  if (!result.criticalAssumptions.every((id) => knownIds.has(id))) {
-    return NextResponse.json(
-      {
-        error:
-          "Die KI-Antwort passte nicht zu den vorhandenen Aussagen. Erneut versuchen — deine Priorisierung bleibt erhalten.",
-      },
-      { status: 502 }
-    );
-  }
+  const processed = await processLlmResult(llmResult, guardCtx);
+  console.log("[phase4] Guard-Log:", processed.log.join(" | "));
 
-  // Re-running replaces draft steps; adopted steps are never touched.
-  const steps = await prisma.$transaction(async (tx) => {
-    await tx.validationStep.deleteMany({
-      where: { optionId: option.id, adopted: false },
-    });
-
-    // Mark the new critical assumptions; unmark statements that are no longer
-    // critical and have no remaining (adopted) step.
-    const remainingSteps = await tx.validationStep.findMany({
-      where: { optionId: option.id },
-      select: { assumptionId: true },
-    });
-    const keepCritical = new Set([
-      ...result.criticalAssumptions,
-      ...remainingSteps.map((step) => step.assumptionId),
-    ]);
-    await tx.statement.updateMany({
-      where: {
-        projectId: project.id,
-        isCritical: true,
-        id: { notIn: [...keepCritical] },
-      },
-      data: { isCritical: false },
-    });
-    await tx.statement.updateMany({
-      where: { id: { in: result.criticalAssumptions } },
-      data: { isCritical: true },
-    });
-
-    // Skip assumptions that already have an adopted step — they stay untouched.
-    const adoptedAssumptionIds = new Set(
-      remainingSteps.map((step) => step.assumptionId)
-    );
-
-    // AI drafts: steps with adopted=false (rule 3).
-    for (const step of result.steps) {
-      if (adoptedAssumptionIds.has(step.assumptionId)) continue;
-      await tx.validationStep.create({
-        data: {
-          projectId: project.id,
-          optionId: option.id,
-          assumptionId: step.assumptionId,
-          title: step.title,
-          description: step.description,
-          channel: step.channel ?? null,
-          timeframe: step.timeframe,
-          budgetFrame: step.budgetFrame,
-          adopted: false,
-          metrics: {
-            create: step.metrics.map((metric) => ({
-              name: metric.name,
-              evaluationMode: metric.evaluationMode,
-              successCriterion: metric.successCriterion,
-              failureCriterion: metric.failureCriterion,
-            })),
-          },
-        },
-      });
-    }
-
-    return tx.validationStep.findMany({
-      where: { optionId: option.id },
-      orderBy: { createdAt: "asc" },
-      include: stepInclude,
-    });
+  const steps = await persistPhase4Steps({
+    projectId,
+    optionId: option.id,
+    stepType: "VALIDATION",
+    processedSteps: processed.steps,
+    criticalAssumptionIds: llmResult.criticalAssumptions.filter((id) =>
+      processed.steps.some((step) => step.assumptionId === id)
+    ),
   });
 
-  return NextResponse.json({ steps }, { status: 201 });
+  return NextResponse.json(
+    {
+      steps,
+      diversityNote: processed.diversityNote,
+      modeNote: processed.modeNote,
+      emptyState: null,
+    },
+    { status: 201 }
+  );
 }

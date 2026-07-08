@@ -10,15 +10,25 @@ const stepSelect = {
   assumptionId: true,
   title: true,
   description: true,
+  validationQuestion: true,
+  testDesign: true,
+  marketingActivities: true,
   channel: true,
   timeframe: true,
   budgetFrame: true,
+  stepType: true,
+  strategyDimension: true,
+  testSubject: true,
+  methodWarning: true,
   adopted: true,
+  discardedAt: true,
   metrics: {
     select: {
       id: true,
       name: true,
       evaluationMode: true,
+      metricRole: true,
+      signalCategory: true,
       successCriterion: true,
       failureCriterion: true,
     },
@@ -35,11 +45,13 @@ const updateStepSchema = z
     budgetFrame: z.string().trim().nullable().optional(),
     // Adoption happens only through an explicit user action (F10/NF5).
     adopted: z.boolean().optional(),
+    // Soft discard for adopted steps — keeps tasks, KPIs and feedback intact.
+    discard: z.boolean().optional(),
     // Full replacement of the step's metrics (AI refinement adoption).
     metrics: z
       .array(metricInputSchema)
       .min(1)
-      .max(2)
+      .max(3)
       .optional(),
   })
   .refine((data) => Object.keys(data).length > 1, "Keine Änderung angegeben.");
@@ -55,7 +67,36 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const { id, channel, timeframe, budgetFrame, metrics, ...data } = parsed.data;
+  const { id, channel, timeframe, budgetFrame, metrics, discard, ...data } =
+    parsed.data;
+
+  if (discard) {
+    const existing = await prisma.validationStep.findUnique({
+      where: { id },
+      select: { adopted: true, discardedAt: true },
+    });
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Der Umsetzungsschritt wurde nicht gefunden." },
+        { status: 404 }
+      );
+    }
+    if (!existing.adopted) {
+      return NextResponse.json(
+        {
+          error:
+            "Nicht übernommene Entwürfe können direkt gelöscht werden — Verwerfen gilt nur für übernommene Schritte.",
+        },
+        { status: 400 }
+      );
+    }
+    if (existing.discardedAt) {
+      return NextResponse.json(
+        { error: "Diese Validierung wurde bereits als nicht weiter verfolgt markiert." },
+        { status: 400 }
+      );
+    }
+  }
 
   try {
     const step = await prisma.validationStep.update({
@@ -65,8 +106,21 @@ export async function PATCH(request: Request) {
         ...(channel !== undefined ? { channel: channel || null } : {}),
         ...(timeframe !== undefined ? { timeframe: timeframe || null } : {}),
         ...(budgetFrame !== undefined ? { budgetFrame: budgetFrame || null } : {}),
+        ...(discard ? { discardedAt: new Date() } : {}),
         ...(metrics !== undefined
-          ? { metrics: { deleteMany: {}, create: metrics } }
+          ? {
+              metrics: {
+                deleteMany: {},
+                create: metrics.map((metric) => ({
+                  name: metric.name,
+                  evaluationMode: metric.evaluationMode,
+                  metricRole: metric.metricRole,
+                  signalCategory: metric.signalCategory ?? null,
+                  successCriterion: metric.successCriterion,
+                  failureCriterion: metric.failureCriterion,
+                })),
+              },
+            }
           : {}),
       },
       select: stepSelect,
@@ -87,6 +141,30 @@ export async function DELETE(request: Request) {
   if (!id) {
     return NextResponse.json(
       { error: "id fehlt in der Anfrage." },
+      { status: 400 }
+    );
+  }
+
+  const existing = await prisma.validationStep.findUnique({
+    where: { id },
+    select: { adopted: true },
+  });
+
+  if (!existing) {
+    return NextResponse.json(
+      { error: "Der Umsetzungsschritt wurde nicht gefunden." },
+      { status: 404 }
+    );
+  }
+
+  // Adopted steps must not be hard-deleted — they may have tasks, KPIs or
+  // feedback attached. Use PATCH { discard: true } instead.
+  if (existing.adopted) {
+    return NextResponse.json(
+      {
+        error:
+          "Übernommene Validierungen können nicht endgültig gelöscht werden. Markiere sie stattdessen als nicht weiter verfolgt.",
+      },
       { status: 400 }
     );
   }

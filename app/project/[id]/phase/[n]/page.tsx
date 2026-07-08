@@ -3,11 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { OPTION_DIMENSION_CATEGORIES } from "@/lib/schemas/phase2";
 import { buildKpiFeedbackSummary } from "@/lib/kpiSummary";
 import { resolvePestelRelevance } from "@/lib/pestelRelevance";
+import { activeValidationStepWhere } from "@/lib/validationStep";
 import { Phase1View } from "@/components/phase1/Phase1View";
 import { Phase2View } from "@/components/phase2/Phase2View";
 import { Phase3View } from "@/components/phase3/Phase3View";
 import { Phase4View } from "@/components/phase4/Phase4View";
 import { Phase5View } from "@/components/phase5/Phase5View";
+import { parseMarketingActivities } from "@/components/phase4/types";
+import { getPhase4Mode } from "@/lib/phase4/mode";
+import type { Phase4Mode } from "@/lib/phase4/types";
 
 const statementSelect = {
   id: true,
@@ -101,6 +105,8 @@ export default async function PhasePage({
           timePerWeek: true,
           skills: true,
           existingInsights: true,
+          profileOnboardingComplete: true,
+          profileOnboardingStep: true,
           pestelRelevance: true,
         },
       }),
@@ -239,7 +245,7 @@ export default async function PhasePage({
 
   if (phaseNumber === 4) {
     // Phase 4 works exclusively on the prioritized option (M5).
-    const [option, latestAdaptation] = await Promise.all([
+    const [option, phase4Mode] = await Promise.all([
       prisma.strategyOption.findFirst({
         where: { projectId: id, status: "PRIORITIZED" },
         select: {
@@ -249,20 +255,11 @@ export default async function PhasePage({
           prioritizationRationale: true,
         },
       }),
-      prisma.adaptationDecision.findFirst({
-        where: { projectId: id, userConfirmed: true },
-        orderBy: { createdAt: "desc" },
-        select: { decision: true },
-      }),
+      getPhase4Mode(id),
     ]);
-
-    // Continuation mode (learning loop): the latest phase 5 decision is
-    // CONTINUE — phase 4 offers controlled scaling instead of a fresh run.
-    const continuationMode =
-      latestAdaptation?.decision === "CONTINUE" && Boolean(option);
     const rawSteps = option
       ? await prisma.validationStep.findMany({
-          where: { optionId: option.id },
+          where: { optionId: option.id, ...activeValidationStepWhere },
           orderBy: { createdAt: "asc" },
           include: {
             metrics: {
@@ -270,6 +267,8 @@ export default async function PhasePage({
                 id: true,
                 name: true,
                 evaluationMode: true,
+                metricRole: true,
+                signalCategory: true,
                 successCriterion: true,
                 failureCriterion: true,
                 dataPoints: {
@@ -284,9 +283,18 @@ export default async function PhasePage({
           },
         })
       : [];
-    const steps = rawSteps.map(({ tasks, metrics, ...step }) => ({
+    const steps = rawSteps.map(({ tasks, metrics, discardedAt, marketingActivities, ...step }) => ({
       ...step,
-      metrics: metrics.map(({ dataPoints: _dataPoints, ...metric }) => metric),
+      stepType: step.stepType ?? "VALIDATION",
+      strategyDimension: step.strategyDimension ?? null,
+      testSubject: step.testSubject ?? null,
+      methodWarning: step.methodWarning ?? null,
+      discardedAt: discardedAt?.toISOString() ?? null,
+      marketingActivities: parseMarketingActivities(marketingActivities),
+      metrics: metrics.map(({ dataPoints: _dataPoints, ...metric }) => ({
+        ...metric,
+        signalCategory: metric.signalCategory ?? null,
+      })),
       cockpitReadinessInput: {
         tasks,
         metrics: metrics.map((metric) => ({
@@ -331,7 +339,7 @@ export default async function PhasePage({
         option={option}
         initialSteps={steps}
         initialFeedbacks={feedbacks}
-        continuationMode={continuationMode}
+        phase4Mode={phase4Mode}
       />
     );
   }
@@ -368,8 +376,9 @@ export default async function PhasePage({
           select: optionSelect,
         });
 
-    // Only adopted validation steps take part in the learning loop.
-    const steps = option
+    // Only adopted validation steps take part in the learning loop (including
+    // discarded ones — their feedback history must remain addressable).
+    const rawPhase5Steps = option
       ? await prisma.validationStep.findMany({
           where: { optionId: option.id, adopted: true },
           orderBy: { createdAt: "asc" },
@@ -379,6 +388,8 @@ export default async function PhasePage({
                 id: true,
                 name: true,
                 evaluationMode: true,
+                metricRole: true,
+                signalCategory: true,
                 successCriterion: true,
                 failureCriterion: true,
               },
@@ -387,6 +398,19 @@ export default async function PhasePage({
           },
         })
       : [];
+    const steps = rawPhase5Steps.map((step) => ({
+      ...step,
+      stepType: step.stepType ?? "VALIDATION",
+      strategyDimension: step.strategyDimension ?? null,
+      testSubject: step.testSubject ?? null,
+      methodWarning: step.methodWarning ?? null,
+      discardedAt: step.discardedAt?.toISOString() ?? null,
+      marketingActivities: parseMarketingActivities(step.marketingActivities),
+      metrics: step.metrics.map((metric) => ({
+        ...metric,
+        signalCategory: metric.signalCategory ?? null,
+      })),
+    }));
 
     const [feedbacks, learnings, kpiMetrics] = await Promise.all([
       prisma.marketFeedback.findMany({

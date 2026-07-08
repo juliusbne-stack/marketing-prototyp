@@ -2,33 +2,40 @@
 
 import { useState } from "react";
 import {
+  AlertTriangle,
   Check,
   CircleCheck,
   CircleX,
   ListChecks,
   Pencil,
   Radio,
-  Sparkles,
-  Trash2,
 } from "lucide-react";
-import { RefinementPanel } from "./RefinementPanel";
 import { StepImplementationFrame } from "@/components/steps/StepImplementationFrame";
+import { useConfirm } from "@/components/ui/DialogProvider";
+import {
+  MARKETING_ACTIVITIES_HEADING,
+  METHOD_WARNING_ADOPT_CONFIRM,
+  SIGNAL_CATEGORY_LABEL,
+  stepCopy,
+} from "@/lib/labels/phase4";
+import { StrategyDimensionChip } from "./StrategyDimensionChip";
 import type { StepData } from "./types";
 
-// Validation step card (UI_KONZEPT §4, phase 4): title, description, channel
-// chip and metrics as a two-column supported/refuted layout. Draft/adoption
-// styling mirrors the StatementCard (F10/NF5).
+const METRIC_ROLE_LABELS = {
+  DECISIVE: "Entscheidend",
+  SUPPORTING: "Unterstützend",
+} as const;
+
 export function ValidationStepCard({
   step,
   onChanged,
-  onDeleted,
 }: {
   step: StepData;
   onChanged: (step: StepData) => void;
-  onDeleted: (id: string) => void;
 }) {
+  const confirm = useConfirm();
+  const copy = stepCopy(step.stepType);
   const [isEditing, setIsEditing] = useState(false);
-  const [isRefinementOpen, setIsRefinementOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(step.title);
   const [draftDescription, setDraftDescription] = useState(step.description);
   const [draftChannel, setDraftChannel] = useState(step.channel ?? "");
@@ -51,7 +58,7 @@ export function ValidationStepCard({
             "Die Änderung konnte nicht gespeichert werden. Erneut versuchen."
         );
       }
-      const updated: Omit<StepData, never> = await response.json();
+      const updated: StepData = await response.json();
       onChanged({ ...step, ...updated });
       return true;
     } catch (err) {
@@ -66,30 +73,6 @@ export function ValidationStepCard({
     }
   }
 
-  async function handleDelete() {
-    setIsBusy(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        `/api/steps?id=${encodeURIComponent(step.id)}`,
-        { method: "DELETE" }
-      );
-      if (!response.ok) {
-        throw new Error(
-          "Der Umsetzungsschritt konnte nicht gelöscht werden. Erneut versuchen."
-        );
-      }
-      onDeleted(step.id);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Der Umsetzungsschritt konnte nicht gelöscht werden. Erneut versuchen."
-      );
-      setIsBusy(false);
-    }
-  }
-
   async function handleSaveEdit() {
     if (!draftTitle.trim() || !draftDescription.trim()) return;
     const ok = await patch({
@@ -100,9 +83,29 @@ export function ValidationStepCard({
     if (ok) setIsEditing(false);
   }
 
+  async function handleAdopt() {
+    if (step.methodWarning) {
+      const confirmed = await confirm({
+        title: "Methodenhinweis beachten",
+        message: METHOD_WARNING_ADOPT_CONFIRM,
+        confirmLabel: "Trotzdem übernehmen",
+        cancelLabel: "Abbrechen",
+      });
+      if (!confirmed) return;
+    }
+    await patch({ adopted: true });
+  }
+
   const cardClasses = step.adopted
     ? "border border-border bg-surface"
     : "border border-dashed border-accent/50 bg-accent-soft/40";
+
+  const decisiveMetrics = step.metrics.filter(
+    (metric) => metric.metricRole === "DECISIVE"
+  );
+  const supportingMetrics = step.metrics.filter(
+    (metric) => metric.metricRole === "SUPPORTING"
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -163,9 +166,14 @@ export function ValidationStepCard({
           <>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <h5 className="font-heading text-sm font-medium text-text">
-                  {step.title}
-                </h5>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h5 className="font-heading text-sm font-medium text-text">
+                    {step.title}
+                  </h5>
+                  {step.strategyDimension && (
+                    <StrategyDimensionChip dimension={step.strategyDimension} />
+                  )}
+                </div>
                 <StepImplementationFrame
                   timeframe={step.timeframe}
                   budgetFrame={step.budgetFrame}
@@ -183,7 +191,6 @@ export function ValidationStepCard({
                       {step.channel}
                     </span>
                   )}
-                  {/* Subtle cockpit progress chip ("Aufgaben 3/6") */}
                   {step.taskProgress && step.taskProgress.total > 0 && (
                     <span
                       title="Aufgabenfortschritt aus dem Umsetzungs-Cockpit"
@@ -195,83 +202,125 @@ export function ValidationStepCard({
                   )}
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDraftTitle(step.title);
-                    setDraftDescription(step.description);
-                    setDraftChannel(step.channel ?? "");
-                    setIsEditing(true);
-                  }}
-                  disabled={isBusy}
-                  aria-label="Umsetzungsschritt bearbeiten"
-                  className="rounded p-1 text-text-muted transition-colors hover:text-accent disabled:opacity-50"
-                >
-                  <Pencil className="h-3.5 w-3.5" aria-hidden />
-                </button>
-                {!step.adopted && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setIsRefinementOpen((open) => !open)}
-                      disabled={isBusy}
-                      aria-label="Mit KI verfeinern"
-                      aria-expanded={isRefinementOpen}
-                      title="Mit KI verfeinern"
-                      className={`rounded p-1 transition-colors hover:text-accent disabled:opacity-50 ${
-                        isRefinementOpen ? "text-accent" : "text-text-muted"
-                      }`}
-                    >
-                      <Sparkles className="h-3.5 w-3.5" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={isBusy}
-                      aria-label="Umsetzungsschritt löschen"
-                      className="rounded p-1 text-text-muted transition-colors hover:text-danger-text disabled:opacity-50"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                    </button>
-                  </>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftTitle(step.title);
+                  setDraftDescription(step.description);
+                  setDraftChannel(step.channel ?? "");
+                  setIsEditing(true);
+                }}
+                disabled={isBusy}
+                aria-label="Umsetzungsschritt bearbeiten"
+                title="Bearbeiten"
+                className="shrink-0 rounded p-1 text-text-muted transition-colors hover:text-accent disabled:opacity-50"
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+              </button>
             </div>
 
-            <p className="mt-2 text-sm leading-relaxed text-text">
+            {step.validationQuestion && (
+              <div className="mt-3 rounded-md border border-border/80 bg-background/60 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                  {copy.questionHeading}
+                </p>
+                <p className="mt-1 text-sm text-text">{step.validationQuestion}</p>
+              </div>
+            )}
+
+            {step.testDesign && (
+              <div className="mt-2 rounded-md border border-border/80 bg-background/60 px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                  {copy.designHeading}
+                </p>
+                <p className="mt-1 text-sm text-text">{step.testDesign}</p>
+              </div>
+            )}
+
+            <p className="mt-2 text-sm leading-relaxed text-text-muted">
               {step.description}
             </p>
+
+            {step.marketingActivities && step.marketingActivities.length > 0 && (
+              <div className="mt-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                  {MARKETING_ACTIVITIES_HEADING}
+                </p>
+                <ul className="mt-1.5 flex flex-col gap-1">
+                  {step.marketingActivities.map((activity) => (
+                    <li
+                      key={activity}
+                      className="text-sm text-text before:mr-2 before:text-accent before:content-['•']"
+                    >
+                      {activity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         )}
 
-        <div className="mt-3 flex flex-col gap-2">
-          {step.metrics.map((metric) => (
-            <div key={metric.id}>
-              <p className="text-xs font-medium text-text">{metric.name}</p>
-              <div className="mt-1 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-md bg-evidence-fact-bg p-2.5">
-                  <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-evidence-fact-text">
-                    <CircleCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                    <span>
-                      <span className="font-semibold">Stützend wenn:</span>{" "}
-                      {metric.successCriterion}
-                    </span>
-                  </p>
-                </div>
-                <div className="rounded-md bg-danger-bg p-2.5">
-                  <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-danger-text">
-                    <CircleX className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                    <span>
-                      <span className="font-semibold">Widerlegend wenn:</span>{" "}
-                      {metric.failureCriterion}
-                    </span>
-                  </p>
+        {!isEditing && (
+          <div className="mt-3 flex flex-col gap-3">
+            {decisiveMetrics.length > 0 && (
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                  {copy.signalsHeading}
+                </p>
+                <div className="mt-1.5 flex flex-col gap-2">
+                  {decisiveMetrics.map((metric) => (
+                    <MetricBlock
+                      key={metric.id}
+                      metric={metric}
+                      successLabel={copy.successLabel}
+                      failureLabel={copy.failureLabel}
+                    />
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+            {supportingMetrics.length > 0 && (
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                  Unterstützende Signale
+                </p>
+                <div className="mt-1.5 flex flex-col gap-2">
+                  {supportingMetrics.map((metric) => (
+                    <MetricBlock
+                      key={metric.id}
+                      metric={metric}
+                      successLabel={copy.successLabel}
+                      failureLabel={copy.failureLabel}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {decisiveMetrics.length === 0 && supportingMetrics.length === 0 && (
+              <div className="flex flex-col gap-2">
+                {step.metrics.map((metric) => (
+                  <MetricBlock
+                    key={metric.id}
+                    metric={metric}
+                    successLabel={copy.successLabel}
+                    failureLabel={copy.failureLabel}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {step.methodWarning && (
+          <div
+            role="alert"
+            className="mt-3 flex gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950"
+          >
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>{step.methodWarning}</span>
+          </div>
+        )}
 
         {!step.adopted && (
           <div className="mt-3 flex items-center justify-between gap-2 border-t border-accent/20 pt-2.5">
@@ -280,7 +329,7 @@ export function ValidationStepCard({
             </span>
             <button
               type="button"
-              onClick={() => patch({ adopted: true })}
+              onClick={() => void handleAdopt()}
               disabled={isBusy}
               className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
             >
@@ -292,14 +341,52 @@ export function ValidationStepCard({
 
         {error && <p className="mt-2 text-xs text-danger-text">{error}</p>}
       </div>
+    </div>
+  );
+}
 
-      {!step.adopted && isRefinementOpen && (
-        <RefinementPanel
-          step={step}
-          onAdopted={onChanged}
-          onClose={() => setIsRefinementOpen(false)}
-        />
-      )}
+function MetricBlock({
+  metric,
+  successLabel,
+  failureLabel,
+}: {
+  metric: StepData["metrics"][number];
+  successLabel: string;
+  failureLabel: string;
+}) {
+  const roleLabel = METRIC_ROLE_LABELS[metric.metricRole];
+  const categoryLabel = metric.signalCategory
+    ? SIGNAL_CATEGORY_LABEL[metric.signalCategory]
+    : null;
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-xs font-medium text-text">{metric.name}</p>
+        <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-text-muted">
+          {categoryLabel ? `${roleLabel} · ${categoryLabel}` : roleLabel}
+        </span>
+      </div>
+      <div className="mt-1 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-md bg-evidence-fact-bg p-2.5">
+          <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-evidence-fact-text">
+            <CircleCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>
+              <span className="font-semibold">{successLabel}:</span>{" "}
+              {metric.successCriterion}
+            </span>
+          </p>
+        </div>
+        <div className="rounded-md bg-danger-bg p-2.5">
+          <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-danger-text">
+            <CircleX className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>
+              <span className="font-semibold">{failureLabel}:</span>{" "}
+              {metric.failureCriterion}
+            </span>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

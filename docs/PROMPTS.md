@@ -27,6 +27,12 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   ergeben oder logisch zwingend sind. "ASSUMPTION" für begründete, aber ungeprüfte
   Einschätzungen (Standardfall). "OPEN_QUESTION" für Punkte ohne belastbare
   Anhaltspunkte, die vor Ressourcenbindung geklärt werden müssen.
+- Im Wettbewerbsbereich (COMPETITOR) darf die KI innerhalb der fiktiven Recherche
+  simulieren, dass einzelne objektnahe Angaben als belegt gelten. "FACT" bedeutet
+  in diesem Prototyp: im Rahmen der simulierten Recherche als belegt dargestellt,
+  nicht real extern geprüft. Interpretierende Aussagen wie Zielgruppenableitungen,
+  Reichweitenschätzungen und strategische Relevanz bleiben in der Regel ASSUMPTION
+  oder AI_DERIVATION. Details siehe Phase-1-Prompt (COMPETITOR-Evidenzregeln).
 - origin: "USER_INPUT" (direkt aus Nutzereingabe übernommen/umformuliert),
   "SIMULATED_RESEARCH" (fiktive Markt-/Wettbewerbsinformation mit sourceRef),
   "AI_DERIVATION" (deine Schlussfolgerung aus dem Kontext).
@@ -100,32 +106,60 @@ Erzeuge Aussagen in diesen Bereichen:
 3. CUSTOMER_PROBLEM: 2–4 Aussagen zu Kundenproblemen und deren Relevanz.
 4. COMPETITOR — ZWEI TEILE:
 
-   a) WETTBEWERBERPROFILE: Identifiziere 5–7 relevante Akteure nach der
-      Start-up-Definition: alle Unternehmen, Angebote oder Lösungen, die aus
-      Kundensicht dasselbe Problem lösen, dasselbe Bedürfnis erfüllen oder eine
-      ähnliche Alternative darstellen. Dazu gehören auch direkte Software-
-      Wettbewerber, indirekte Anbieter (z. B. Agenturen), Substitute (Excel,
-      manuelle Prozesse) und Status-quo-Alternativen (Nicht-Nutzung).
+   a) AKTEURSPROFILE: Identifiziere GENAU targetCompetitorCount relevante Akteure
+      (targetCompetitorCount wird serverseitig pro Analyse zufällig zwischen 9 und 17
+      gesetzt und im Projektkontext übergeben). Aus Kundensicht sind das alle
+      Unternehmen, Angebote oder Lösungen, die dasselbe Problem lösen, dasselbe
+      Bedürfnis erfüllen oder eine ähnliche Alternative darstellen.
 
-      Pro Akteur GENAU 6 Aussagen (category COMPETITOR) mit demselben
-      competitorLabel (fiktiver Name, z. B. „SocialFlow Pro (fiktiv)") und je
+      Erzeuge eine plausible Mischung je nach Geschäftsmodell, z. B. direkte
+      Wettbewerber, indirekte Anbieter, Substitute, analoge Offline-Angebote,
+      Do-it-yourself-Alternativen, etablierte Plattformen/Tools, lokale/regional
+      relevante Alternativen, Budget-/Aufmerksamkeitskonkurrenten und Status quo.
+
+      Jeder Akteur braucht ein eigenes competitorLabel — keine Dubletten, keine
+      generischen Labels. Pro Akteur GENAU 6 Aussagen (category COMPETITOR) mit
+      demselben competitorLabel (fiktiver Name, z. B. „SocialFlow Pro (fiktiv)") und je
       einem competitorAspect:
       - ENTITY_TYPE: Art aus Kundensicht (direkter Wettbewerber, indirekter
-        Wettbewerber, Substitut oder Status quo) — als prüfbarer Satz.
+        Wettbewerber, Substitut, DIY, Offline-Alternative, Plattform, Status quo
+        o. Ä.) — als prüfbarer Satz.
       - OFFERING: Was das Angebot aus Kundensicht leistet.
       - TARGET_CUSTOMERS: Für wen primär gedacht (Segment, Region).
       - PRICING: Preismodell/Preisspanne — origin SIMULATED_RESEARCH mit
-        sourceRef, realistische Spannen statt Scheinpräzision.
+        sourceRef (endet mit „(fiktiv)"), realistische Spannen statt Scheinpräzision.
       - SCALE: Größe/Reichweite (z. B. Nutzer, Umsatzgrößenordnung, Team) —
-        origin SIMULATED_RESEARCH mit sourceRef, als Spanne oder Schätzung.
+        origin SIMULATED_RESEARCH mit sourceRef (endet mit „(fiktiv)").
       - RELEVANCE: Warum dieser Akteur für das Start-up relevant ist.
 
       Jede Profil-Aussage bleibt ein eigenständig prüfbarer Aussagesatz mit
-      eigenem Evidenzstatus. Kennzahlen typischerweise ASSUMPTION oder
-      OPEN_QUESTION, wenn unsicher.
+      eigenem Evidenzstatus. Im Wettbewerbsbereich darf die KI innerhalb der
+      fiktiven Recherche simulieren, dass einzelne objektnahe Angaben als belegt
+      gelten. FACT bedeutet hier: im Rahmen der simulierten Recherche als belegt
+      dargestellt, nicht real extern geprüft. Interpretierende Aussagen wie
+      Zielgruppenableitungen, Reichweitenschätzungen und strategische Relevanz
+      bleiben in der Regel ASSUMPTION oder AI_DERIVATION.
+
+      Evidenzregeln je competitorAspect (differenziert statt pauschal ASSUMPTION):
+      - ENTITY_TYPE: FACT erlaubt, wenn die Art des Akteurs in der simulierten
+        Quelle eindeutig beschrieben wird (origin SIMULATED_RESEARCH, sourceRef
+        endet mit „(fiktiv)").
+      - OFFERING: FACT erlaubt, wenn das Angebot als öffentlich beobachtbares
+        Produkt- oder Leistungsangebot simuliert wird (origin SIMULATED_RESEARCH).
+      - PRICING: FACT nur bei konkreten Preisen, Preisspannen oder Abo-Modellen
+        aus simulierter Preisseite, fiktivem Marktprofil oder fiktiver
+        Anbieterübersicht; bei Schätzungen ASSUMPTION.
+      - TARGET_CUSTOMERS: in der Regel ASSUMPTION; FACT nur, wenn die Zielgruppe
+        in der fiktiven Quelle ausdrücklich genannt wird.
+      - SCALE: in der Regel ASSUMPTION; FACT nur bei konkreter Kennzahl aus
+        fiktiver Marktquelle; bei Schätzungen „geschätzt", „vermutlich" o. Ä.
+      - RELEVANCE: immer ASSUMPTION oder AI_DERIVATION — nie FACT.
+
+      FACT mit origin SIMULATED_RESEARCH erfordert immer sourceRef (endet mit „(fiktiv)").
 
    b) LANDSCHAFTS-AUSSAGEN: 2–3 übergreifende COMPETITOR-Statements OHNE
-      competitorLabel (Marktstruktur, typisches Kundenverhalten, Lücken).
+      competitorLabel (Marktstruktur, typisches Kundenverhalten, Lücken im
+      Wettbewerbsumfeld).
 5. RESOURCE: 2–4 Aussagen zu internen Ressourcen/Fähigkeiten (aus dem Profil,
    meist FACT mit origin USER_INPUT).
 6. SWOT: je Quadrant (STRENGTH, WEAKNESS, OPPORTUNITY, THREAT) 2–3 Aussagen,
@@ -139,6 +173,7 @@ Zahlungsbereitschaft, tatsächliche Problemrelevanz, Kanalwirksamkeit).
 Konsistenzregeln:
 - pestelRelevance MUSS genau 6 Einträge enthalten, einen je PESTEL-Kategorie.
 - Für jede Kategorie mit relevant=false darf im statements-Array KEINE Aussage mit dieser category stehen. Für relevant=true SOLL mindestens eine vorhanden sein.
+- COMPETITOR-Profile: GENAU targetCompetitorCount unterschiedliche competitorLabels (9–17), je Label GENAU 6 Statements mit allen sechs competitorAspect-Werten.
 ```
 
 **JSON-Schema Phase 1:**
@@ -276,43 +311,46 @@ REGELN:
 
 ## PHASE 4 — Validierende Umsetzung
 
-```
-AUFGABE: Identifiziere für die priorisierte Option die 2–4 KRITISCHSTEN Annahmen
-und übersetze jede in einen begrenzten, ressourcensensiblen Umsetzungsschritt
-mit Messpunkten.
+Siehe `lib/prompts/phase4.ts`, `lib/prompts/phase4Scale.ts` und `lib/prompts/validationCoreRules.ts` als Source of Truth.
+Modusbestimmung: `lib/phase4/mode.ts` (`VALIDATION` | `SCALING`). Guards: `lib/phase4/guards.ts`.
 
-REGELN:
-- Kritisch = erfolgsentscheidend für die Stoßrichtung UND geringer Evidenzgrad
-  (bevorzugt OPEN_QUESTION, dann ASSUMPTION). Wähle aus den übergebenen
-  Statements der Option und des Analysebilds; gib deren IDs zurück.
-- Wenn im Kontext ein addressedSegmentProfile übergeben wird (vollständiges
-  Profil des von der Option adressierten Segments inkl. Evidenzstatus und
-  Statement-IDs), wähle kritische Annahmen bevorzugt aus dessen schwach
-  gestützten Profilaspekten und aus den Dimensionen der Option.
-- Jeder Schritt: konkret in 1–3 Wochen mit dem Profil-Budget umsetzbar
-  (z. B. 5 Problem-Interviews, einfache Landingpage mit Warteliste, ein
-  Kanaltest mit kleinem Budget). Kein breiter Rollout.
-- Je Schritt 1–2 Metriken mit klarem Erfolgs- UND Misserfolgskriterium
-  (vorab festgelegt, quantifiziert als Spanne oder Schwelle).
-- Der Kanal muss zur Zielgruppe der Option passen — begründe das kurz in der
-  description.
-```
+Kernlogik (Zwei-Ebenen-Modell):
+1. **Validierungskern** — `validationQuestion` + `testDesign`
+2. **Durchführung** — `marketingActivities` + Kanal
+3. **Messlogik** — `metricRole` (DECISIVE | SUPPORTING) + `signalCategory` (COMMITMENT | BEHAVIOR | ATTENTION | QUALITATIVE)
+4. **Klassifikation** — `strategyDimension`, `testSubject` pro Schritt; `stepType` serverseitig (VALIDATION | SCALING)
 
-**JSON-Schema Phase 4:**
+Zwei Routen: `/api/ai/4` (VALIDATION, Whitelist: adopted ASSUMPTION/OPEN_QUESTION) und `/api/ai/4/scale` (SCALING, Whitelist: adopted FACT mit SUPPORTED-Feedback über umgesetzten Schritt). Leere Whitelist → kein LLM-Call.
+
+Signal-Passung: ATTENTION ist niemals DECISIVE. Matrix je `testSubject` — siehe `validationCoreRules.ts`.
+
+**JSON-Schema Phase 4 (Auszug):**
 ```json
 {
-  "criticalAssumptions": ["statementId1", "statementId2"],
+  "criticalAssumptions": ["statementId1"],
+  "diversityNote": "string | null",
+  "modeNote": "string | null",
   "steps": [
     {
       "assumptionId": "statementId1",
+      "strategyDimension": "MARKET_ACCESS",
+      "testSubject": "WILLINGNESS_TO_PAY",
+      "validationQuestion": "string",
+      "testDesign": "string",
       "title": "string",
-      "description": "string (Was wird gemacht, warum dieser Kanal, welcher Aufwand)",
+      "description": "string",
+      "marketingActivities": ["string"],
       "channel": "string | null",
+      "timeframe": "string",
+      "budgetFrame": "string",
       "metrics": [
         {
           "name": "string",
-          "successCriterion": "string (gilt als stützend, wenn ...)",
-          "failureCriterion": "string (gilt als widerlegend, wenn ...)"
+          "evaluationMode": "PER_POINT | CUMULATIVE",
+          "metricRole": "DECISIVE | SUPPORTING",
+          "signalCategory": "COMMITMENT | BEHAVIOR | ATTENTION | QUALITATIVE",
+          "successCriterion": "string",
+          "failureCriterion": "string"
         }
       ]
     }
@@ -322,7 +360,67 @@ REGELN:
 
 ---
 
+## PHASE 4 — Einzelne Validierung überarbeiten (`refine-validation`)
+
+```
+AUFGABE: Überarbeite GENAU DIESE Validierung (kritische Annahme + Umsetzungsschritt +
+Messpunkte) gemäß dem Nutzerhinweis. Erzeuge eine besser prüfbare Version — kein
+neues, unabhängiges Validierungspaket.
+
+Phase 4 dient der Validierung und Operationalisierung der priorisierten Strategieoption.
+Sie darf die Strategie nicht unbemerkt neu formulieren. Wenn das Nutzerfeedback eine
+grundlegende Änderung von Zielgruppe, Nutzenversprechen, Positionierung oder
+Marktzugang verlangt, formuliere eine vorsichtige Verbesserung und ergänze einen
+Hinweis, dass eine strategische Anpassung eher in Phase 2 oder über die Lernschleife
+erfolgen sollte.
+
+REGELN:
+- Überarbeitete Aussage: vollständiger, prüfbarer Behauptungssatz.
+- Umsetzungsschritt muss die Aussage direkt prüfen.
+- 1–2 Metriken mit stützendem UND widerlegendem Kriterium (quantifiziert).
+- Budget, Zeitrahmen und Kanal passend zum Start-up-Profil (1–4 Wochen).
+- Keine völlig neue Strategie; keine grundlegende Änderung von Zielgruppe,
+  Positionierung oder Nutzenversprechen.
+```
+
+**JSON-Schema Phase 4 Refine-Validation:**
+```json
+{
+  "revisedStatement": {
+    "content": "string",
+    "evidenceStatus": "FACT | ASSUMPTION | OPEN_QUESTION",
+    "justification": "string | null",
+    "uncertainty": "string | null"
+  },
+  "revisedValidationStep": {
+    "title": "string",
+    "description": "string",
+    "channel": "string | null",
+    "timeframe": "string",
+    "budgetFrame": "string"
+  },
+  "revisedMetrics": [
+    {
+      "name": "string",
+      "evaluationMode": "PER_POINT | CUMULATIVE",
+      "successCriterion": "string",
+      "failureCriterion": "string"
+    }
+  ],
+  "rationale": "string",
+  "strategyAdjustmentHint": "string | null"
+}
+```
+
+---
+
 ## PHASE 5 — Lernen und strategische Anpassung
+
+Siehe `lib/prompts/phase5.ts` als Source of Truth.
+
+Zusätzliche Regel (Proxy-Metriken): `SUPPORTED`/`REFUTED` primär über `metricRole:
+DECISIVE`. Nur `SUPPORTING` (Reichweite, CTR, Engagement) erfüllt → höchstens
+`PARTIALLY_SUPPORTED` oder `AMBIGUOUS`, mit Hinweis auf begrenzte Aussagekraft.
 
 ```
 AUFGABE: Interpretiere die vom Nutzer erfassten Marktrückmeldungen im Hinblick auf

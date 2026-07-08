@@ -1,13 +1,20 @@
-import type { EvaluationMode } from "@prisma/client";
+import type {
+  EvaluationMode,
+  MetricRole,
+  SignalCategory,
+  StepType,
+  StrategyDimension,
+  TestSubject,
+} from "@prisma/client";
 import type { StatementData } from "@/components/statements/types";
 import type { StepReadinessInput } from "@/lib/cockpitPeriod";
 
-// Client-side shape of a validation step, matching app/api/ai/4/route.ts
-// and app/api/steps/route.ts.
 export type MetricData = {
   id: string;
   name: string;
   evaluationMode: EvaluationMode;
+  metricRole: MetricRole;
+  signalCategory: SignalCategory | null;
   successCriterion: string;
   failureCriterion: string;
 };
@@ -19,26 +26,62 @@ export type StepData = {
   assumptionId: string;
   title: string;
   description: string;
+  validationQuestion: string | null;
+  testDesign: string | null;
+  marketingActivities: string[] | null;
   channel: string | null;
   timeframe: string | null;
   budgetFrame: string | null;
+  stepType: StepType;
+  strategyDimension: StrategyDimension | null;
+  testSubject: TestSubject | null;
+  methodWarning: string | null;
   adopted: boolean;
+  discardedAt: string | null;
   metrics: MetricData[];
-  // Cockpit task progress ("Aufgaben 3/6"), computed server-side; absent in
-  // API responses that don't load tasks.
   taskProgress?: { done: number; total: number } | null;
-  // Minimal cockpit snapshot for readiness derivation in phase 4; absent in
-  // API responses that don't load tasks or KPI data points.
   cockpitReadinessInput?: StepReadinessInput;
 };
 
-// Phase 4 groups steps under their tested critical assumption.
 export type StepWithAssumption = StepData & { assumption: StatementData };
 
-// Slim shape of the prioritized option shown in the phase 4/5 header.
 export type PrioritizedOptionData = {
   id: string;
   title: string;
   summary: string | null;
   prioritizationRationale: string | null;
+};
+
+/** Parse marketingActivities from API (Json) for client use. */
+export function parseMarketingActivities(
+  value: unknown
+): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const items = value.filter((item) => typeof item === "string");
+  return items.length > 0 ? items : null;
+}
+
+/** Normalize API step payloads (Json fields, legacy metrics without role). */
+export function normalizeStepFromApi<T extends StepData>(
+  step: T & { marketingActivities?: unknown; stepType?: StepType }
+): T {
+  return {
+    ...step,
+    stepType: step.stepType ?? "VALIDATION",
+    strategyDimension: step.strategyDimension ?? null,
+    testSubject: step.testSubject ?? null,
+    methodWarning: step.methodWarning ?? null,
+    marketingActivities: parseMarketingActivities(step.marketingActivities),
+    metrics: step.metrics.map((metric) => ({
+      ...metric,
+      metricRole: metric.metricRole ?? "DECISIVE",
+      signalCategory: metric.signalCategory ?? null,
+    })),
+  };
+}
+
+export type Phase4GenerationMeta = {
+  diversityNote: string | null;
+  modeNote: string | null;
+  emptyState: string | null;
 };

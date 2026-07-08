@@ -1,63 +1,46 @@
-// Phase 4 scaling prompt — continuation mode after a confirmed CONTINUE
-// decision (GLOBAL_PROMPT rules apply, see lib/openai.ts). The validated core
-// stays untouched; execution is expanded in limited, observable steps.
-export const PHASE4_SCALE_PROMPT = `AUFGABE: Die Anpassungsentscheidung lautet FORTFÜHREN — der strategische Kern
-der priorisierten Option ist validiert. Leite 2–4 begrenzte AUSWEITUNGSSCHRITTE
-ab, mit denen die Umsetzung kontrolliert skaliert wird (z. B. Budget auf dem
-bewährten Kanal erhöhen, einen zweiten passenden Kanal hinzunehmen, Reichweite
-oder Zielkreis vergrößern).
+// Phase 4 scaling prompt — continuation mode after a confirmed CONTINUE decision.
+import {
+  ASSUMPTION_TYPE_VALIDATION_MAP,
+  METRIC_ROLE_RULES,
+  SCALING_MODE_RULES,
+  SIGNAL_CATEGORY_RULES,
+  VALIDATION_CORE_THINKING,
+  VALIDATION_STEP_OUTPUT_FIELDS,
+} from "./validationCoreRules";
+
+export const PHASE4_SCALE_PROMPT = `AUFGABE: Die Anpassungsentscheidung lautet FORTFÜHREN — leite 2–4 begrenzte
+Skalierungsschritte ab, die gestützte Fakten aus der Whitelist im größeren Maßstab
+weiter beobachten.
+
+${VALIDATION_CORE_THINKING}
+
+${ASSUMPTION_TYPE_VALIDATION_MAP}
+
+${SIGNAL_CATEGORY_RULES}
+
+${SCALING_MODE_RULES}
 
 REGELN:
-- KEINE neuen Validierungsexperimente für ungeprüfte Annahmen und KEINE
-  Änderung an den Dimensionen der Option. Der validierte Kern bleibt stabil —
-  es geht ausschließlich um die kontrollierte Ausweitung der Umsetzung.
-- Jeder Schritt referenziert als assumptionId GENAU EINE der übergebenen
-  gestützten Kernannahmen (supportedCriticalAssumptions): die Annahme, deren
-  Tragfähigkeit im größeren Maßstab er beobachtet. Mehrere Schritte dürfen
-  dieselbe Annahme referenzieren. Verwende KEINE anderen IDs.
-- Baue auf den Kanälen/Schritten auf, mit denen die Annahmen geprüft wurden
-  (testedWith im Kontext). Ein neuer Kanal ist nur zulässig, wenn er zur
-  Zielgruppe der Option passt — begründe das kurz in der description.
-- Jeder Schritt bleibt im Ressourcenrahmen des Profils (Budget, Teamgröße,
-  Zeit, Fähigkeiten) und ist konkret umsetzbar. Kein ungebremster Rollout —
-  die Ausweitung erfolgt in begrenzten, beobachtbaren Stufen.
-- Jeder Schritt MUSS timeframe und budgetFrame enthalten:
-  - timeframe: ein begrenzter Zeitraum (1–4 Wochen), passend zur Ausweitung
-    (z. B. „4 Wochen").
-  - budgetFrame: ein konkreter Budgeteinsatz, der explizit als tragbarer
-    Anteil des Profil-Budgets begründet wird. Bei kostenlosen Maßnahmen:
-    „0 € — Zeiteinsatz ca. X Std./Woche" im Rahmen der Profil-Zeitangabe.
-- Je Schritt 1–2 Monitoring-Metriken mit klaren Schwellen (quantifiziert als
-  Spanne oder Schwelle): successCriterion = gilt als stützend, wenn die
-  Annahme auch im größeren Maßstab hält; failureCriterion = gilt als
-  widerlegend, wenn die Wirkung beim Ausweiten einbricht.
-- evaluationMode je Metrik (PFLICHT):
-  - PER_POINT: Raten, Quoten und Niveaugrößen je Messzeitpunkt (%, Rate).
-  - CUMULATIVE: Zähler über die Prüfperiode (Gesamtsumme). Kriterien MÜSSEN
-    den Periodenbezug benennen (z. B. „insgesamt über den Zeitraum von 4 Wochen").
-- criticalAssumptions: die IDs der gestützten Kernannahmen, die von den
-  Schritten beobachtet werden (Teilmenge der übergebenen IDs).
+- Skaliere den TEST, nicht blind den Kanal: Bei Zahlungsbereitschaft = mehr Besucher auf
+  derselben Preis-Landingpage, nicht nur mehr Impressions ohne Preissignal.
+- Jeder Schritt referenziert als assumptionId GENAU EINE Whitelist-ID.
+- Baue auf dem Testdesign der bisherigen Schritte auf (testedWith im Kontext).
+- Skalierungsschritte dürfen ausschließlich Kanäle aus validatedChannels nutzen.
+  Ein bisher nicht validierter Kanal führt eine ungeprüfte Erreichbarkeitsannahme ein
+  und ist im Fortführungsmodus unzulässig. Wenn ein neuer Kanal fachlich sinnvoll wäre,
+  schlage ihn NICHT als Schritt vor, sondern setze modeNote mit dem Hinweis, dass dafür
+  ADAPT statt CONTINUE zu wählen ist.
+- ${VALIDATION_STEP_OUTPUT_FIELDS}
+- Jeder Schritt MUSS timeframe und budgetFrame enthalten.
+- Je Schritt 1–3 Monitoring-Metriken mit signalCategory und klaren Schwellen.
+- ${METRIC_ROLE_RULES}
+- Erfolgskriterien: „Skalierung trägt wenn …" / „Skalierungsgrenze erreicht wenn …"
+- criticalAssumptions: IDs aus der Whitelist, die von den Schritten beobachtet werden.
 
-AUSGABEFORMAT (JSON, exakt dieses Schema; assumptionId sind die id-Werte aus
-supportedCriticalAssumptions, unverändert übernehmen):
+AUSGABEFORMAT (JSON):
 {
-  "criticalAssumptions": ["statementId1", "statementId2"],
-  "steps": [
-    {
-      "assumptionId": "statementId1",
-      "title": "string",
-      "description": "string (Was wird ausgeweitet, warum dieser Kanal, welcher Aufwand)",
-      "channel": "string | null",
-      "timeframe": "string (begrenzter Zeitraum, z. B. 4 Wochen)",
-      "budgetFrame": "string (tragbarer Budgeteinsatz, z. B. max. 300 € von 500 €/Monat)",
-      "metrics": [
-        {
-          "name": "string",
-          "evaluationMode": "PER_POINT | CUMULATIVE",
-          "successCriterion": "string (gilt als stützend, wenn die Annahme auch im größeren Maßstab hält ...)",
-          "failureCriterion": "string (gilt als widerlegend, wenn die Wirkung beim Ausweiten einbricht ...)"
-        }
-      ]
-    }
-  ]
+  "criticalAssumptions": ["statementId1"],
+  "diversityNote": null,
+  "modeNote": "string | null",
+  "steps": [ /* wie Phase 4, inkl. strategyDimension, testSubject, signalCategory */ ]
 }`;
