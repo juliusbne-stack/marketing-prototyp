@@ -12,13 +12,16 @@ import {
 } from "lucide-react";
 import { StepImplementationFrame } from "@/components/steps/StepImplementationFrame";
 import { ProgressButton } from "@/components/ui/ProgressButton";
+import { getAnchorAssumptionInlinePrefix } from "@/lib/anchorAssumptionLabel";
 import { formatImplementationGoals } from "@/lib/formatImplementationGoals";
 import {
+  derivePeriodAssessment,
   formatCumulativeTotal,
   formatRunningTotal,
   parseNumericValue,
+  periodAssessmentLabel,
   reassessDataPoints,
-  resolveMetricType,
+  resolveEvaluationMode,
 } from "@/lib/kpiAssessment";
 import {
   deriveStepReadiness,
@@ -192,6 +195,10 @@ export function CockpitStepCard({
 
   async function handleToggleTask(task: TaskData) {
     const nextDone = !task.done;
+    const allTasksWillBeDone =
+      nextDone &&
+      tasks.length > 0 &&
+      tasks.every((entry) => entry.id === task.id || entry.done);
     setTasks((current) =>
       current.map((entry) =>
         entry.id === task.id ? { ...entry, done: nextDone } : entry
@@ -206,6 +213,9 @@ export function CockpitStepCard({
       });
       if (!response.ok) {
         throw new Error();
+      }
+      if (allTasksWillBeDone) {
+        router.refresh();
       }
     } catch {
       setTasks((current) =>
@@ -312,7 +322,8 @@ export function CockpitStepCard({
         )}
       </div>
       <p className="mt-1 text-[13px] text-text-muted">
-        Geprüfte Annahme: {step.assumptionContent}
+        {getAnchorAssumptionInlinePrefix(step.assumptionEvidenceStatus)}:{" "}
+        {step.assumptionContent}
       </p>
       <StepImplementationFrame
         timeframe={timeframe}
@@ -407,30 +418,43 @@ export function CockpitStepCard({
           {metrics.map((metric) => {
             const reassessed = reassessDataPoints(metric, metric.dataPoints);
             const latest = reassessed.at(-1);
-            const latestConfig = latest
-              ? KPI_ASSESSMENT_CONFIG[latest.assessment]
+            const isCumulative = resolveEvaluationMode(metric) === "CUMULATIVE";
+            const periodAssessment = isCumulative
+              ? derivePeriodAssessment(metric, metric.dataPoints)
+              : latest?.assessment ?? null;
+            const displayAssessment = isCumulative
+              ? periodAssessment
+              : latest?.assessment ?? null;
+            const displayConfig = displayAssessment
+              ? KPI_ASSESSMENT_CONFIG[displayAssessment]
               : null;
-            const isCumulative = resolveMetricType(metric) === "CUMULATIVE";
+            const assessmentText =
+              displayAssessment && isCumulative
+                ? periodAssessmentLabel(displayAssessment, "CUMULATIVE")
+                : displayAssessment
+                  ? displayConfig?.label
+                  : null;
             const chipLabel =
               latest && isCumulative
-                ? `Gesamt: ${formatCumulativeTotal(metric, reassessed)}`
+                ? `Gesamt: ${formatCumulativeTotal(metric, reassessed)}${assessmentText ? ` — ${assessmentText}` : ""}`
                 : latest
                   ? `${latest.periodLabel}: ${latest.value}`
                   : null;
             const chipTitle =
-              latest && latestConfig
+              latest && displayConfig
                 ? isCumulative
-                  ? `Gesamt über die Periode: ${formatCumulativeTotal(metric, reassessed)} (${latestConfig.label})`
-                  : `${latest.periodLabel}: ${latest.value} (${latestConfig.label})`
+                  ? `Gesamt über die Periode: ${formatCumulativeTotal(metric, reassessed)} (${assessmentText})`
+                  : `${latest.periodLabel}: ${latest.value} (${displayConfig.label})`
                 : undefined;
+            const neutralDot = KPI_ASSESSMENT_CONFIG.NEUTRAL;
             return (
               <div key={metric.id}>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-xs font-medium text-text">{metric.name}</p>
-                  {latest && latestConfig && chipLabel ? (
+                  {latest && displayConfig && chipLabel ? (
                     <span
                       title={chipTitle}
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${latestConfig.chipClassName}`}
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${displayConfig.chipClassName}`}
                     >
                       {chipLabel}
                     </span>
@@ -446,7 +470,9 @@ export function CockpitStepCard({
                     aria-label={`Verlauf ${metric.name}`}
                   >
                     {reassessed.map((point, index) => {
-                      const config = KPI_ASSESSMENT_CONFIG[point.assessment];
+                      const config = isCumulative
+                        ? neutralDot
+                        : KPI_ASSESSMENT_CONFIG[point.assessment];
                       let runningTotal = 0;
                       if (isCumulative) {
                         for (let i = 0; i <= index; i++) {
@@ -455,7 +481,7 @@ export function CockpitStepCard({
                         }
                       }
                       const dotTitle = isCumulative
-                        ? `${point.periodLabel}: ${point.value}, Zwischenstand ${formatRunningTotal(metric, runningTotal)} (${config.label})`
+                        ? `${point.periodLabel}: ${point.value} · kumuliert ${formatRunningTotal(metric, runningTotal)}`
                         : `${point.periodLabel}: ${point.value} (${config.label})`;
                       return (
                         <span

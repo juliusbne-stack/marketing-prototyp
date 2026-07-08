@@ -31,8 +31,10 @@ REGELN:
   Spanne oder Schwelle): successCriterion = gilt als stützend, wenn die
   Annahme auch im größeren Maßstab hält; failureCriterion = gilt als
   widerlegend, wenn die Wirkung beim Ausweiten einbricht.
-- metricType je Metrik (PFLICHT): RATE für Periodenwerte (%, Rate);
-  CUMULATIVE für Zähler über die Prüfperiode (Gesamtsumme).
+- evaluationMode je Metrik (PFLICHT):
+  - PER_POINT: Raten, Quoten und Niveaugrößen je Messzeitpunkt (%, Rate).
+  - CUMULATIVE: Zähler über die Prüfperiode (Gesamtsumme). Kriterien MÜSSEN
+    den Periodenbezug benennen (z. B. „insgesamt über den Zeitraum von 4 Wochen").
 - criticalAssumptions: die IDs der gestützten Kernannahmen, die von den
   Schritten beobachtet werden (Teilmenge der übergebenen IDs).
 
@@ -51,7 +53,7 @@ supportedCriticalAssumptions, unverändert übernehmen):
       "metrics": [
         {
           "name": "string",
-          "metricType": "RATE | CUMULATIVE",
+          "evaluationMode": "PER_POINT | CUMULATIVE",
           "successCriterion": "string (gilt als stützend, wenn die Annahme auch im größeren Maßstab hält ...)",
           "failureCriterion": "string (gilt als widerlegend, wenn die Wirkung beim Ausweiten einbricht ...)"
         }

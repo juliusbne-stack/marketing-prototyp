@@ -5,7 +5,7 @@ import { Gauge, MessageSquareText, Radio } from "lucide-react";
 import type { StepWithAssumption } from "@/components/phase4/types";
 import type { FeedbackData } from "./types";
 
-// One feedback form per adopted validation step (UI_KONZEPT §4, phase 5).
+import { formatCriterionInline } from "@/lib/kpiAssessment";
 export function FeedbackForm({
   projectId,
   step,
@@ -83,9 +83,9 @@ export function FeedbackForm({
       <ul className="mt-2 flex flex-col gap-0.5 text-[13px] text-text-muted">
         {step.metrics.map((metric) => (
           <li key={metric.id}>
-            <span className="font-medium">{metric.name}:</span> stützend wenn{" "}
-            {metric.successCriterion} — widerlegend wenn{" "}
-            {metric.failureCriterion}
+            <span className="font-medium">{metric.name}:</span> stützend, wenn{" "}
+            {formatCriterionInline(metric.successCriterion)} — widerlegend, wenn{" "}
+            {formatCriterionInline(metric.failureCriterion)}
           </li>
         ))}
       </ul>

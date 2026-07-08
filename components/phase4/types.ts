@@ -1,12 +1,13 @@
-import type { MetricType } from "@prisma/client";
+import type { EvaluationMode } from "@prisma/client";
 import type { StatementData } from "@/components/statements/types";
+import type { StepReadinessInput } from "@/lib/cockpitPeriod";
 
 // Client-side shape of a validation step, matching app/api/ai/4/route.ts
 // and app/api/steps/route.ts.
 export type MetricData = {
   id: string;
   name: string;
-  metricType: MetricType;
+  evaluationMode: EvaluationMode;
   successCriterion: string;
   failureCriterion: string;
 };
@@ -26,6 +27,9 @@ export type StepData = {
   // Cockpit task progress ("Aufgaben 3/6"), computed server-side; absent in
   // API responses that don't load tasks.
   taskProgress?: { done: number; total: number } | null;
+  // Minimal cockpit snapshot for readiness derivation in phase 4; absent in
+  // API responses that don't load tasks or KPI data points.
+  cockpitReadinessInput?: StepReadinessInput;
 };
 
 // Phase 4 groups steps under their tested critical assumption.

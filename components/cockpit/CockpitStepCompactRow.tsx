@@ -110,6 +110,7 @@ export function CockpitStepCompactRow({
       {expanded && (
         <div className="border-t border-border/70 px-4 pb-4 pt-3">
           <CockpitStepCard
+            key={step.id}
             projectId={projectId}
             step={step}
             readOnly={readOnly}

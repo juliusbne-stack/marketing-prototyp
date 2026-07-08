@@ -205,8 +205,8 @@ model ValidationStep {
   tasks     Task[]
 }
 
-enum MetricType {
-  RATE        // Periodenwert (z. B. %, Rate) — Bewertung je Periode
+enum EvaluationMode {
+  PER_POINT   // je Messzeitpunkt eigenständig interpretierbar (z. B. Rate, Quote)
   CUMULATIVE  // Zähler über die Prüfperiode — Bewertung über kumulierte Summe
 }
 
@@ -215,7 +215,7 @@ model Metric {
   stepId           String
   step             ValidationStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
   name             String         // z.B. "Registrierungen in 2 Wochen"
-  metricType       MetricType     @default(RATE)
+  evaluationMode   EvaluationMode @default(PER_POINT)
   successCriterion String         // gilt als stützend, wenn ...
   failureCriterion String         // gilt als widerlegend, wenn ...
 

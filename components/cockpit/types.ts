@@ -1,10 +1,11 @@
 import type {
+  EvaluationMode,
   EvidenceStatus,
   FeedbackResult,
   KpiAssessment,
-  MetricType,
 } from "@prisma/client";
 import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
+import { getMetricDisplayAssessment } from "@/lib/cockpitPeriod";
 
 // Client-side shapes of the implementation cockpit, matching
 // app/project/[id]/cockpit/page.tsx and the /api/tasks + /api/kpi routes.
@@ -40,7 +41,7 @@ export type KpiDataPointData = {
 export type CockpitMetricData = {
   id: string;
   name: string;
-  metricType: MetricType;
+  evaluationMode: EvaluationMode;
   successCriterion: string;
   failureCriterion: string;
   dataPoints: KpiDataPointData[];
@@ -70,22 +71,21 @@ const KPI_INDICATOR_SEVERITY: Record<KpiAssessment, number> = {
   CONTRADICTING: 2,
 };
 
-// One dot per step: worst assessment among each metric's latest data point.
+// One dot per step: worst period-level assessment across metrics.
 export function getStepKpiIndicator(
   step: CockpitStepData
 ): KpiAssessment | null {
-  const latestPerMetric = step.metrics
-    .map((metric) => metric.dataPoints.at(-1))
-    .filter((point): point is KpiDataPointData => point !== undefined);
+  const assessments = step.metrics
+    .map((metric) => getMetricDisplayAssessment(metric))
+    .filter((assessment): assessment is KpiAssessment => assessment !== null);
 
-  if (latestPerMetric.length === 0) return null;
+  if (assessments.length === 0) return null;
 
-  return latestPerMetric.reduce((worst, point) =>
-    KPI_INDICATOR_SEVERITY[point.assessment] >
-    KPI_INDICATOR_SEVERITY[worst.assessment]
-      ? point
+  return assessments.reduce((worst, assessment) =>
+    KPI_INDICATOR_SEVERITY[assessment] > KPI_INDICATOR_SEVERITY[worst]
+      ? assessment
       : worst
-  ).assessment;
+  );
 }
 
 // KPI chip/dot styling — deliberately NOT the reserved evidence colors.

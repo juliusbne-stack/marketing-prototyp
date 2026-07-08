@@ -5,27 +5,27 @@ export const KPI_SIMULATION_PROMPT = `AUFGABE: Erzeuge für JEDE übergebene Met
 UND zu den definierten Schwellen der Metrik passen.
 
 REGELN:
-- Szenario-Treue (bezogen auf successCriterion und failureCriterion der Metrik):
-  - SUPPORTING: Die Werte liegen überwiegend über der Stütz-Schwelle
-    (successCriterion erfüllt); einzelne Perioden dürfen schwächer ausfallen,
-    der Gesamttrend stützt die Annahme.
-  - CONTRADICTING: Die Werte reißen überwiegend das Misserfolgskriterium
-    (failureCriterion erfüllt); der Gesamttrend widerspricht der Annahme.
-  - MIXED: Uneinheitliches Bild — Mischung aus stützenden, neutralen und
-    widersprechenden Perioden ohne klaren Trend.
-- metricType je Metrik (aus dem Kontext):
-  - RATE: Gib den Periodenwert an (z. B. „2,5 %", „3,2 %"). Die Bewertung
-    erfolgt je Periode gegen die Schwellen.
+- Szenario-Treue auf der jeweiligen Auswertungsebene (evaluationMode):
+  - SUPPORTING: Das Ergebnis auf Auswertungsebene stützt die Annahme.
+  - CONTRADICTING: Das Ergebnis auf Auswertungsebene widerspricht der Annahme.
+  - MIXED: Das Ergebnis liegt zwischen Erfolgs- und Misserfolgsschwelle
+    (teilweise gestützt) bzw. zeigt bei PER_POINT ein uneinheitliches Bild.
+- evaluationMode je Metrik (aus dem Kontext):
+  - PER_POINT: Gib den Periodenwert an (z. B. „2,5 %", „3,2 %"). Die Bewertung
+    erfolgt je Periode gegen die Schwellen. Bei SUPPORTING liegen die meisten
+    Periodenwerte über der Stütz-Schwelle; bei CONTRADICTING reißen die meisten
+    das Misserfolgskriterium; bei MIXED eine Mischung ohne klaren Trend.
   - CUMULATIVE: Gib den Zuwachs JE Periode an (z. B. „12 neue Anfragen" in
     Woche 1, „8 neue Anfragen" in Woche 2) — NICHT den kumulierten Stand.
-    Die Gesamtsumme über alle Perioden wird serverseitig gegen die Kriterien
-    geprüft; Einzelwochen mit niedrigem Zuwachs sind kein Misserfolg, solange
-    die Summe am Ende die Schwelle erreicht.
-- assessment je Punkt: Für RATE wie bisher — SUPPORTING nur, wenn der
-  Periodenwert das successCriterion erfüllt; CONTRADICTING nur, wenn er das
-  failureCriterion erfüllt; sonst NEUTRAL. Für CUMULATIVE setze vorerst
-  NEUTRAL auf Zwischenperioden; die endgültige Bewertung erfolgt serverseitig
-  über die kumulierte Summe.
+    Die Gesamtsumme über alle Perioden wird gegen die Kriterien geprüft:
+    Bei SUPPORTING erreicht die Endsumme die Erfolgsschwelle; bei
+    CONTRADICTING liegt sie unter der Misserfolgsschwelle; bei MIXED dazwischen.
+    Einzelwochen mit niedrigem Zuwachs sind kein Misserfolg, solange die Summe
+    am Ende die Schwelle erreicht.
+- assessment je Punkt: Für PER_POINT — SUPPORTING nur, wenn der Periodenwert das
+  successCriterion erfüllt; CONTRADICTING nur, wenn er das failureCriterion
+  erfüllt; sonst NEUTRAL. Für CUMULATIVE setze auf allen Punkten NEUTRAL —
+  die Klassifikation erfolgt ausschließlich auf Periodenebene (serverseitig).
 - value: kurzer, konkreter Wert mit Einheit bzw. Bezugsgröße (z. B.
   "14 Registrierungen", "3 von 5 Interviews bestätigen das Problem",
   "Conversion 1,8 %"). Realistische Größenordnungen für den Ressourcenrahmen

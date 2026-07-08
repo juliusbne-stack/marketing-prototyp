@@ -164,7 +164,7 @@ export default async function CockpitPage({
       metrics: step.metrics.map((metric) => ({
         id: metric.id,
         name: metric.name,
-        metricType: metric.metricType,
+        evaluationMode: metric.evaluationMode,
         successCriterion: metric.successCriterion,
         failureCriterion: metric.failureCriterion,
         dataPoints: reassessDataPoints(metric, metric.dataPoints),

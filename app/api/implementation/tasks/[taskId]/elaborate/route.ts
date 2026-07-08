@@ -22,6 +22,10 @@ const requestSchema = z.object({
   regenerate: z.boolean().optional(),
 });
 
+const patchSchema = z.object({
+  elaboration: taskElaborationResponseSchema,
+});
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ taskId: string }> }
@@ -198,5 +202,60 @@ export async function POST(
     generatedAt: updated.elaborationGeneratedAt,
     model: updated.elaborationModel,
     cached: false,
+  });
+}
+
+// Persists an adopted elaboration revision (e.g. after feedback-based preview).
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ taskId: string }> }
+) {
+  const { taskId } = await params;
+  const body = await request.json().catch(() => null);
+  const parsed = patchSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Die Ausarbeitung konnte nicht verarbeitet werden." },
+      { status: 400 }
+    );
+  }
+
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: { step: { select: { adopted: true } } },
+  });
+
+  if (!task) {
+    return NextResponse.json(
+      { error: "Die Aufgabe wurde nicht gefunden." },
+      { status: 404 }
+    );
+  }
+
+  if (!task.step.adopted) {
+    return NextResponse.json(
+      {
+        error:
+          "Ausarbeitungen sind nur für übernommene Umsetzungsschritte möglich.",
+      },
+      { status: 400 }
+    );
+  }
+
+  const updated = await prisma.task.update({
+    where: { id: taskId },
+    data: {
+      elaboration: parsed.data.elaboration,
+      elaborationGeneratedAt: new Date(),
+      elaborationModel: MODEL,
+    },
+    select: taskSelect,
+  });
+
+  return NextResponse.json({
+    elaboration: parsed.data.elaboration,
+    generatedAt: updated.elaborationGeneratedAt,
+    model: updated.elaborationModel,
   });
 }

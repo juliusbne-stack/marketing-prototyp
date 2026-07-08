@@ -269,9 +269,13 @@ export default async function PhasePage({
               select: {
                 id: true,
                 name: true,
-                metricType: true,
+                evaluationMode: true,
                 successCriterion: true,
                 failureCriterion: true,
+                dataPoints: {
+                  orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+                  select: { periodLabel: true, value: true, assessment: true },
+                },
               },
             },
             assumption: { select: statementSelect },
@@ -280,8 +284,19 @@ export default async function PhasePage({
           },
         })
       : [];
-    const steps = rawSteps.map(({ tasks, ...step }) => ({
+    const steps = rawSteps.map(({ tasks, metrics, ...step }) => ({
       ...step,
+      metrics: metrics.map(({ dataPoints: _dataPoints, ...metric }) => metric),
+      cockpitReadinessInput: {
+        tasks,
+        metrics: metrics.map((metric) => ({
+          evaluationMode: metric.evaluationMode,
+          name: metric.name,
+          successCriterion: metric.successCriterion,
+          failureCriterion: metric.failureCriterion,
+          dataPoints: metric.dataPoints,
+        })),
+      },
       taskProgress:
         tasks.length > 0
           ? {
@@ -363,7 +378,7 @@ export default async function PhasePage({
               select: {
                 id: true,
                 name: true,
-                metricType: true,
+                evaluationMode: true,
                 successCriterion: true,
                 failureCriterion: true,
               },
@@ -400,7 +415,7 @@ export default async function PhasePage({
         select: {
           stepId: true,
           name: true,
-          metricType: true,
+          evaluationMode: true,
           successCriterion: true,
           failureCriterion: true,
           dataPoints: {

@@ -18,7 +18,7 @@ const stepSelect = {
     select: {
       id: true,
       name: true,
-      metricType: true,
+      evaluationMode: true,
       successCriterion: true,
       failureCriterion: true,
     },

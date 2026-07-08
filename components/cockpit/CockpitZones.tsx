@@ -38,6 +38,7 @@ export function CockpitZones({
           )}
           <div className="mt-3">
             <CockpitStepCard
+              key={focusStep.id}
               projectId={projectId}
               step={focusStep}
               highlightNextTask

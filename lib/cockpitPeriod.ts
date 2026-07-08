@@ -1,5 +1,11 @@
 import type { CockpitMetricData, CockpitStepData, TaskData } from "@/components/cockpit/types";
 import type { KpiDataPointData } from "@/components/cockpit/types";
+import {
+  derivePeriodAssessment,
+  isCumulativeEarlySupporting,
+  reassessDataPoints,
+  resolveEvaluationMode,
+} from "@/lib/kpiAssessment";
 
 export type StepReadiness =
   | "IN_PROGRESS"
@@ -33,7 +39,10 @@ export function getLatestKpiPointsPerMetric(
   metrics: CockpitMetricData[]
 ): KpiDataPointData[] {
   return metrics
-    .map((metric) => metric.dataPoints.at(-1))
+    .map((metric) => {
+      const reassessed = reassessDataPoints(metric, metric.dataPoints);
+      return reassessed.at(-1);
+    })
     .filter((point): point is KpiDataPointData => point !== undefined);
 }
 
@@ -45,15 +54,37 @@ export function hasAnyKpiDataPoint(metrics: CockpitMetricData[]): boolean {
   return metrics.some((metric) => metric.dataPoints.length > 0);
 }
 
-/** Majority of each metric's latest data point is CONTRADICTING. */
+/** Majority of PER_POINT metrics' latest data point is CONTRADICTING. */
 export function isPredominantlyContradicting(metrics: CockpitMetricData[]): boolean {
-  const latest = getLatestKpiPointsPerMetric(metrics);
+  const perPointMetrics = metrics.filter(
+    (metric) => resolveEvaluationMode(metric) === "PER_POINT"
+  );
+  if (perPointMetrics.length === 0) return false;
+
+  const latest = perPointMetrics
+    .map((metric) => {
+      const reassessed = reassessDataPoints(metric, metric.dataPoints);
+      return reassessed.at(-1);
+    })
+    .filter((point): point is KpiDataPointData => point !== undefined);
+
   if (latest.length === 0) return false;
 
   const contradicting = latest.filter(
     (point) => point.assessment === "CONTRADICTING"
   ).length;
   return contradicting > latest.length / 2;
+}
+
+/** CUMULATIVE: running total already exceeds success threshold (irreversible). */
+export function hasCumulativeEarlySupporting(
+  metrics: CockpitMetricData[]
+): boolean {
+  return metrics.some(
+    (metric) =>
+      resolveEvaluationMode(metric) === "CUMULATIVE" &&
+      isCumulativeEarlySupporting(metric, metric.dataPoints)
+  );
 }
 
 export function deriveStepReadiness(
@@ -70,6 +101,31 @@ export function deriveStepReadiness(
     return "READY_FOR_FEEDBACK";
   }
   return "IN_PROGRESS";
+}
+
+/** Minimal cockpit snapshot for readiness derivation outside the cockpit view. */
+export type StepReadinessInput = {
+  tasks: Pick<TaskData, "done">[];
+  metrics: {
+    evaluationMode?: CockpitMetricData["evaluationMode"];
+    name: string;
+    successCriterion: string;
+    failureCriterion: string;
+    dataPoints: Pick<KpiDataPointData, "periodLabel" | "value" | "assessment">[];
+  }[];
+};
+
+export function isStepReadyForFeedback(
+  input: StepReadinessInput,
+  hasFeedback: boolean
+): boolean {
+  return (
+    deriveStepReadiness(
+      input.tasks as TaskData[],
+      input.metrics as CockpitMetricData[],
+      hasFeedback
+    ) === "READY_FOR_FEEDBACK"
+  );
 }
 
 export function getImplementationPeriodProgress(steps: CockpitStepData[]): {
@@ -127,4 +183,18 @@ export function getLongestActiveTimeframe(steps: CockpitStepData[]): string | nu
 
 export function allStepsHaveFeedback(steps: CockpitStepData[]): boolean {
   return steps.length > 0 && steps.every((step) => step.hasFeedback);
+}
+
+/** Period-level assessment for a metric (used by step KPI indicator). */
+export function getMetricDisplayAssessment(
+  metric: CockpitMetricData
+): KpiDataPointData["assessment"] | null {
+  if (metric.dataPoints.length === 0) return null;
+  const reassessed = reassessDataPoints(metric, metric.dataPoints);
+
+  if (resolveEvaluationMode(metric) === "CUMULATIVE") {
+    return derivePeriodAssessment(metric, metric.dataPoints);
+  }
+
+  return reassessed.at(-1)?.assessment ?? null;
 }

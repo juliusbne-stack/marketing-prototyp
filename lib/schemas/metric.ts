@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const metricTypeSchema = z.enum(["RATE", "CUMULATIVE"]);
+export const evaluationModeSchema = z.enum(["PER_POINT", "CUMULATIVE"]);
 
 export const metricInputSchema = z.object({
   name: z.string().trim().min(1),
-  metricType: metricTypeSchema,
+  evaluationMode: evaluationModeSchema,
   successCriterion: z.string().trim().min(1),
   failureCriterion: z.string().trim().min(1),
 });

@@ -6,15 +6,41 @@ import {
   LoaderCircle,
   RefreshCw,
   Sparkles,
-  Target,
 } from "lucide-react";
 import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
-import { StatementReferenceChip } from "./StatementReferenceChip";
+import { EvidenceBadge } from "@/components/statements/EvidenceBadge";
 import { CopyRefinementSection } from "./CopyRefinementSection";
+import { ElaborationContent } from "./ElaborationContent";
+import { ElaborationRefinementSection } from "./ElaborationRefinementSection";
 import type { StatementRef } from "./types";
+
+function TaskAssumptionContextSection({
+  statement,
+}: {
+  statement: StatementRef;
+}) {
+  const introText =
+    statement.evidenceStatus === "FACT"
+      ? "Diese Aufgabe stützt sich auf diese belegte Aussage."
+      : "Diese Aufgabe zahlt auf die Prüfung dieser Annahme ein.";
+
+  return (
+    <div className="mb-4 rounded-md border border-border/80 bg-surface/60 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+        Wozu diese Aufgabe beiträgt
+      </p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <EvidenceBadge status={statement.evidenceStatus} />
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-text">{statement.content}</p>
+      <p className="mt-2 text-xs text-text-muted">{introText}</p>
+    </div>
+  );
+}
 
 export function TaskElaborationPanel({
   taskId,
+  annahmenBezugId,
   elaboration,
   statementMap,
   expanded,
@@ -22,6 +48,7 @@ export function TaskElaborationPanel({
   onElaboration,
 }: {
   taskId: string;
+  annahmenBezugId: string | null;
   elaboration: TaskElaborationResponse | null;
   statementMap: Map<string, StatementRef>;
   expanded: boolean;
@@ -34,6 +61,10 @@ export function TaskElaborationPanel({
   const [loading, setLoading] = useState(!elaboration);
   const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [refineInitialFeedback, setRefineInitialFeedback] = useState<
+    string | undefined
+  >(undefined);
 
   useEffect(() => {
     if (elaboration) {
@@ -91,9 +122,31 @@ export function TaskElaborationPanel({
     onToggleExpanded();
   }
 
+  function openRefinement(initialFeedback?: string) {
+    setRefineInitialFeedback(initialFeedback);
+    setRefineOpen(true);
+  }
+
+  function handleToggleRefinement() {
+    if (refineOpen) {
+      setRefineOpen(false);
+      setRefineInitialFeedback(undefined);
+    } else {
+      openRefinement();
+    }
+  }
+
+  function handleStepReject(stepTitle: string) {
+    openRefinement(`Schritt "${stepTitle}": `);
+  }
+
   const summaryText =
     content?.einleitungssatz ??
     (loading ? "Arbeitspaket wird erstellt …" : null);
+
+  const assumptionRef = annahmenBezugId
+    ? (statementMap.get(annahmenBezugId) ?? null)
+    : null;
 
   return (
     <div className="mt-1 rounded-md border border-border bg-background">
@@ -129,6 +182,9 @@ export function TaskElaborationPanel({
 
       {expanded && (
         <div className="border-t border-border px-3 py-4">
+          {assumptionRef && (
+            <TaskAssumptionContextSection statement={assumptionRef} />
+          )}
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-text-muted">
               <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
@@ -150,6 +206,18 @@ export function TaskElaborationPanel({
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <button
                   type="button"
+                  onClick={handleToggleRefinement}
+                  disabled={regenerating}
+                  aria-expanded={refineOpen}
+                  className={`inline-flex items-center gap-1 text-xs font-medium transition-colors hover:text-accent disabled:opacity-50 ${
+                    refineOpen ? "text-accent" : "text-text-muted"
+                  }`}
+                >
+                  <Sparkles className="h-3 w-3" aria-hidden />
+                  Mit Feedback überarbeiten
+                </button>
+                <button
+                  type="button"
                   onClick={() => fetchElaboration(true)}
                   disabled={regenerating}
                   className="inline-flex items-center gap-1 text-xs font-medium text-text-muted transition-colors hover:text-accent disabled:opacity-50"
@@ -162,133 +230,46 @@ export function TaskElaborationPanel({
                 </button>
               </div>
 
-              <p className="mt-3 text-[13px] text-text">{content.einleitungssatz}</p>
-
-              <ol className="mt-4 flex flex-col gap-3">
-                {content.schritte.map((schritt, index) => (
-                  <li key={schritt.titel}>
-                    <p className="text-sm font-medium text-text">
-                      {index + 1}. {schritt.titel}
-                    </p>
-                    <p className="mt-0.5 text-xs text-text-muted">
-                      {schritt.beschreibung}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-
-              {content.targeting.vorhanden && (
-                <div className="mt-4 rounded-md bg-accent-soft/40 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                    Targeting-Spezifikation
-                  </p>
-                  <dl className="mt-2 grid gap-2 text-[13px]">
-                    <div>
-                      <dt className="font-medium text-text">Zielgruppe</dt>
-                      <dd className="text-text-muted">
-                        {content.targeting.spezifikation.zielgruppenbeschreibung}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-text">Demografie</dt>
-                      <dd className="text-text-muted">
-                        {content.targeting.spezifikation.demografie}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-text">Geografie</dt>
-                      <dd className="text-text-muted">
-                        {content.targeting.spezifikation.geografie}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-text">Interessen</dt>
-                      <dd className="text-text-muted">
-                        {content.targeting.spezifikation.interessen.join(", ")}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-text">Platzierung</dt>
-                      <dd className="text-text-muted">
-                        {content.targeting.spezifikation.platzierung}
-                      </dd>
-                    </div>
-                  </dl>
-                  <p className="mt-2 text-xs text-text-muted">
-                    {content.targeting.hinweis}
-                  </p>
-                  {content.targeting.basiertAufAussageIds.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {content.targeting.basiertAufAussageIds.map((id) => {
-                        const statement = statementMap.get(id);
-                        if (!statement) return null;
-                        return (
-                          <StatementReferenceChip
-                            key={id}
-                            displayNumber={statement.displayNumber}
-                            evidenceStatus={statement.evidenceStatus}
-                            content={statement.content}
-                            prefix="Basiert auf:"
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {content.formulierungsvorschlaege.length > 0 && (
-                <CopyRefinementSection
-                  key={content.schritte.map((schritt) => schritt.titel).join("·")}
-                  taskId={taskId}
-                  snippets={content.formulierungsvorschlaege}
-                  onUpdated={(elaboration) => {
-                    setContent(elaboration);
-                    onElaboration(elaboration);
-                  }}
+              <div className="mt-3">
+                <ElaborationContent
+                  content={content}
+                  statementMap={statementMap}
+                  onStepReject={handleStepReject}
+                  formulierungsvorschlaegeSlot={
+                    content.formulierungsvorschlaege.length > 0 ? (
+                      <CopyRefinementSection
+                        key={content.schritte
+                          .map((schritt) => schritt.titel)
+                          .join("·")}
+                        taskId={taskId}
+                        snippets={content.formulierungsvorschlaege}
+                        onUpdated={(elaboration) => {
+                          setContent(elaboration);
+                          onElaboration(elaboration);
+                        }}
+                      />
+                    ) : undefined
+                  }
                 />
-              )}
-
-              <div className="mt-4 flex flex-col gap-2 border-t border-border pt-3 text-[13px]">
-                <p className="inline-flex items-start gap-1.5 text-text-muted">
-                  <Target
-                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent"
-                    aria-hidden
-                  />
-                  <span>
-                    <span className="font-medium text-text">Erfolgskriterium:</span>{" "}
-                    {content.erfolgskriterium}
-                  </span>
-                </p>
-                <p className="text-text-muted">
-                  <span className="font-medium text-text">Zeitaufwand:</span>{" "}
-                  {content.benoetigteRessourcen.zeitaufwandGeschaetzt}
-                  <span className="mx-1.5 text-border">·</span>
-                  <span className="font-medium text-text">Tools:</span>{" "}
-                  {content.benoetigteRessourcen.tools.join(", ")}
-                  {content.benoetigteRessourcen.budgetanteil && (
-                    <>
-                      <span className="mx-1.5 text-border">·</span>
-                      <span className="font-medium text-text">Budgetanteil:</span>{" "}
-                      {content.benoetigteRessourcen.budgetanteil}
-                    </>
-                  )}
-                </p>
               </div>
 
-              {content.offeneFragen.length > 0 && (
-                <div className="mt-4 rounded-md border border-evidence-question-border/40 bg-evidence-question-bg/50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-evidence-question-text">
-                    Offene Fragen
-                  </p>
-                  <ul className="mt-2 flex flex-col gap-1.5">
-                    {content.offeneFragen.map((question) => (
-                      <li key={question} className="text-[13px] text-text">
-                        {question}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              {refineOpen && (
+                <ElaborationRefinementSection
+                  taskId={taskId}
+                  currentContent={content}
+                  statementMap={statementMap}
+                  initialFeedback={refineInitialFeedback}
+                  onAdopted={(elaboration) => {
+                    setContent(elaboration);
+                    onElaboration(elaboration);
+                    setRefineOpen(false);
+                    setRefineInitialFeedback(undefined);
+                  }}
+                  onClose={() => {
+                    setRefineOpen(false);
+                    setRefineInitialFeedback(undefined);
+                  }}
+                />
               )}
 
               {error && <p className="mt-2 text-xs text-danger-text">{error}</p>}

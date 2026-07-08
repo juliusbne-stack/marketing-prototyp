@@ -1,40 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Sparkles, Target } from "lucide-react";
-import { StatementReferenceChip } from "./StatementReferenceChip";
+import { Sparkles, Target } from "lucide-react";
 import { TaskElaborationPanel } from "./TaskElaborationPanel";
 import type { StatementRef, TaskData } from "./types";
 import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
 
-function TaskMeta({
-  task,
-  statementMap,
-}: {
-  task: TaskData;
-  statementMap: Map<string, StatementRef>;
-}) {
-  const assumptionRef = task.annahmenBezugId
-    ? statementMap.get(task.annahmenBezugId)
-    : null;
-
-  if (!assumptionRef && !task.erfolgskriterium) return null;
+function TaskMeta({ task }: { task: TaskData }) {
+  if (!task.erfolgskriterium) return null;
 
   return (
-    <div className="mt-1 flex flex-col gap-1">
-      {assumptionRef && (
-        <StatementReferenceChip
-          displayNumber={assumptionRef.displayNumber}
-          evidenceStatus={assumptionRef.evidenceStatus}
-          content={assumptionRef.content}
-        />
-      )}
-      {task.erfolgskriterium && (
-        <span className="inline-flex items-start gap-1 text-xs text-text-muted">
-          <Target className="mt-0.5 h-3 w-3 shrink-0 text-accent/80" aria-hidden />
-          {task.erfolgskriterium}
-        </span>
-      )}
+    <div className="mt-1">
+      <span className="inline-flex items-start gap-1 text-xs text-text-muted">
+        <Target className="mt-0.5 h-3 w-3 shrink-0 text-accent/80" aria-hidden />
+        {task.erfolgskriterium}
+      </span>
     </div>
   );
 }
@@ -120,10 +100,11 @@ export function CockpitTaskRow({
         {task.hint && (
           <span className="mt-0.5 block text-xs text-text-muted">{task.hint}</span>
         )}
-        <TaskMeta task={task} statementMap={statementMap} />
+        <TaskMeta task={task} />
         {sessionActive && (
           <TaskElaborationPanel
             taskId={task.id}
+            annahmenBezugId={task.annahmenBezugId}
             elaboration={task.elaboration}
             statementMap={statementMap}
             expanded={expanded}
@@ -158,13 +139,14 @@ export function CockpitTaskRow({
               {task.hint}
             </span>
           )}
-          <TaskMeta task={task} statementMap={statementMap} />
+          <TaskMeta task={task} />
         </div>
       </div>
 
       {sessionActive && (
         <TaskElaborationPanel
           taskId={task.id}
+          annahmenBezugId={task.annahmenBezugId}
           elaboration={task.elaboration}
           statementMap={statementMap}
           expanded={expanded}

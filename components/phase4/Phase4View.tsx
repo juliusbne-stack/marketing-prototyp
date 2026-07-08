@@ -16,9 +16,11 @@ import {
 import {
   buildValidationHistoryMap,
   getAssessedFeedbackForStep,
+  getOpenValidationIntro,
   isAssumptionPreviouslyValidated,
   isStepCompleted,
 } from "@/lib/validation";
+import { AnchorAssumptionHeading } from "./AnchorAssumptionHeading";
 import { CompletedAssumptionCard } from "./CompletedAssumptionCard";
 import { ValidationStepCard } from "./ValidationStepCard";
 import type { PrioritizedOptionData, StepWithAssumption } from "./types";
@@ -121,7 +123,9 @@ export function Phase4View({
   function handleStepChanged(updated: StepWithAssumption) {
     setSteps((current) =>
       current.map((step) =>
-        step.id === updated.id ? { ...updated, assumption: step.assumption } : step
+        step.id === updated.id
+          ? { ...step, ...updated, assumption: step.assumption }
+          : step
       )
     );
   }
@@ -169,6 +173,14 @@ export function Phase4View({
   );
   const completedGroups = assumptionGroups.filter((group) =>
     isAssumptionPreviouslyValidated(group.steps, feedbacks)
+  );
+  const openValidationSteps = openGroups.flatMap((group) =>
+    group.steps.filter((step) => !isStepCompleted(step.id, feedbacks))
+  );
+  const openValidationIntro = getOpenValidationIntro(
+    openValidationSteps,
+    feedbacks,
+    hasDrafts
   );
 
   return (
@@ -256,16 +268,14 @@ export function Phase4View({
                   Offene Validierung ({openGroups.length})
                 </h3>
                 <p className="mt-1 text-sm text-text-muted">
-                  {hasDrafts
-                    ? "Prüfe die Entwürfe, passe sie bei Bedarf an und übernimm die Schritte in den Projektstand — die Umsetzung erfolgt danach im Umsetzungs-Cockpit."
-                    : "Alle Schritte sind übernommen — setze sie im Umsetzungs-Cockpit um und gehe anschließend zu Phase 5 für die Auswertung."}
+                  {openValidationIntro}
                 </p>
               </div>
               {openGroups.map((group) => (
                 <div key={group.assumption.id} className="flex flex-col gap-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                    Kritische Annahme
-                  </p>
+                  <AnchorAssumptionHeading
+                    evidenceStatus={group.assumption.evidenceStatus}
+                  />
                   <StatementCard
                     statement={group.assumption}
                     onChanged={handleAssumptionChanged}

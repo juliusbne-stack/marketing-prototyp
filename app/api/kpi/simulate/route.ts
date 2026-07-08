@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { KPI_SIMULATION_PROMPT } from "@/lib/prompts/kpiSimulation";
 import { reassessDataPoints } from "@/lib/kpiAssessment";
+import { adjustSimulationForScenario } from "@/lib/kpiSimulationAdjust";
 import {
   kpiScenarioSchema,
   kpiSimulationResponseSchema,
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
     metrics: step.metrics.map((metric) => ({
       id: metric.id,
       name: metric.name,
-      metricType: metric.metricType,
+      evaluationMode: metric.evaluationMode,
       successCriterion: metric.successCriterion,
       failureCriterion: metric.failureCriterion,
     })),
@@ -157,7 +158,12 @@ export async function POST(request: Request) {
   const pointsToCreate = result.series.flatMap((series) => {
     const metric = metricById.get(series.metricId);
     if (!metric) return [];
-    const reassessed = reassessDataPoints(metric, series.points);
+    const adjusted = adjustSimulationForScenario(
+      metric,
+      series.points,
+      parsed.data.scenario
+    );
+    const reassessed = reassessDataPoints(metric, adjusted);
     return reassessed.map((point) => ({
       metricId: series.metricId,
       periodLabel: point.periodLabel,

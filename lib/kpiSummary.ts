@@ -1,13 +1,16 @@
-import type { KpiAssessment, MetricType } from "@prisma/client";
+import type { EvaluationMode, KpiAssessment } from "@prisma/client";
 import {
   assessmentLabel,
   computeCumulativeTotal,
   deriveOverallAssessment,
+  derivePeriodAssessment,
+  formatCriterionInline,
   formatCumulativeTotal,
   formatRunningTotal,
   parseNumericValue,
+  periodAssessmentLabel,
   reassessDataPoints,
-  resolveMetricType,
+  resolveEvaluationMode,
   type KpiPoint,
   type MetricForAssessment,
 } from "@/lib/kpiAssessment";
@@ -16,21 +19,29 @@ export type KpiSummaryMetric = MetricForAssessment & {
   dataPoints: KpiPoint[];
 };
 
-function formatCumulativePointLine(
+function extractPeriodCountLabel(points: KpiPoint[]): string {
+  const count = points.length;
+  if (count === 0) return "der Periode";
+  const firstLabel = points[0]!.periodLabel.toLowerCase();
+  if (firstLabel.includes("woche")) {
+    return count === 1 ? "1 Woche" : `${count} Wochen`;
+  }
+  if (firstLabel.includes("tag")) {
+    return count === 1 ? "1 Tag" : `${count} Tage`;
+  }
+  return `${count} Perioden`;
+}
+
+function formatCumulativeTrendLine(
   metric: MetricForAssessment,
   point: KpiPoint,
   runningTotal: number
 ): string {
-  const increment = parseNumericValue(point.value);
   const runningLabel = formatRunningTotal(metric, runningTotal);
-  const incrementPart =
-    increment !== null
-      ? `${point.value} (Zwischenstand: ${runningLabel})`
-      : point.value;
-  return `- ${point.periodLabel}: ${incrementPart} (${assessmentLabel(point.assessment)})`;
+  return `- ${point.value} · kumuliert ${runningLabel}`;
 }
 
-function formatRatePointLine(point: KpiPoint): string {
+function formatPerPointLine(point: KpiPoint): string {
   return `- ${point.periodLabel}: ${point.value} (${assessmentLabel(point.assessment)})`;
 }
 
@@ -39,26 +50,31 @@ export function buildKpiFeedbackSummary(metrics: KpiSummaryMetric[]): string {
     .filter((metric) => metric.dataPoints.length > 0)
     .map((metric) => {
       const reassessed = reassessDataPoints(metric, metric.dataPoints);
-      const type = resolveMetricType(metric);
+      const mode = resolveEvaluationMode(metric);
+      const successText = formatCriterionInline(metric.successCriterion);
+      const failureText = formatCriterionInline(metric.failureCriterion);
       const lines: string[] = [
-        `Metrik „${metric.name}“ — stützend wenn ${metric.successCriterion}; widerlegend wenn ${metric.failureCriterion}:`,
+        `Metrik „${metric.name}" — stützend, wenn ${successText}; widerlegend, wenn ${failureText}:`,
       ];
 
-      if (type === "CUMULATIVE") {
+      if (mode === "CUMULATIVE") {
         let runningTotal = 0;
         for (const point of reassessed) {
           runningTotal += parseNumericValue(point.value) ?? 0;
-          lines.push(formatCumulativePointLine(metric, point, runningTotal));
+          lines.push(formatCumulativeTrendLine(metric, point, runningTotal));
         }
-        const overall = deriveOverallAssessment(metric, metric.dataPoints);
+        const overall = derivePeriodAssessment(metric, metric.dataPoints);
+        const periodLabel = extractPeriodCountLabel(reassessed);
         lines.push(
-          `Gesamt über die Periode: ${formatCumulativeTotal(metric, metric.dataPoints)} — Gesamturteil: ${assessmentLabel(overall)}`
+          `Gesamt nach ${periodLabel}: ${formatCumulativeTotal(metric, metric.dataPoints)} — ${periodAssessmentLabel(overall, mode)}`
         );
       } else {
-        lines.push(...reassessed.map((point) => formatRatePointLine(point)));
+        lines.push(...reassessed.map((point) => formatPerPointLine(point)));
         const overall = deriveOverallAssessment(metric, metric.dataPoints);
         if (reassessed.length > 1) {
-          lines.push(`Gesamturteil über die Periode: ${assessmentLabel(overall)}`);
+          lines.push(
+            `Gesamturteil über die Periode: ${assessmentLabel(overall)}`
+          );
         }
       }
 
@@ -71,6 +87,5 @@ export function buildKpiFeedbackSummary(metrics: KpiSummaryMetric[]): string {
   ].join("\n\n");
 }
 
-// Re-export for callers that need enriched data points in the UI.
-export { reassessDataPoints, resolveMetricType, computeCumulativeTotal };
-export type { KpiAssessment, MetricType };
+export { reassessDataPoints, resolveEvaluationMode, computeCumulativeTotal };
+export type { KpiAssessment, EvaluationMode };

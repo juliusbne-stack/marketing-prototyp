@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       metrics: {
         select: {
           name: true,
-          metricType: true,
+          evaluationMode: true,
           successCriterion: true,
           failureCriterion: true,
         },

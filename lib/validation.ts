@@ -1,6 +1,10 @@
 import type { FeedbackResult } from "@prisma/client";
 import type { StepWithAssumption } from "@/components/phase4/types";
 import type { FeedbackData } from "@/components/phase5/types";
+import {
+  isStepReadyForFeedback,
+  type StepReadinessInput,
+} from "@/lib/cockpitPeriod";
 
 type StepRef = Pick<StepWithAssumption, "id" | "adopted">;
 type FeedbackRef = Pick<FeedbackData, "stepId" | "interpretation" | "statusApplied">;
@@ -108,4 +112,44 @@ export function getAssessedFeedbackForStep(
   return feedbacks.find(
     (feedback) => feedback.stepId === stepId && feedback.interpretation !== null
   );
+}
+
+const OPEN_VALIDATION_DRAFT_INTRO =
+  "Prüfe die Entwürfe, passe sie bei Bedarf an und übernimm die Schritte in den Projektstand — die Umsetzung erfolgt danach im Umsetzungs-Cockpit.";
+
+const OPEN_VALIDATION_ADOPTED_INTRO =
+  "Alle Schritte sind übernommen — setze sie im Umsetzungs-Cockpit um und gehe anschließend zu Phase 5 für die Auswertung.";
+
+/** Subtitle for the phase 4 "Offene Validierung" section, derived from open steps. */
+export function getOpenValidationIntro(
+  openSteps: (StepWithAssumption & {
+    cockpitReadinessInput?: StepReadinessInput;
+  })[],
+  feedbacks: FeedbackRef[],
+  hasDrafts: boolean
+): string {
+  if (hasDrafts) {
+    return OPEN_VALIDATION_DRAFT_INTRO;
+  }
+
+  const activeSteps = openSteps.filter(
+    (step) => !isStepCompleted(step.id, feedbacks)
+  );
+  const readyCount = activeSteps.filter(
+    (step) =>
+      step.cockpitReadinessInput &&
+      isStepReadyForFeedback(
+        step.cockpitReadinessInput,
+        isStepCompleted(step.id, feedbacks)
+      )
+  ).length;
+  const total = activeSteps.length;
+
+  if (readyCount === 0) {
+    return OPEN_VALIDATION_ADOPTED_INTRO;
+  }
+  if (readyCount < total) {
+    return `${readyCount} von ${total} Schritten sind bereit für Rückmeldung — erfasse sie im Umsetzungs-Cockpit.`;
+  }
+  return "Alle Schritte sind umgesetzt — erfasse die Rückmeldungen im Umsetzungs-Cockpit und werte sie anschließend in Phase 5 aus.";
 }
