@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { TriangleAlert } from "lucide-react";
+import { AppProviders } from "./providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -41,7 +42,9 @@ export default function RootLayout({
             Demonstrationszwecken von der KI simuliert und sind fiktiv.
           </span>
         </div>
-        <div className="flex flex-1 flex-col">{children}</div>
+        <AppProviders>
+          <div className="flex flex-1 flex-col">{children}</div>
+        </AppProviders>
       </body>
     </html>
   );
