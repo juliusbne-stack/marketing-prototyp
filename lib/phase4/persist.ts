@@ -117,3 +117,18 @@ export async function persistPhase4Steps({
     });
   });
 }
+
+export async function persistPhase4GenerationNotes({
+  optionId,
+  diversityNote,
+  modeNote,
+}: {
+  optionId: string;
+  diversityNote: string | null;
+  modeNote: string | null;
+}) {
+  return prisma.strategyOption.update({
+    where: { id: optionId },
+    data: { diversityNote, modeNote },
+  });
+}

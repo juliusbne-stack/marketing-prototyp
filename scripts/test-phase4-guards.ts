@@ -3,7 +3,7 @@
  */
 import {
   ALLOWED_DECISIVE_SIGNAL,
-  computeWhitelistSingleDimension,
+  computeWhitelistDimensionState,
   validateSteps,
   type GuardContext,
   type WhitelistCandidate,
@@ -45,7 +45,7 @@ const validationCtx: GuardContext = {
     },
   ],
   validatedChannels: [],
-  whitelistSingleDimension: false,
+  whitelistDimensionState: "MULTI",
 };
 
 // T4: WTP → only COMMITMENT decisive
@@ -130,7 +130,7 @@ assert(
 const singleDimCtx: GuardContext = {
   ...validationCtx,
   whitelist: [validationCtx.whitelist[0]!],
-  whitelistSingleDimension: computeWhitelistSingleDimension([
+  whitelistDimensionState: computeWhitelistDimensionState([
     validationCtx.whitelist[0]!,
   ]),
 };
@@ -170,7 +170,7 @@ const scalingCtx: GuardContext = {
     },
   ],
   validatedChannels: ["Instagram"],
-  whitelistSingleDimension: true,
+  whitelistDimensionState: "SINGLE",
 };
 const v6Result: Phase4LlmResponse = {
   criticalAssumptions: ["f1"],

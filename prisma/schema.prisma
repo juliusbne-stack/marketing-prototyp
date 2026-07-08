@@ -142,6 +142,8 @@ model StrategyOption {
   summary                String?      @db.Text
   status                 OptionStatus @default(DRAFT)
   prioritizationRationale String?     @db.Text // Begründung der Priorisierung (F7, nutzerbestätigt)
+  diversityNote          String?      @db.Text // Hinweis der letzten VALIDATION-Generierung (Diversität)
+  modeNote               String?      @db.Text // Hinweis der letzten SCALING-Generierung (Modus/Kanal)
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
 

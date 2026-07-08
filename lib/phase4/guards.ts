@@ -21,11 +21,13 @@ export type WhitelistCandidate = {
   category: string;
 };
 
+export type WhitelistDimensionState = "UNDETERMINABLE" | "SINGLE" | "MULTI";
+
 export type GuardContext = {
   mode: Phase4Mode;
   whitelist: WhitelistCandidate[];
   validatedChannels: string[];
-  whitelistSingleDimension: boolean;
+  whitelistDimensionState: WhitelistDimensionState;
 };
 
 export type StepViolation = {
@@ -183,15 +185,70 @@ export async function getValidatedChannels(projectId: string): Promise<string[]>
   return [...channels];
 }
 
-export function computeWhitelistSingleDimension(
+export function deriveStepStrategyDimension(
+  assumptionId: string,
+  ctx: GuardContext
+): StrategyDimension | null {
+  const candidate = ctx.whitelist.find((entry) => entry.id === assumptionId);
+  return candidate?.strategyDimension ?? null;
+}
+
+function applyDerivedStrategyDimensions(
+  result: Phase4LlmResponse,
+  ctx: GuardContext
+): Phase4LlmResponse {
+  return {
+    ...result,
+    steps: result.steps.map((step, index) => {
+      const derived = deriveStepStrategyDimension(step.assumptionId, ctx);
+      if (step.strategyDimension !== derived) {
+        console.warn(
+          `[phase4/guards] strategyDimension-Mismatch: LLM=${step.strategyDimension}, abgeleitet=${derived}, Schritt=${index + 1}`
+        );
+      }
+      return { ...step, strategyDimension: derived };
+    }),
+  };
+}
+
+export function computeWhitelistDimensionState(
   whitelist: WhitelistCandidate[]
-): boolean {
+): WhitelistDimensionState {
+  const nullCandidates = whitelist.filter(
+    (candidate) => candidate.strategyDimension == null
+  );
+  if (nullCandidates.length > 0) {
+    console.warn(
+      "[phase4/guards] Whitelist-Kandidaten ohne mappbare strategyDimension:",
+      nullCandidates.map((candidate) => ({
+        id: candidate.id,
+        category: candidate.category,
+      }))
+    );
+  }
+
   const dimensions = new Set(
     whitelist
       .map((candidate) => candidate.strategyDimension)
       .filter((dimension): dimension is StrategyDimension => dimension != null)
   );
-  return dimensions.size <= 1;
+
+  if (dimensions.size === 0) {
+    console.warn(
+      "[phase4/guards] V3 unbestimmbar: kein Whitelist-Kandidat hat eine mappbare strategyDimension — Diversitätsregel wird nicht geprüft."
+    );
+    return "UNDETERMINABLE";
+  }
+
+  if (dimensions.size === 1) {
+    console.log(
+      "[phase4/guards] V3 Ausnahme (SINGLE): Whitelist enthält nur eine strategyDimension:",
+      [...dimensions][0]
+    );
+    return "SINGLE";
+  }
+
+  return "MULTI";
 }
 
 export function validateSteps(
@@ -225,10 +282,12 @@ export function validateSteps(
     if (
       ctx.mode === "VALIDATION" &&
       result.steps.length >= 2 &&
-      !ctx.whitelistSingleDimension
+      ctx.whitelistDimensionState === "MULTI"
     ) {
       const dimensions = new Set(
-        result.steps.map((entry) => entry.strategyDimension)
+        result.steps
+          .map((entry) => deriveStepStrategyDimension(entry.assumptionId, ctx))
+          .filter((dimension): dimension is StrategyDimension => dimension != null)
       );
       if (dimensions.size < 2 && index === 0) {
         violations.push({
@@ -401,7 +460,7 @@ export async function processLlmResult(
   let repairTriggered = false;
   let repairSucceeded = false;
 
-  let result = initial;
+  let result = applyDerivedStrategyDimensions(initial, ctx);
   let violations = validateSteps(result, ctx);
 
   if (violations.length > 0) {
@@ -412,7 +471,10 @@ export async function processLlmResult(
 
     repairTriggered = true;
     try {
-      result = await repairOnce(result, violations, ctx);
+      result = applyDerivedStrategyDimensions(
+        await repairOnce(result, violations, ctx),
+        ctx
+      );
       repairSucceeded = true;
       log.push("Repair-Call ausgelöst und erfolgreich geparst.");
       console.log("[phase4/guards] Repair-Call erfolgreich.");

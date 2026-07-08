@@ -253,6 +253,8 @@ export default async function PhasePage({
           title: true,
           summary: true,
           prioritizationRationale: true,
+          diversityNote: true,
+          modeNote: true,
         },
       }),
       getPhase4Mode(id),
@@ -340,6 +342,11 @@ export default async function PhasePage({
         initialSteps={steps}
         initialFeedbacks={feedbacks}
         phase4Mode={phase4Mode}
+        initialMeta={{
+          diversityNote: option?.diversityNote ?? null,
+          modeNote: option?.modeNote ?? null,
+          emptyState: null,
+        }}
       />
     );
   }

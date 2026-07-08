@@ -10,12 +10,12 @@ import {
 } from "@/lib/phase4/context";
 import {
   buildCandidateWhitelist,
-  computeWhitelistSingleDimension,
+  computeWhitelistDimensionState,
   getValidatedChannels,
   processLlmResult,
 } from "@/lib/phase4/guards";
 import { getPhase4Mode } from "@/lib/phase4/mode";
-import { phase4StepInclude, persistPhase4Steps } from "@/lib/phase4/persist";
+import { phase4StepInclude, persistPhase4GenerationNotes, persistPhase4Steps } from "@/lib/phase4/persist";
 import { EMPTY_WHITELIST_SCALING } from "@/lib/labels/phase4";
 import { PHASE4_SCALE_PROMPT } from "@/lib/prompts/phase4Scale";
 import { phase4ScaleResponseSchema } from "@/lib/schemas/phase4";
@@ -97,6 +97,11 @@ export async function POST(request: Request) {
       orderBy: { createdAt: "asc" },
       include: phase4StepInclude,
     });
+    await persistPhase4GenerationNotes({
+      optionId: option.id,
+      diversityNote: null,
+      modeNote: null,
+    });
     return NextResponse.json({
       steps,
       diversityNote: null,
@@ -159,7 +164,7 @@ export async function POST(request: Request) {
     mode: "SCALING" as const,
     whitelist,
     validatedChannels,
-    whitelistSingleDimension: computeWhitelistSingleDimension(whitelist),
+    whitelistDimensionState: computeWhitelistDimensionState(whitelist),
   };
 
   let llmResult;
@@ -232,10 +237,16 @@ export async function POST(request: Request) {
     );
   }
 
+  await persistPhase4GenerationNotes({
+    optionId: option.id,
+    diversityNote: null,
+    modeNote: processed.modeNote,
+  });
+
   return NextResponse.json(
     {
       steps,
-      diversityNote: processed.diversityNote,
+      diversityNote: null,
       modeNote: processed.modeNote,
       emptyState: null,
     },
