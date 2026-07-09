@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Trash2, XCircle } from "lucide-react";
+import { MessageCircle, Trash2, XCircle } from "lucide-react";
+import type { AdoptedAussageInput } from "@/lib/phase4/strategyAssistant";
 import type { ValidationHistoryCounts } from "@/lib/validation";
 import type { StatementData } from "@/components/statements/types";
 import { useConfirm } from "@/components/ui/DialogProvider";
 import { StatementCard } from "@/components/statements/StatementCard";
 import { AnchorAssumptionHeading } from "./AnchorAssumptionHeading";
-import { ValidationRefinementPanel } from "./ValidationRefinementPanel";
+import { StrategieAssistentPanel } from "./StrategieAssistentPanel";
 import { ValidationStepCard } from "./ValidationStepCard";
-import type { StepWithAssumption } from "./types";
+import type { AssistantTaskData, StepWithAssumption } from "./types";
 
 const DRAFT_DELETE_CONFIRM =
   "Diesen Validierungsentwurf löschen? Übernommene Inhalte bleiben davon unberührt.";
@@ -18,7 +19,7 @@ const ADOPTED_DISCARD_CONFIRM =
   "Diese Validierung wurde bereits übernommen. Sie wird nicht endgültig gelöscht, sondern als nicht weiter verfolgt markiert, damit spätere Aufgaben, Kennzahlen oder Rückmeldungen nachvollziehbar bleiben.";
 
 // One open validation block: critical assumption + implementation step(s)
-// with visible actions for KI refinement, delete and discard.
+// with visible actions for the strategy assistant, delete and discard.
 export function OpenValidationBlock({
   projectId,
   assumption,
@@ -27,15 +28,19 @@ export function OpenValidationBlock({
   onAssumptionChanged,
   onStepChanged,
   onStepRemoved,
+  onTaskChanged,
   onRefinementAdopted,
+  adoptedAussagen,
 }: {
   projectId: string;
   assumption: StatementData;
   steps: StepWithAssumption[];
   validationHistory?: ValidationHistoryCounts | null;
+  adoptedAussagen: AdoptedAussageInput[];
   onAssumptionChanged: (statement: StatementData) => void;
   onStepChanged: (step: StepWithAssumption) => void;
   onStepRemoved: (stepId: string) => void;
+  onTaskChanged: (stepId: string, task: AssistantTaskData) => void;
   onRefinementAdopted: (result: {
     step: StepWithAssumption;
     assumption: StatementData;
@@ -44,7 +49,7 @@ export function OpenValidationBlock({
 }) {
   const confirm = useConfirm();
   const primaryStep = steps[0];
-  const [refinementOpen, setRefinementOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,12 +132,17 @@ export function OpenValidationBlock({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setRefinementOpen(true)}
-            disabled={isBusy || refinementOpen}
-            className="inline-flex items-center gap-1.5 rounded-md border border-accent px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent-soft disabled:opacity-50"
+            onClick={() => setAssistantOpen((open) => !open)}
+            disabled={isBusy}
+            aria-expanded={assistantOpen}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+              assistantOpen
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-border bg-surface text-text-muted hover:border-accent hover:text-accent"
+            }`}
           >
-            <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Mit KI überarbeiten
+            <MessageCircle className="h-3.5 w-3.5" aria-hidden />
+            Strategie Assistent
           </button>
           {!primaryStep.adopted ? (
             <button
@@ -177,20 +187,26 @@ export function OpenValidationBlock({
         ))}
       </div>
 
-      {refinementOpen && (
-        <ValidationRefinementPanel
+      {assistantOpen && (
+        <StrategieAssistentPanel
           projectId={projectId}
-          step={primaryStep}
           assumption={assumption}
-          onAdopted={(result) => {
+          step={primaryStep}
+          tasks={primaryStep.assistantTasks ?? []}
+          adoptedAussagen={adoptedAussagen}
+          onAssumptionChanged={onAssumptionChanged}
+          onTaskChanged={(task) => onTaskChanged(primaryStep.id, task)}
+          onStepChanged={(updated) =>
+            onStepChanged({ ...updated, assumption: primaryStep.assumption })
+          }
+          onRefinementAdopted={(result) => {
             onRefinementAdopted({
               step: { ...result.step, assumption: result.assumption },
               assumption: result.assumption,
               archivedStepId: result.archivedStepId,
             });
-            setRefinementOpen(false);
           }}
-          onClose={() => setRefinementOpen(false)}
+          onClose={() => setAssistantOpen(false)}
         />
       )}
 

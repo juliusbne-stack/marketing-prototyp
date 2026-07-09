@@ -3,6 +3,7 @@ import type {
   StepType,
   StrategyDimension,
   TestSubject,
+  ProxyStrength,
 } from "@prisma/client";
 
 export const STEP_TYPE_LABEL: Record<StepType, string> = {
@@ -34,6 +35,11 @@ export const SIGNAL_CATEGORY_LABEL: Record<SignalCategory, string> = {
   BEHAVIOR: "Verhalten",
   ATTENTION: "Aufmerksamkeit",
   QUALITATIVE: "Qualitativ",
+};
+
+export const PROXY_STRENGTH_LABEL: Record<ProxyStrength, string> = {
+  DIRECT: "Direkter Beleg",
+  PROXY: "Indirekt / Proxy",
 };
 
 export const VALIDATION_QUESTION_HEADING = "Was muss geprüft werden?";

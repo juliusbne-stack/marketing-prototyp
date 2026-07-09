@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Target } from "lucide-react";
 import { TaskElaborationPanel } from "./TaskElaborationPanel";
+import { ImplementationReferenceChip } from "./ImplementationReferenceChip";
 import type { StatementRef, TaskData } from "./types";
 import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
+import { isActionableTask } from "@/lib/taskActionable";
 
 function TaskMeta({ task }: { task: TaskData }) {
   if (!task.erfolgskriterium) return null;
@@ -43,6 +45,9 @@ export function CockpitTaskRow({
   const [sessionActive, setSessionActive] = useState(!!task.elaboration);
   const [readOnlyExpanded, setReadOnlyExpanded] = useState(false);
 
+  const isFulfilledRef = task.herkunft === "BEREITS_ERFUELLT";
+  const actionable = isActionableTask(task.herkunft);
+
   const expanded = readOnly ? readOnlyExpanded : isExpanded;
   const toggleExpanded = readOnly
     ? () => setReadOnlyExpanded((current) => !current)
@@ -54,13 +59,15 @@ export function CockpitTaskRow({
     }
   }, [task.elaboration]);
 
-  const titleClass = task.done
-    ? "text-text-muted line-through"
-    : isNext
-      ? "font-semibold text-text"
-      : "text-text";
+  const titleClass = isFulfilledRef
+    ? "text-text-muted/70"
+    : task.done
+      ? "text-text-muted line-through"
+      : isNext
+        ? "font-semibold text-text"
+        : "text-text";
 
-  const nextLabel = isNext && (
+  const nextLabel = isNext && actionable && (
     <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-accent">
       Als Nächstes:
     </span>
@@ -78,21 +85,33 @@ export function CockpitTaskRow({
   const elaborateLabel =
     sessionActive && !expanded ? "Ausarbeitung anzeigen" : "Mit KI ausarbeiten";
 
-  const elaborateAction = !readOnly && (
-    <button
-      type="button"
-      onClick={handleElaborateClick}
-      className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-accent opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
-      aria-expanded={sessionActive && expanded}
-    >
-      <Sparkles className="h-3 w-3" aria-hidden />
-      {elaborateLabel}
-    </button>
-  );
+  const elaborateAction =
+    !readOnly && actionable && (
+      <button
+        type="button"
+        onClick={handleElaborateClick}
+        className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-accent opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
+        aria-expanded={sessionActive && expanded}
+      >
+        <Sparkles className="h-3 w-3" aria-hidden />
+        {elaborateLabel}
+      </button>
+    );
 
-  if (readOnly) {
+  const referenceChip =
+    isFulfilledRef && task.erfuelltDurchUmsetzung ? (
+      <div className="mt-1.5">
+        <ImplementationReferenceChip
+          stepTitle={task.erfuelltDurchUmsetzung.title}
+        />
+      </div>
+    ) : null;
+
+  if (readOnly || isFulfilledRef) {
     return (
-      <li className="rounded-md px-2 py-1.5">
+      <li
+        className={`rounded-md px-2 py-1.5 ${isFulfilledRef ? "opacity-75" : ""}`}
+      >
         <span className={`block text-sm ${titleClass}`}>
           {nextLabel}
           {task.title}
@@ -101,7 +120,8 @@ export function CockpitTaskRow({
           <span className="mt-0.5 block text-xs text-text-muted">{task.hint}</span>
         )}
         <TaskMeta task={task} />
-        {sessionActive && (
+        {referenceChip}
+        {sessionActive && actionable && (
           <TaskElaborationPanel
             taskId={task.id}
             annahmenBezugId={task.annahmenBezugId}
@@ -140,6 +160,7 @@ export function CockpitTaskRow({
             </span>
           )}
           <TaskMeta task={task} />
+          {referenceChip}
         </div>
       </div>
 

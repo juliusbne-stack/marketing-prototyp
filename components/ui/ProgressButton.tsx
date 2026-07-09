@@ -90,35 +90,33 @@ export function ProgressButton({
   }, [loading, loadingPhase]);
 
   const isDisabled = disabled || loading;
+  const showProgress = progress > 0;
 
   return (
     <button
       {...props}
       disabled={isDisabled}
       aria-busy={loading}
-      className={`relative inline-flex overflow-hidden rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:cursor-not-allowed ${
+      className={`inline-flex items-center gap-1.5 rounded-md border-0 bg-accent px-4 py-2 text-sm font-medium text-white shadow-none transition-[filter,opacity] appearance-none hover:brightness-95 disabled:cursor-not-allowed ${
         loading ? "" : "disabled:opacity-50"
       } ${className}`}
+      style={
+        showProgress
+          ? {
+              backgroundImage: `linear-gradient(90deg, rgba(255,255,255,0.2) ${progress}%, transparent ${progress}%)`,
+              backgroundColor: "var(--accent)",
+            }
+          : undefined
+      }
     >
-      <span
-        aria-hidden
-        className="absolute inset-y-0 left-0 bg-white/20 transition-transform duration-300 ease-out"
-        style={{
-          width: "100%",
-          transform: `scaleX(${progress / 100})`,
-          transformOrigin: "left",
-        }}
-      />
-      <span className="relative z-10 inline-flex items-center gap-1.5 [text-shadow:0_1px_1px_rgba(0,0,0,0.12)]">
-        {loading && loadingLabel ? (
-          <>
-            {stripTrailingEllipsis(loadingLabel)}
-            <LoadingDots />
-          </>
-        ) : (
-          children
-        )}
-      </span>
+      {loading && loadingLabel ? (
+        <>
+          {stripTrailingEllipsis(loadingLabel)}
+          <LoadingDots />
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

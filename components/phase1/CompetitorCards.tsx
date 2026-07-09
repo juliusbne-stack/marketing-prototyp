@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ChevronRight, MoreVertical, Plus } from "lucide-react";
 import { AddStatementForm } from "./AddStatementForm";
 import { AddCompetitorAspectForm } from "./AddCompetitorAspectForm";
+import { AddCompetitorForm } from "./AddCompetitorForm";
 import { CompactStatementRow } from "./CompactStatementRow";
 import type { StatementData } from "@/components/statements/types";
 import {
@@ -339,6 +340,14 @@ function CompetitorListPanel({
           />
         ))}
       </div>
+
+      <footer className="border-t border-border/70 px-4 py-3">
+        <AddCompetitorForm
+          projectId={projectId}
+          existingLabels={Array.from(profileGroups.keys())}
+          onAdded={onAdded}
+        />
+      </footer>
     </article>
   );
 }
@@ -495,7 +504,12 @@ export function CompetitorCards({
       />
 
       {!hasProfiles && legacyStatements.length === 0 && (
-        <div className="mt-3">
+        <div className="mt-3 flex flex-col gap-3">
+          <AddCompetitorForm
+            projectId={projectId}
+            existingLabels={[]}
+            onAdded={onAdded}
+          />
           <AddStatementForm
             projectId={projectId}
             categories={[
@@ -504,6 +518,16 @@ export function CompetitorCards({
             onAdded={onAdded}
           />
         </div>
+      )}
+
+      {!hasProfiles && legacyStatements.length > 0 && (
+        <footer className="mt-3">
+          <AddCompetitorForm
+            projectId={projectId}
+            existingLabels={[]}
+            onAdded={onAdded}
+          />
+        </footer>
       )}
     </section>
   );

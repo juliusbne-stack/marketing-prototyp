@@ -12,13 +12,20 @@ import {
 } from "@/lib/schemas/phase4";
 import type { Phase4Mode } from "@/lib/phase4/types";
 import { statementCategoryToStrategyDimension } from "./strategyDimension";
+import {
+  deriveAllowedDecisiveTestSubjects,
+  serializeAllowedTestSubjects,
+} from "./testSubjectDerivation";
 
 export type WhitelistCandidate = {
   id: string;
   content: string;
+  justification: string | null;
+  uncertainty: string | null;
   evidenceStatus: EvidenceStatus;
   strategyDimension: StrategyDimension | null;
   category: string;
+  allowedDecisiveTestSubjects: TestSubjectValue[];
 };
 
 export type WhitelistDimensionState = "UNDETERMINABLE" | "SINGLE" | "MULTI";
@@ -32,7 +39,7 @@ export type GuardContext = {
 
 export type StepViolation = {
   stepIndex: number;
-  rule: "V1" | "V2" | "V3" | "V3b" | "V4" | "V5" | "V6";
+  rule: "V1" | "V2" | "V3" | "V3b" | "V4" | "V5" | "V6" | "V7" | "V7s";
   message: string;
 };
 
@@ -63,6 +70,21 @@ export const ALLOWED_DECISIVE_SIGNAL: Record<
   OTHER: ["COMMITMENT", "BEHAVIOR", "QUALITATIVE"],
 };
 
+function attachAllowedTestSubjects(
+  statement: Pick<
+    WhitelistCandidate,
+    "content" | "justification" | "uncertainty"
+  >
+): TestSubjectValue[] {
+  return serializeAllowedTestSubjects(
+    deriveAllowedDecisiveTestSubjects({
+      content: statement.content,
+      justification: statement.justification,
+      uncertainty: statement.uncertainty,
+    })
+  );
+}
+
 export async function buildCandidateWhitelist(
   projectId: string,
   mode: Phase4Mode
@@ -76,6 +98,8 @@ export async function buildCandidateWhitelist(
             select: {
               id: true,
               content: true,
+              justification: true,
+              uncertainty: true,
               evidenceStatus: true,
               adopted: true,
               category: true,
@@ -100,11 +124,14 @@ export async function buildCandidateWhitelist(
       .map((statement) => ({
         id: statement.id,
         content: statement.content,
+        justification: statement.justification,
+        uncertainty: statement.uncertainty,
         evidenceStatus: statement.evidenceStatus,
         strategyDimension: statementCategoryToStrategyDimension(
           statement.category
         ),
         category: statement.category,
+        allowedDecisiveTestSubjects: attachAllowedTestSubjects(statement),
       }));
   }
 
@@ -142,9 +169,12 @@ export async function buildCandidateWhitelist(
   return candidates.map((statement) => ({
     id: statement.id,
     content: statement.content,
+    justification: statement.justification,
+    uncertainty: statement.uncertainty,
     evidenceStatus: statement.evidenceStatus,
     strategyDimension: statementCategoryToStrategyDimension(statement.category),
     category: statement.category,
+    allowedDecisiveTestSubjects: attachAllowedTestSubjects(statement),
   }));
 }
 
@@ -193,6 +223,43 @@ export function deriveStepStrategyDimension(
   return candidate?.strategyDimension ?? null;
 }
 
+export function getAllowedDecisiveTestSubjects(
+  assumptionId: string,
+  ctx: GuardContext
+): TestSubjectValue[] {
+  const candidate = ctx.whitelist.find((entry) => entry.id === assumptionId);
+  return candidate?.allowedDecisiveTestSubjects ?? [];
+}
+
+/**
+ * Reach-Proxy detection for V7 reachabilityVeto (thesis Kap. 5.3).
+ *
+ * Vocabulary-based only: fixed regex on metric.name + successCriterion (case-insensitive):
+ * klick | ctr | klickrate | reichweite | impression | cpc | cpm | reach;
+ * plus unconditional match when signalCategory === ATTENTION.
+ *
+ * Known gap: reach-adjacent DECISIVE metrics outside this vocabulary (e.g. "Sichtbarkeitsquote")
+ * are NOT classified as reach proxies. If their signalCategory still fits an allowed testSubject,
+ * the step gets V7s (warn/relabel), not V7 (hard reject).
+ *
+ * Accepted trade-off: deterministic guard, no semantic inference. Escalation to an LLM
+ * classifier (B-llm-on-miss) only if this gap appears in real usage.
+ *
+ * Error asymmetry: a missed reach proxy preserves status quo ante (no regression); the guard
+ * never tightens beyond the pre-guard behavior.
+ */
+function isReachProxyDecisiveMetric(metric: {
+  name: string;
+  successCriterion: string;
+  signalCategory: SignalCategoryValue;
+}): boolean {
+  if (metric.signalCategory === "ATTENTION") return true;
+  const blob = `${metric.name} ${metric.successCriterion}`.toLowerCase();
+  return /\b(klick|ctr|klickrate|reichweite|impression|cpc|cpm|reach)\b/.test(
+    blob
+  );
+}
+
 function applyDerivedStrategyDimensions(
   result: Phase4LlmResponse,
   ctx: GuardContext
@@ -206,7 +273,10 @@ function applyDerivedStrategyDimensions(
           `[phase4/guards] strategyDimension-Mismatch: LLM=${step.strategyDimension}, abgeleitet=${derived}, Schritt=${index + 1}`
         );
       }
-      return { ...step, strategyDimension: derived };
+      return {
+        ...step,
+        strategyDimension: derived ?? step.strategyDimension,
+      };
     }),
   };
 }
@@ -333,6 +403,52 @@ export function validateSteps(
       }
     }
 
+    const allowedTestSubjects = getAllowedDecisiveTestSubjects(
+      step.assumptionId,
+      ctx
+    );
+    if (
+      allowedTestSubjects.length > 0 &&
+      !allowedTestSubjects.includes(step.testSubject)
+    ) {
+      const allowedLabel = allowedTestSubjects.join(", ");
+      const decisiveAlignsWithAllowed = decisive.every((metric) =>
+        allowedTestSubjects.some((subject) =>
+          ALLOWED_DECISIVE_SIGNAL[subject].includes(metric.signalCategory)
+        )
+      );
+      const reachProxyDecisive = decisive.some((metric) =>
+        isReachProxyDecisiveMetric(metric)
+      );
+      const reachabilityVeto =
+        step.testSubject === "REACHABILITY" &&
+        !allowedTestSubjects.includes("REACHABILITY") &&
+        reachProxyDecisive;
+
+      if (decisive.length === 0) {
+        violations.push({
+          stepIndex: index,
+          rule: "V7s",
+          message: `Schritt ${stepNum} Hinweis V7s: testSubject '${step.testSubject}' liegt außerhalb des erlaubten Satzes [${allowedLabel}], betrifft aber nur unterstützende Metriken.`,
+        });
+      } else if (
+        reachabilityVeto ||
+        !decisiveAlignsWithAllowed
+      ) {
+        violations.push({
+          stepIndex: index,
+          rule: "V7",
+          message: `Schritt ${stepNum} verletzt V7: testSubject '${step.testSubject}' passt nicht zur Unsicherheit der Annahme (erlaubter DECISIVE-Satz: [${allowedLabel}]). Entscheidende Metriken spiegeln Erreichbarkeit oder ein nicht passendes Signal.`,
+        });
+      } else {
+        violations.push({
+          stepIndex: index,
+          rule: "V7s",
+          message: `Schritt ${stepNum} Hinweis V7s: testSubject '${step.testSubject}' liegt außerhalb von [${allowedLabel}], die entscheidenden Metriken passen jedoch zur Annahme.`,
+        });
+      }
+    }
+
     if (ctx.mode === "SCALING" && step.channel) {
       const channel = step.channel.trim();
       const normalized = ctx.validatedChannels.map((entry) =>
@@ -359,6 +475,9 @@ function methodWarningForViolation(violation: StepViolation): string | null {
   if (violation.rule === "V4" || violation.rule === "V5") {
     return "Hinweis: Das entscheidende Signal dieses Schritts misst Aufmerksamkeit oder passt nicht zur geprüften Aussage und kann sie nicht belegen. Bitte vor Übernahme anpassen.";
   }
+  if (violation.rule === "V7s") {
+    return "Hinweis: Der gewählte testSubject passt nicht zur Unsicherheit der Annahme. Da nur unterstützende Metriken betroffen sind, kannst du den Schritt übernehmen — prüfe die Zuordnung dennoch.";
+  }
   if (violation.rule === "V6") {
     const channelMatch = violation.message.match(/Kanal '([^']+)'/);
     const channel = channelMatch?.[1] ?? "dieser Kanal";
@@ -371,8 +490,8 @@ function applyPostValidation(
   result: Phase4LlmResponse,
   violations: StepViolation[]
 ): ProcessedStep[] {
-  const structuralRules = new Set(["V1", "V2", "V3", "V3b"]);
-  const warnableRules = new Set(["V4", "V5", "V6"]);
+  const structuralRules = new Set(["V1", "V2", "V3", "V3b", "V7"]);
+  const warnableRules = new Set(["V4", "V5", "V6", "V7s"]);
 
   if (violations.some((violation) => violation.rule === "V3")) {
     console.log(
@@ -436,12 +555,40 @@ export async function repairOnce(
     .map((violation) => violation.message)
     .join("\n");
 
+  const v7AssumptionIds = [
+    ...new Set(
+      violations
+        .filter((violation) => violation.rule === "V7")
+        .map(
+          (violation) =>
+            original.steps[violation.stepIndex]?.assumptionId ?? null
+        )
+        .filter((id): id is string => id != null)
+    ),
+  ];
+
   const repairContext = {
     modus: ctx.mode,
-    whitelist: ctx.whitelist,
+    whitelist: ctx.whitelist.map((candidate) => ({
+      id: candidate.id,
+      text: candidate.content,
+      justification: candidate.justification,
+      uncertainty: candidate.uncertainty,
+      allowedDecisiveTestSubjects: candidate.allowedDecisiveTestSubjects,
+    })),
     validatedChannels: ctx.validatedChannels,
     originalOutput: original,
     violations: violationList,
+    v7RepairHints: v7AssumptionIds.map((assumptionId) => {
+      const candidate = ctx.whitelist.find((entry) => entry.id === assumptionId);
+      return {
+        assumptionId,
+        allowedDecisiveTestSubjects:
+          candidate?.allowedDecisiveTestSubjects ?? [],
+        instruction:
+          "DECISIVE-testSubject NUR aus allowedDecisiveTestSubjects wählen. REACHABILITY höchstens als SUPPORTING, wenn die Annahme keine Erreichbarkeits-Unsicherheit prüft.",
+      };
+    }),
   };
 
   return callLLM(
@@ -497,6 +644,29 @@ export async function processLlmResult(
   }
 
   const steps = applyPostValidation(result, violations);
+
+  const processedAssumptionIds = new Set(steps.map((step) => step.assumptionId));
+  for (const assumptionId of result.criticalAssumptions) {
+    if (processedAssumptionIds.has(assumptionId)) continue;
+    const candidate = ctx.whitelist.find((entry) => entry.id === assumptionId);
+    const stepViolations = violations.filter(
+      (violation) =>
+        result.steps[violation.stepIndex]?.assumptionId === assumptionId
+    );
+    console.log(
+      "[phase4/guards] Kritische Annahme ohne gültigen Schritt:",
+      {
+        assumptionId,
+        content: candidate?.content?.slice(0, 120) ?? "(unbekannt)",
+        allowedDecisiveTestSubjects:
+          candidate?.allowedDecisiveTestSubjects ?? [],
+        violations: stepViolations.map((violation) => violation.rule),
+      }
+    );
+    log.push(
+      `Annahme ${assumptionId} ohne gültigen Schritt (${stepViolations.map((v) => v.rule).join(", ") || "verworfen"})`
+    );
+  }
 
   return {
     steps,

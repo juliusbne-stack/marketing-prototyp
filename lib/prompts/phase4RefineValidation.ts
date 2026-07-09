@@ -2,6 +2,7 @@
 // metrics). Preview only until the user adopts (GLOBAL_PROMPT rules apply).
 import {
   ASSUMPTION_TYPE_VALIDATION_MAP,
+  CRITERION_THRESHOLD_RULES,
   METRIC_ROLE_RULES,
   VALIDATION_CORE_THINKING,
   VALIDATION_STEP_OUTPUT_FIELDS,
@@ -28,6 +29,7 @@ REGELN:
 - ${METRIC_ROLE_RULES}
 - Erfolgs- und Misserfolgskriterien beschreiben AUSSCHLIESSLICH die Beobachtung,
   nie die Konsequenz.
+- ${CRITERION_THRESHOLD_RULES}
 - evaluationMode je Metrik (PFLICHT): PER_POINT oder CUMULATIVE.
 - Halte Budget, Teamgröße, Zeit und Skills aus dem Profil ein.
 - Entwickle keine völlig neue Strategie.

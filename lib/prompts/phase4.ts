@@ -1,6 +1,8 @@
 // Phase 4 prompt — critical assumptions and validation steps (docs/PROMPTS.md).
 import {
   ASSUMPTION_TYPE_VALIDATION_MAP,
+  CRITERION_THRESHOLD_RULES,
+  METRIC_EFFECT_LOGIC_RULES,
   METRIC_ROLE_RULES,
   SIGNAL_CATEGORY_RULES,
   VALIDATION_CORE_THINKING,
@@ -11,6 +13,12 @@ import {
 export const PHASE4_PROMPT = `AUFGABE: Identifiziere für die priorisierte Option die 2–4 KRITISCHSTEN Annahmen
 aus der übergebenen Whitelist und übersetze jede in einen begrenzten, ressourcensensiblen
 Validierungsschritt mit Testdesign, Durchführungsaktivitäten und Messpunkten.
+
+Der Projektkontext enthält ggf. phasenEingaben (Rahmenbedingungen des Nutzers,
+KEINE Aussagen) und phasenEingabenRegeln. Wende diese Regeln strikt an.
+Wenn eine Rahmenbedingung eine Methodenwahl beeinflusst hat, erwähne das in
+testDesign oder description (z. B. "Interviews ausgeschlossen (deine Angabe)
+→ Online-Umfrage vorgeschlagen").
 
 ${VALIDATION_CORE_THINKING}
 
@@ -29,7 +37,9 @@ REGELN:
 - Jeder Schritt MUSS timeframe und budgetFrame enthalten.
 - Je Schritt 1–3 Metriken mit signalCategory, metricRole und klaren Kriterien.
 - ${METRIC_ROLE_RULES}
+- ${METRIC_EFFECT_LOGIC_RULES}
 - Erfolgs- und Misserfolgskriterien beschreiben AUSSCHLIESSLICH die Beobachtung.
+- ${CRITERION_THRESHOLD_RULES}
 - evaluationMode je Metrik: PER_POINT oder CUMULATIVE (PFLICHT).
 
 AUSGABEFORMAT (JSON):
@@ -56,6 +66,8 @@ AUSGABEFORMAT (JSON):
           "evaluationMode": "PER_POINT | CUMULATIVE",
           "metricRole": "DECISIVE | SUPPORTING",
           "signalCategory": "COMMITMENT | BEHAVIOR | ATTENTION | QUALITATIVE",
+          "proxyStrength": "DIRECT | PROXY (PFLICHT bei DECISIVE)",
+          "signalRationale": "string (PFLICHT bei DECISIVE — Bezug zur Annahmen-Unsicherheit)",
           "successCriterion": "string (gilt als stützend, wenn ...)",
           "failureCriterion": "string (gilt als widerlegend, wenn ...)"
         }

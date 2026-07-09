@@ -1,5 +1,6 @@
 import type { EvidenceStatus } from "@prisma/client";
 import type { CockpitStepData } from "@/components/cockpit/types";
+import { countActionableTasks } from "@/lib/taskActionable";
 
 // Lower value = less secured assumption = higher cockpit priority.
 const EVIDENCE_PRIORITY: Record<EvidenceStatus, number> = {
@@ -13,8 +14,7 @@ export function taskProgress(step: CockpitStepData): {
   total: number;
   ratio: number;
 } {
-  const total = step.tasks.length;
-  const done = step.tasks.filter((task) => task.done).length;
+  const { done, total } = countActionableTasks(step.tasks);
   return {
     done,
     total,

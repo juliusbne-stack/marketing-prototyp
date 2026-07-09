@@ -1,5 +1,7 @@
 // Phase 4 refinement prompt — dialogic revision of ONE validation step based
 // on informal user feedback (GLOBAL_PROMPT rules apply, see lib/openai.ts).
+import { CRITERION_THRESHOLD_RULES } from "./validationCoreRules";
+
 export const PHASE4_REFINE_PROMPT = `AUFGABE: Überarbeite GENAU DEN übergebenen Umsetzungsschritt (currentStep)
 gemäß dem aktuellen Nutzerfeedback (userFeedback). Erfinde keinen neuen,
 unabhängigen Schritt — es geht um eine Verfeinerung des bestehenden Entwurfs.
@@ -24,6 +26,7 @@ REGELN:
   nie die Konsequenz. Falsch: „Weniger als 50% positive Rückmeldungen erfordern
   Anpassung der Strategie." Richtig: „Weniger als 50% der Befragten empfinden
   Preis und Mehrwert als stimmig."
+- ${CRITERION_THRESHOLD_RULES}
 - Die Messpunkte müssen genau die geprüfte Aussage (kritische Annahme)
   adressieren. Misst eine Metrik nur einen Teilaspekt der Annahme, muss das
   Kriterium diesen Teilaspekt benennen — oder eine passendere Metrik gewählt

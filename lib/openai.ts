@@ -111,6 +111,47 @@ export async function callLLM<Schema extends z.ZodType>(
   throw lastError ?? new LlmValidationError("Unbekannter Validierungsfehler.");
 }
 
+export type CallLlmStreamOptions = {
+  maxTokens?: number;
+};
+
+/**
+ * Streams raw JSON content deltas from the LLM using the same parameters as callLLM
+ * (model, messages, response_format) with stream:true. No validation or parsing.
+ * The generator's return value is the OpenAI finish_reason (e.g. "stop" or "length").
+ */
+export async function* callLLMStream(
+  phasePrompt: string,
+  context: unknown,
+  options: CallLlmStreamOptions = {}
+): AsyncGenerator<string, string | null, undefined> {
+  const maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const systemPrompt = `${GLOBAL_PROMPT}\n\n${phasePrompt}`;
+  const contextMessage = `PROJEKTKONTEXT (JSON):\n${JSON.stringify(context, null, 2)}`;
+
+  const completion = await openai.chat.completions.create({
+    model: MODEL,
+    max_tokens: maxTokens,
+    response_format: { type: "json_object" },
+    stream: true,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: contextMessage },
+    ],
+  });
+
+  let finishReason: string | null = null;
+  for await (const chunk of completion) {
+    finishReason = chunk.choices[0]?.finish_reason ?? finishReason;
+    const delta = chunk.choices[0]?.delta?.content ?? "";
+    if (delta) {
+      yield delta;
+    }
+  }
+
+  return finishReason;
+}
+
 /** Maps OpenAI API failures to short, actionable German user messages. */
 export function mapLlmCallError(error: unknown, fallback: string): string {
   if (error instanceof LlmValidationError) {

@@ -49,6 +49,25 @@ model Project {
   steps       ValidationStep[]
   feedbacks   MarketFeedback[]
   adaptations AdaptationDecision[]
+  phaseInputs PhaseInput[]
+}
+
+// ----------------------------------------------------------------------------
+// Phasenbezogene Rahmenbedingungen (F2) — KEINE Aussagen, nur KI-Kontext
+// ----------------------------------------------------------------------------
+model PhaseInput {
+  id          String   @id @default(cuid())
+  projectId   String
+  phase       Int      // 2 | 4
+  questionKey String
+  value       Json?
+  skipped     Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, phase, questionKey])
+  @@index([projectId, phase])
 }
 
 // ----------------------------------------------------------------------------
@@ -221,6 +240,18 @@ enum SignalCategory {
   QUALITATIVE
 }
 
+enum Laufmodus {
+  PARALLEL
+  NACHGELAGERT
+  EIGENSTAENDIG
+}
+
+enum TaskHerkunft {
+  NEU
+  GETEILT
+  BEREITS_ERFUELLT
+}
+
 model ValidationStep {
   id           String         @id @default(cuid())
   projectId    String
@@ -246,11 +277,16 @@ model ValidationStep {
   // Soft discard for adopted steps — preserves tasks, KPIs and feedback for
   // traceability; hard DELETE is only allowed for non-adopted drafts.
   discardedAt  DateTime?
+  laufmodus    Laufmodus @default(EIGENSTAENDIG)
+  basiertAufUmsetzungId String?
+  basiertAufUmsetzung   ValidationStep?  @relation("StepDependency", fields: [basiertAufUmsetzungId], references: [id], onDelete: SetNull)
+  abhaengigeUmsetzungen ValidationStep[] @relation("StepDependency")
   createdAt    DateTime       @default(now())
 
   metrics   Metric[]
   feedbacks MarketFeedback[]
   tasks     Task[]
+  erfuellteTasks Task[] @relation("TaskFulfillment")
 }
 
 enum EvaluationMode {
@@ -263,6 +299,11 @@ enum MetricRole {
   SUPPORTING  // Nebensignal (Traffic, Reichweite) — nicht allein entscheidend
 }
 
+enum ProxyStrength {
+  DIRECT // Signal belegt die Annahme unmittelbar
+  PROXY  // Signal belegt die Annahme nur mittelbar (Stellvertreter)
+}
+
 model Metric {
   id               String         @id @default(cuid())
   stepId           String
@@ -271,6 +312,8 @@ model Metric {
   evaluationMode   EvaluationMode @default(PER_POINT)
   metricRole       MetricRole     @default(DECISIVE)
   signalCategory   SignalCategory?
+  proxyStrength    ProxyStrength?
+  signalRationale  String?
   successCriterion String         // gilt als stützend, wenn ...
   failureCriterion String         // gilt als widerlegend, wenn ...
 
@@ -296,6 +339,9 @@ model Task {
   elaboration            Json?
   elaborationGeneratedAt DateTime?
   elaborationModel       String?
+  herkunft               TaskHerkunft @default(NEU)
+  erfuelltDurchUmsetzungId String?
+  erfuelltDurchUmsetzung   ValidationStep? @relation("TaskFulfillment", fields: [erfuelltDurchUmsetzungId], references: [id], onDelete: SetNull)
 }
 
 enum KpiAssessment {

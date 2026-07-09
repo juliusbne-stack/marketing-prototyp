@@ -18,6 +18,8 @@ import { phase4StepInclude, persistPhase4GenerationNotes, persistPhase4Steps } f
 import { EMPTY_WHITELIST_VALIDATION } from "@/lib/labels/phase4";
 import { PHASE4_PROMPT } from "@/lib/prompts/phase4";
 import { phase4ResponseSchema } from "@/lib/schemas/phase4";
+import { buildPhaseInputLlmContext, loadPhaseInputsForPage } from "@/lib/phaseInput/context";
+import { enrichStepsWithPhaseInputContext } from "@/lib/phaseInput/enrichPhase4";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -111,6 +113,9 @@ export async function POST(request: Request) {
       .find((statement) => statement.category === "OPT_TARGET_GROUP")
       ?.segmentLabel ?? null;
 
+  const phaseInputContext = await buildPhaseInputLlmContext(projectId, 4);
+  const phaseInputState = await loadPhaseInputsForPage(projectId, 4);
+
   const context = {
     modus: "VALIDATION",
     whitelist: whitelistToContext(whitelist),
@@ -126,6 +131,7 @@ export async function POST(request: Request) {
       addressedSegmentLabel
     ),
     adoptedAnalysisStatements: adoptedAnalysis,
+    ...phaseInputContext,
   };
 
   const guardCtx = {
@@ -161,13 +167,27 @@ export async function POST(request: Request) {
   }
 
   const processed = await processLlmResult(llmResult, guardCtx);
+  const enrichedSteps = enrichStepsWithPhaseInputContext(
+    processed.steps,
+    phaseInputState
+  );
   console.log("[phase4] Guard-Log:", processed.log.join(" | "));
+
+  if (enrichedSteps.length < 2) {
+    return NextResponse.json(
+      {
+        error:
+          "Es konnten nicht genügend gültige Umsetzungsschritte erzeugt werden (mindestens 2 erforderlich). Manche Annahmen wurden verworfen, weil der gewählte Prüfgegenstand nicht zur Unsicherheit passte. Erneut versuchen — deine Priorisierung bleibt erhalten.",
+      },
+      { status: 502 }
+    );
+  }
 
   const steps = await persistPhase4Steps({
     projectId,
     optionId: option.id,
     stepType: "VALIDATION",
-    processedSteps: processed.steps,
+    processedSteps: enrichedSteps,
     criticalAssumptionIds: llmResult.criticalAssumptions.filter((id) =>
       processed.steps.some((step) => step.assumptionId === id)
     ),

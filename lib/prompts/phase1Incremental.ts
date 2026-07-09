@@ -51,7 +51,9 @@ ${competitorTargetBlock}
 - pestelRelevance weiterhin für alle sechs Kategorien bewerten (Profil kann sich
   geändert haben). Neue PESTEL-Aussagen nur, wenn die Dimension relevant ist UND
   der Projektstand dort noch keine passende Aussage hat oder sich die Lage
-  fachlich geändert hat.
+  fachlich geändert hat. PESTEL-Qualitätsregeln und Self-Check aus dem
+  Phase-1-Prompt gelten unverändert; nutze ventureAnchors und
+  adoptedAnchorsForPestel aus dem Projektkontext.
 
 Mengen in diesem Modus (Orientierung, keine Pflichtvorgabe außer COMPETITOR oben):
 - PESTEL: 0–2 neue Aussagen je relevante Dimension

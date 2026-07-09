@@ -11,4 +11,9 @@ export const taskSelect = {
   elaboration: true,
   elaborationGeneratedAt: true,
   elaborationModel: true,
+  herkunft: true,
+  erfuelltDurchUmsetzungId: true,
+  erfuelltDurchUmsetzung: {
+    select: { id: true, title: true },
+  },
 } as const;

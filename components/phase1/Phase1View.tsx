@@ -4,15 +4,18 @@ import { useState } from "react";
 import { LayoutGroup } from "framer-motion";
 import { CheckCheck } from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
+import { EvidenceBadge } from "@/components/statements/EvidenceBadge";
+import { OriginTag } from "@/components/statements/OriginTag";
 import type { StatementData } from "@/components/statements/types";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
 import {
   AI_ERROR_FALLBACK,
+  AI_LOADING_MESSAGES,
   PhaseEmptyState,
   PhaseErrorState,
-  PhaseLoadingState,
 } from "@/components/wizard/phaseStates";
 import { isOnboardingNeeded } from "@/lib/profileQuestions";
+import type { Phase1Statement, PestelRelevance } from "@/lib/schemas/phase1";
 import { ProfileForm, type ProfileData } from "./ProfileForm";
 import { ProfileOnboardingWizard } from "./onboarding/ProfileOnboardingWizard";
 import { AddStatementForm } from "./AddStatementForm";
@@ -20,7 +23,6 @@ import { PestelGrid } from "./PestelGrid";
 import { SegmentCards } from "./SegmentCards";
 import { CompetitorCards } from "./CompetitorCards";
 import { SwotMatrix } from "./SwotMatrix";
-import type { PestelRelevance } from "@/lib/schemas/phase1";
 
 const ANCHORS = [
   { href: "#pestel", label: "PESTEL" },
@@ -29,6 +31,149 @@ const ANCHORS = [
   { href: "#ressourcen", label: "Ressourcen" },
   { href: "#swot", label: "SWOT & Marktpfade" },
 ];
+
+type Phase1FinalResponse = {
+  statements: StatementData[];
+  pestelRelevance: PestelRelevance[];
+  incremental?: boolean;
+  filteredDuplicateCount?: number;
+};
+
+type StreamEvent =
+  | { type: "statement"; data: Phase1Statement }
+  | { type: "final"; data: Phase1FinalResponse }
+  | { type: "error"; message: string; details?: string };
+
+function previewStatementToData(
+  statement: Phase1Statement,
+  index: number,
+  projectId: string
+): StatementData {
+  return {
+    id: `preview-${index}`,
+    projectId,
+    phase: 1,
+    category: statement.category,
+    content: statement.content,
+    evidenceStatus: statement.evidenceStatus,
+    origin: statement.origin,
+    justification: statement.justification,
+    sourceRef: statement.sourceRef ?? null,
+    uncertainty: statement.uncertainty ?? null,
+    isCritical: false,
+    adopted: false,
+    segmentLabel: statement.segmentLabel ?? null,
+    segmentAspect: statement.segmentAspect ?? null,
+    competitorLabel: statement.competitorLabel ?? null,
+    competitorAspect: statement.competitorAspect ?? null,
+  };
+}
+
+function PreviewStatementCard({ statement }: { statement: StatementData }) {
+  return (
+    <div className="rounded-[10px] border border-dashed border-accent/40 bg-accent-soft/25 p-4 opacity-90">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <EvidenceBadge status={statement.evidenceStatus} />
+          <span className="rounded-full border border-accent/30 bg-surface px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-accent">
+            Vorläufig
+          </span>
+        </div>
+        <OriginTag origin={statement.origin} />
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-text">{statement.content}</p>
+      {statement.justification && (
+        <p className="mt-2 border-t border-border/70 pt-2 text-[13px] text-text-muted">
+          <span className="font-medium">Begründung:</span> {statement.justification}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function applyFinalResponse(
+  body: Phase1FinalResponse,
+  setStatements: (statements: StatementData[]) => void,
+  setPestelRelevance: (relevance: PestelRelevance[]) => void,
+  setAnalysisInfo: (info: string | null) => void
+) {
+  setStatements(body.statements);
+  if (Array.isArray(body.pestelRelevance)) {
+    setPestelRelevance(body.pestelRelevance);
+  }
+  if (body.filteredDuplicateCount && body.filteredDuplicateCount > 0) {
+    setAnalysisInfo(
+      `${body.filteredDuplicateCount} ähnliche Aussage${body.filteredDuplicateCount === 1 ? "" : "n"} wurden nicht ergänzt — sie sind bereits im Projektstand enthalten.`
+    );
+  } else if (body.incremental) {
+    const draftCount = body.statements.filter((statement) => !statement.adopted).length;
+    if (draftCount === 0) {
+      setAnalysisInfo(
+        "Keine neuen Aussagen ergänzt — der bestehende Projektstand deckt das Profil bereits ab."
+      );
+    }
+  }
+}
+
+async function consumeNdjsonStream(
+  response: Response,
+  onStatement: (statement: Phase1Statement, index: number) => void
+): Promise<Phase1FinalResponse> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error(AI_ERROR_FALLBACK);
+  }
+
+  const decoder = new TextDecoder();
+  let lineBuffer = "";
+  let previewIndex = 0;
+  let finalPayload: Phase1FinalResponse | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    lineBuffer += decoder.decode(value, { stream: true });
+    const lines = lineBuffer.split("\n");
+    lineBuffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      const event = JSON.parse(trimmed) as StreamEvent;
+      if (event.type === "statement") {
+        onStatement(event.data, previewIndex);
+        previewIndex += 1;
+      } else if (event.type === "final") {
+        finalPayload = event.data;
+      } else if (event.type === "error") {
+        const detail =
+          typeof event.details === "string"
+            ? `\n\nTechnisch: ${event.details}`
+            : "";
+        throw new Error(event.message + detail);
+      }
+    }
+  }
+
+  if (lineBuffer.trim()) {
+    const event = JSON.parse(lineBuffer.trim()) as StreamEvent;
+    if (event.type === "final") {
+      finalPayload = event.data;
+    } else if (event.type === "error") {
+      const detail =
+        typeof event.details === "string" ? `\n\nTechnisch: ${event.details}` : "";
+      throw new Error(event.message + detail);
+    }
+  }
+
+  if (!finalPayload) {
+    throw new Error(AI_ERROR_FALLBACK);
+  }
+
+  return finalPayload;
+}
 
 export function Phase1View({
   project,
@@ -45,6 +190,7 @@ export function Phase1View({
   const [isAdoptingAll, setIsAdoptingAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisInfo, setAnalysisInfo] = useState<string | null>(null);
+  const [previewStatements, setPreviewStatements] = useState<StatementData[]>([]);
   const [profile, setProfile] = useState(project);
   const [showOnboarding, setShowOnboarding] = useState(
     isOnboardingNeeded(project)
@@ -54,6 +200,7 @@ export function Phase1View({
     setIsGenerating(true);
     setError(null);
     setAnalysisInfo(null);
+    setPreviewStatements([]);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000);
     try {
@@ -63,31 +210,39 @@ export function Phase1View({
         body: JSON.stringify({ projectId: project.id }),
         signal: controller.signal,
       });
-      const body = await response.json().catch(() => null);
-      if (!response.ok) {
-        const detail =
-          typeof body?.details === "string" ? `\n\nTechnisch: ${body.details}` : "";
-        throw new Error((body?.error ?? AI_ERROR_FALLBACK) + detail);
-      }
-      setStatements(body.statements);
-      if (Array.isArray(body.pestelRelevance)) {
-        setPestelRelevance(body.pestelRelevance);
-      }
-      if (body.filteredDuplicateCount > 0) {
-        setAnalysisInfo(
-          `${body.filteredDuplicateCount} ähnliche Aussage${body.filteredDuplicateCount === 1 ? "" : "n"} wurden nicht ergänzt — sie sind bereits im Projektstand enthalten.`
-        );
-      } else if (body.incremental) {
-        const draftCount = (body.statements as StatementData[]).filter(
-          (statement) => !statement.adopted
-        ).length;
-        if (draftCount === 0) {
-          setAnalysisInfo(
-            "Keine neuen Aussagen ergänzt — der bestehende Projektstand deckt das Profil bereits ab."
-          );
+
+      const contentType = response.headers.get("content-type") ?? "";
+
+      if (contentType.includes("application/x-ndjson")) {
+        if (!response.ok) {
+          throw new Error(AI_ERROR_FALLBACK);
         }
+
+        const finalPayload = await consumeNdjsonStream(response, (statement, index) => {
+          setPreviewStatements((current) => [
+            ...current,
+            previewStatementToData(statement, index, project.id),
+          ]);
+        });
+
+        setPreviewStatements([]);
+        applyFinalResponse(
+          finalPayload,
+          setStatements,
+          setPestelRelevance,
+          setAnalysisInfo
+        );
+      } else {
+        const body = await response.json().catch(() => null);
+        if (!response.ok) {
+          const detail =
+            typeof body?.details === "string" ? `\n\nTechnisch: ${body.details}` : "";
+          throw new Error((body?.error ?? AI_ERROR_FALLBACK) + detail);
+        }
+        applyFinalResponse(body, setStatements, setPestelRelevance, setAnalysisInfo);
       }
     } catch (err) {
+      setPreviewStatements([]);
       if (err instanceof Error && err.name === "AbortError") {
         setError(
           "Die Analyse hat zu lange gedauert (über 10 Minuten). Erneut versuchen — deine Eingaben bleiben erhalten."
@@ -170,6 +325,7 @@ export function Phase1View({
   const hasResults = statements.length > 0;
   const resources = byCategory("RESOURCE");
   const hasAdopted = statements.some((statement) => statement.adopted);
+  const showPreview = isGenerating && previewStatements.length > 0;
 
   return (
     <LayoutGroup>
@@ -199,7 +355,29 @@ export function Phase1View({
 
       {error && <PhaseErrorState message={error} />}
 
-      {isGenerating && <PhaseLoadingState phase={1} />}
+      {isGenerating && !showPreview && (
+        <p className="text-sm text-text-muted" aria-live="polite" aria-busy="true">
+          {AI_LOADING_MESSAGES[1]}
+        </p>
+      )}
+
+      {showPreview && (
+        <section
+          aria-live="polite"
+          aria-busy="true"
+          className="flex flex-col gap-3"
+        >
+          <p className="text-sm text-text-muted">
+            {AI_LOADING_MESSAGES[1]} — Aussagen erscheinen vorläufig, solange die
+            Analyse läuft.
+          </p>
+          <div className="flex flex-col gap-3">
+            {previewStatements.map((statement) => (
+              <PreviewStatementCard key={statement.id} statement={statement} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {hasResults && !isGenerating && (
         <>

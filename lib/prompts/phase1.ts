@@ -12,7 +12,87 @@ Erzeuge Aussagen in diesen Bereichen:
    sondern kontextbezogen: Für viele Start-ups sind einzelne Dimensionen
    nachrangig.
 
-   - Ist eine Kategorie relevant (relevant=true): erzeuge 1–3 Aussagen dazu
+   VORHABEN-ANKER (aus PROJEKTKONTEXT — vor jeder PESTEL-Aussage lesen):
+   - ventureAnchors: zielsegment, preissegment, produktkategorie, regionMarkt
+     (explizit aus dem Start-up-Profil extrahiert) und fehlendeAnker (welche
+     Anker noch nicht belegt sind).
+   - adoptedAnchorsForPestel: bereits übernommene Aussagen, die als Anker dienen
+     (PESTEL, TARGET_SEGMENT, CUSTOMER_PROBLEM, MARKET_PATH).
+   - Bei inkrementeller Analyse zusätzlich adoptedAnalysisStatements.
+   Jede PESTEL-Aussage MUSS mindestens einen konkreten Anker aus ventureAnchors
+   oder adoptedAnchorsForPestel enthalten.
+
+   PESTEL-QUALITÄTSREGELN (jede Aussage muss allen entsprechen):
+   1) Externer-Faktor-Regel: Jede Aussage beschreibt ausschließlich einen
+      EXTERNEN Rahmenfaktor, der unabhängig vom betrachteten Start-up existiert.
+      Prüffrage: „Würde dieser Faktor auch existieren, wenn es dieses Start-up
+      nicht gäbe?" Wenn nein → keine PESTEL-Aussage. Interne Gegebenheiten
+      (Ressourcen, Fähigkeiten, Produktions-/Produktentscheidungen wie
+      „Produktion in Deutschland", Positionierungs- oder Marketingaussagen)
+      gehören NICHT in PESTEL und werden weggelassen (sie sind Sache der
+      Ressourcen-/SWOT-Analyse).
+   2) Diskriminierungs-Test: Formuliere keine Aussage, die für ein beliebiges
+      anderes Start-up derselben Preis-/Branchenklasse genauso gälte. Jede
+      Aussage muss mindestens einen konkreten Anker aus ventureAnchors bzw.
+      adoptedAnchorsForPestel enthalten (konkretes Segment, Preispunkt,
+      Produktkategorie, Region) — der Anker muss im content wörtlich erkennbar
+      sein. Der Anker muss die Aussage TRAGEN, nicht nur erwähnt sein: Er muss
+      die Konsequenz verändern, nicht nur im Satz vorkommen. Verbindliche
+      Self-Check-Frage pro Aussage: „Bliebe die Aussage gleich wahr, wenn ich
+      das konkrete Produkt/Segment/den Preis durch ein anderes ersetze?" Wenn
+      ja → durchgefallen, reformulieren oder verwerfen. Verboten sind
+      Binsenweisheiten wie „Die wirtschaftliche Lage beeinflusst die
+      Kaufbereitschaft" oder „Nachhaltigkeitstrend steigt". Richtig: „In
+      Deutschland verschärfen sich EU-Textilkennzeichnungspflichten für
+      Premium-Basics ab 2026 — das erhöht den Dokumentationsaufwand für
+      Anbieter im Segment 80–150 €."
+   3) Faktor + Implikation: Jede Aussage macht zwei Teile explizit — (1) den
+      externen Faktor als Beobachtung, (2) die konkrete, nicht-triviale
+      Konsequenz für genau dieses Vorhaben. Aus der Konsequenz muss ein
+      sinnvoller nächster Prüf- oder Entscheidungsschritt ableitbar sein.
+      Ist keine solche Konsequenz formulierbar, wird die Aussage nicht erzeugt.
+      Faktor und Implikation stehen im content; justification und uncertainty
+      begründen bzw. benennen Unsicherheit.
+   4) Evidenz an der Implikation: Der evidenceStatus bezieht sich IMMER auf die
+      IMPLIKATION für dieses Vorhaben (die handlungsrelevante Konsequenz), NICHT
+      auf die bloße Existenz des externen Faktors.
+      - FACT nur, wenn AUCH die Konsequenz für dieses Vorhaben belegbar ist —
+        das ist selten. Ein belegter externer Faktor mit unbewiesener Wirkung
+        für das Vorhaben ist KEIN Fakt.
+      - ASSUMPTION, wenn der externe Faktor belegbar/plausibel ist, die
+        Konsequenz für das Vorhaben aber unbewiesen ist (z. B. „Plattform X ist
+        verbreitet" ist belegt, aber „daraus folgt effektive/günstige Reichweite
+        für unser Produkt" ist eine Annahme). Die Begründung benennt den Faktor
+        ausdrücklich als gesichert und markiert nur die Konsequenz als unsicher.
+      - OPEN_QUESTION, wenn die für die Konsequenz nötige Grundlage fehlt (z. B.
+        kein übernommenes Zielsegment). Die Begründung benennt den externen
+        Faktor als gesichert; die offene Frage sitzt ausschließlich auf der
+        Passung/Relevanz für das Vorhaben — NICHT auf der Existenz des Faktors.
+      Verbot: Reichweite/Verbreitung eines Kanals oder Trends darf nicht als
+      Beleg für Wirksamkeit („effektiv", „breite Zielgruppe erreichen",
+      „günstig") gewertet werden. Ein Quellenstring (auch fiktiv) rechtfertigt
+      keinen FACT für eine Wirksamkeits-Konsequenz. Erfinde keine fehlenden
+      Anker — formuliere OPEN_QUESTION statt Fakten zu erfinden. Enthält
+      ventureAnchors.fehlendeAnker „Zielsegment": mindestens eine PESTEL-Aussage
+      in einer relevanten Dimension MUSS evidenceStatus OPEN_QUESTION haben und
+      benennen, welche externe Einordnung ohne belastbares Zielsegment noch
+      unklar ist.
+   5) Fokus statt Vollständigkeit: Lieber 0–2 wirklich prägende Faktoren pro
+      Dimension als Slot-Füllung. Ergibt eine Dimension keinen prägenden
+      externen Faktor, setze relevant=false mit Begründung, statt eine generische
+      Aussage zu erzeugen.
+   6) Phasengrenzen: Keine vorweggenommenen Kanal-, Maßnahmen- oder
+      Positionierungsentscheidungen. Formulierungen wie „über Kanal X
+      vermarkten", „auf Plattform Y setzen" sind Marketingmix (spätere Phase)
+      und in der Situationsanalyse verboten. Zulässig ist nur der externe
+      Faktor + seine prüfbare Konsequenz, nicht die daraus abgeleitete Maßnahme.
+
+   Formulierungsgrenze: PESTEL-content beschreibt den externen Faktor in der
+   dritten Person (Markt, Regulierung, Gesellschaft) — nicht als interne
+   Stärke oder Entscheidung des Start-ups. Verboten: „unsere Produktion",
+   „unser Angebot", „wir produzieren" — solche Inhalte gehören in RESOURCE/SWOT.
+
+   - Ist eine Kategorie relevant (relevant=true): erzeuge 1–2 Aussagen dazu
      im statements-Array (category = PESTEL_<KATEGORIE>).
    - Ist eine Kategorie nachrangig (relevant=false): erzeuge KEINE Aussage in
      dieser Kategorie. Begründe stattdessen in relevanceJustification in einem
@@ -23,6 +103,20 @@ Erzeuge Aussagen in diesen Bereichen:
    - Sei ehrlich zurückhaltend: Markiere eine Kategorie nur dann als relevant,
      wenn sich daraus tatsächlich eine prägende Aussage ableiten lässt. Lieber
      wenige relevante Dimensionen als sechs erzwungene.
+
+   SELF-CHECK VOR AUSGABE (PESTEL):
+   Prüfe jede erzeugte PESTEL-Aussage vor Ausgabe:
+   - Regel 1 (Externer-Faktor): interner Faktor? → verwerfen/reformulieren.
+   - Regel 2 (Diskriminierungs-Test): trägt der Anker die Konsequenz? Würde die
+     Aussage bei Austausch von Produkt/Segment/Preis gleich bleiben? → verwerfen/
+     reformulieren.
+   - Regel 4 (Evidenz an der Implikation): hängt evidenceStatus an der Implikation,
+     nicht am externen Faktor? FACT nur bei belegbarer Konsequenz — nicht bei
+     bloßer Kanal-/Trend-Verbreitung als Wirksamkeitsbeleg.
+   - Regel 6 (Phasengrenzen): Kanal-/Maßnahmen-/Positionierungsentscheidung
+     enthalten? → verwerfen/reformulieren (nur Faktor + prüfbare Konsequenz).
+   Aussagen, die durchfallen: verwerfen oder so reformulieren, dass sie bestehen
+   — nicht ausgeben.
 2. TARGET_SEGMENT: Entwickle 2–3 Zielgruppensegmente. Erzeuge je Segment GENAU 5
    Aussagen (category TARGET_SEGMENT), alle mit demselben segmentLabel und je einem
    segmentAspect: DESCRIPTION (wer genau: Abgrenzung, relevante Merkmale wie Alter,
@@ -121,6 +215,12 @@ Zahlungsbereitschaft, tatsächliche Problemrelevanz, Kanalwirksamkeit).
 Konsistenzregeln:
 - pestelRelevance MUSS genau 6 Einträge enthalten, einen je PESTEL-Kategorie.
 - Für jede Kategorie mit relevant=false darf im statements-Array KEINE Aussage mit dieser category stehen. Für relevant=true SOLL mindestens eine vorhanden sein.
+- PESTEL-Pflichtcheck: Enthält ventureAnchors.fehlendeAnker „Zielsegment" → mindestens
+  eine PESTEL-Aussage mit evidenceStatus OPEN_QUESTION (offene Frage auf Implikation/
+  Passung, nicht auf Faktor-Existenz). Jede PESTEL-Aussage ohne tragenden Anker
+  (Regel 2) → entfernen. Jede mit internem Faktor (Regel 1) → entfernen. Jede mit
+  Kanal-/Maßnahmenentscheidung (Regel 6) → entfernen. evidenceStatus FACT nur, wenn
+  die Implikation belegbar ist (Regel 4) — nicht bei bloßer Verbreitung als Wirksamkeit.
 - COMPETITOR-Profile: GENAU ${targetCompetitorCount} unterschiedliche competitorLabels, je Label GENAU 6 Statements mit allen sechs competitorAspect-Werten.
 - COMPETITOR-Landschaft: zusätzlich 1–3 COMPETITOR-Statements OHNE competitorLabel.
 - VOR der Ausgabe zählen: distinct competitorLabels = ${targetCompetitorCount}? Landschafts-COMPETITOR ohne Label = 1–3? Sonst korrigieren.

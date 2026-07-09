@@ -15,9 +15,11 @@ import { useConfirm } from "@/components/ui/DialogProvider";
 import {
   MARKETING_ACTIVITIES_HEADING,
   METHOD_WARNING_ADOPT_CONFIRM,
+  PROXY_STRENGTH_LABEL,
   SIGNAL_CATEGORY_LABEL,
   stepCopy,
 } from "@/lib/labels/phase4";
+import { resolveMethodWarningForDisplay } from "@/lib/phase4/methodWarning";
 import { StrategyDimensionChip } from "./StrategyDimensionChip";
 import type { StepData } from "./types";
 
@@ -35,6 +37,10 @@ export function ValidationStepCard({
 }) {
   const confirm = useConfirm();
   const copy = stepCopy(step.stepType);
+  const displayedMethodWarning = resolveMethodWarningForDisplay(
+    step.methodWarning,
+    step
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(step.title);
   const [draftDescription, setDraftDescription] = useState(step.description);
@@ -84,7 +90,7 @@ export function ValidationStepCard({
   }
 
   async function handleAdopt() {
-    if (step.methodWarning) {
+    if (displayedMethodWarning) {
       const confirmed = await confirm({
         title: "Methodenhinweis beachten",
         message: METHOD_WARNING_ADOPT_CONFIRM,
@@ -312,13 +318,13 @@ export function ValidationStepCard({
           </div>
         )}
 
-        {step.methodWarning && (
+        {displayedMethodWarning && (
           <div
             role="alert"
             className="mt-3 flex gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950"
           >
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span>{step.methodWarning}</span>
+            <span>{displayedMethodWarning}</span>
           </div>
         )}
 
@@ -354,9 +360,13 @@ function MetricBlock({
   successLabel: string;
   failureLabel: string;
 }) {
+  const [rationaleOpen, setRationaleOpen] = useState(false);
   const roleLabel = METRIC_ROLE_LABELS[metric.metricRole];
   const categoryLabel = metric.signalCategory
     ? SIGNAL_CATEGORY_LABEL[metric.signalCategory]
+    : null;
+  const proxyLabel = metric.proxyStrength
+    ? PROXY_STRENGTH_LABEL[metric.proxyStrength]
     : null;
 
   return (
@@ -366,7 +376,35 @@ function MetricBlock({
         <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-text-muted">
           {categoryLabel ? `${roleLabel} · ${categoryLabel}` : roleLabel}
         </span>
+        {metric.metricRole === "DECISIVE" && proxyLabel && (
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              metric.proxyStrength === "DIRECT"
+                ? "border border-evidence-fact-text/30 bg-evidence-fact-bg text-evidence-fact-text"
+                : "border border-border bg-background text-text-muted"
+            }`}
+          >
+            {proxyLabel}
+          </span>
+        )}
       </div>
+      {metric.signalRationale && (
+        <div className="mt-1.5">
+          <button
+            type="button"
+            onClick={() => setRationaleOpen((open) => !open)}
+            className="text-[11px] font-medium text-accent transition-colors hover:text-accent/80"
+            aria-expanded={rationaleOpen}
+          >
+            {rationaleOpen ? "Begründung ausblenden" : "Warum dieses Signal?"}
+          </button>
+          {rationaleOpen && (
+            <p className="mt-1 rounded-md border border-border/80 bg-background/60 px-2.5 py-2 text-xs leading-relaxed text-text-muted">
+              {metric.signalRationale}
+            </p>
+          )}
+        </div>
+      )}
       <div className="mt-1 grid gap-2 sm:grid-cols-2">
         <div className="rounded-md bg-evidence-fact-bg p-2.5">
           <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-evidence-fact-text">

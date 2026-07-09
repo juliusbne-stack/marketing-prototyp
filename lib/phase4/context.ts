@@ -68,8 +68,11 @@ export function whitelistToContext(whitelist: WhitelistCandidate[]) {
   return whitelist.map((candidate) => ({
     id: candidate.id,
     text: candidate.content,
+    justification: candidate.justification,
+    uncertainty: candidate.uncertainty,
     evidenceStatus: candidate.evidenceStatus,
     strategyDimension: candidate.strategyDimension,
+    allowedDecisiveTestSubjects: candidate.allowedDecisiveTestSubjects,
   }));
 }
 

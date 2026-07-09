@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveMethodWarningAfterFrameEdit } from "@/lib/phase4/methodWarning";
 import { prisma } from "@/lib/prisma";
 import { metricInputSchema } from "@/lib/schemas/metric";
 
@@ -29,6 +30,8 @@ const stepSelect = {
       evaluationMode: true,
       metricRole: true,
       signalCategory: true,
+      proxyStrength: true,
+      signalRationale: true,
       successCriterion: true,
       failureCriterion: true,
     },
@@ -43,6 +46,8 @@ const updateStepSchema = z
     channel: z.string().trim().nullable().optional(),
     timeframe: z.string().trim().nullable().optional(),
     budgetFrame: z.string().trim().nullable().optional(),
+    validationQuestion: z.string().trim().nullable().optional(),
+    testDesign: z.string().trim().nullable().optional(),
     // Adoption happens only through an explicit user action (F10/NF5).
     adopted: z.boolean().optional(),
     // Soft discard for adopted steps — keeps tasks, KPIs and feedback intact.
@@ -67,7 +72,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const { id, channel, timeframe, budgetFrame, metrics, discard, ...data } =
+  const { id, channel, timeframe, budgetFrame, validationQuestion, testDesign, metrics, discard, ...data } =
     parsed.data;
 
   if (discard) {
@@ -99,6 +104,31 @@ export async function PATCH(request: Request) {
   }
 
   try {
+    let methodWarningUpdate: string | null | undefined;
+    if (timeframe !== undefined || budgetFrame !== undefined) {
+      const existing = await prisma.validationStep.findUnique({
+        where: { id },
+        select: { methodWarning: true, timeframe: true, budgetFrame: true },
+      });
+      if (!existing) {
+        return NextResponse.json(
+          { error: "Der Umsetzungsschritt wurde nicht gefunden." },
+          { status: 404 }
+        );
+      }
+      methodWarningUpdate = resolveMethodWarningAfterFrameEdit(
+        existing.methodWarning,
+        {
+          ...(timeframe !== undefined
+            ? { timeframe: timeframe || null }
+            : {}),
+          ...(budgetFrame !== undefined
+            ? { budgetFrame: budgetFrame || null }
+            : {}),
+        }
+      );
+    }
+
     const step = await prisma.validationStep.update({
       where: { id },
       data: {
@@ -106,6 +136,13 @@ export async function PATCH(request: Request) {
         ...(channel !== undefined ? { channel: channel || null } : {}),
         ...(timeframe !== undefined ? { timeframe: timeframe || null } : {}),
         ...(budgetFrame !== undefined ? { budgetFrame: budgetFrame || null } : {}),
+        ...(methodWarningUpdate !== undefined
+          ? { methodWarning: methodWarningUpdate }
+          : {}),
+        ...(validationQuestion !== undefined
+          ? { validationQuestion: validationQuestion || null }
+          : {}),
+        ...(testDesign !== undefined ? { testDesign: testDesign || null } : {}),
         ...(discard ? { discardedAt: new Date() } : {}),
         ...(metrics !== undefined
           ? {
@@ -116,6 +153,8 @@ export async function PATCH(request: Request) {
                   evaluationMode: metric.evaluationMode,
                   metricRole: metric.metricRole,
                   signalCategory: metric.signalCategory ?? null,
+                  proxyStrength: metric.proxyStrength ?? null,
+                  signalRationale: metric.signalRationale ?? null,
                   successCriterion: metric.successCriterion,
                   failureCriterion: metric.failureCriterion,
                 })),

@@ -1,6 +1,7 @@
 import type {
   EvaluationMode,
   MetricRole,
+  ProxyStrength,
   SignalCategory,
   StepType,
   StrategyDimension,
@@ -9,12 +10,21 @@ import type {
 import type { StatementData } from "@/components/statements/types";
 import type { StepReadinessInput } from "@/lib/cockpitPeriod";
 
+export type AssistantTaskData = {
+  id: string;
+  text: string;
+  erfolgskriterium: string | null;
+  annahmenBezugId: string | null;
+};
+
 export type MetricData = {
   id: string;
   name: string;
   evaluationMode: EvaluationMode;
   metricRole: MetricRole;
   signalCategory: SignalCategory | null;
+  proxyStrength: ProxyStrength | null;
+  signalRationale: string | null;
   successCriterion: string;
   failureCriterion: string;
 };
@@ -41,6 +51,8 @@ export type StepData = {
   metrics: MetricData[];
   taskProgress?: { done: number; total: number } | null;
   cockpitReadinessInput?: StepReadinessInput;
+  assistantTasks?: AssistantTaskData[];
+  hasKpiDataPoints?: boolean;
 };
 
 export type StepWithAssumption = StepData & { assumption: StatementData };
@@ -76,6 +88,8 @@ export function normalizeStepFromApi<T extends StepData>(
       ...metric,
       metricRole: metric.metricRole ?? "DECISIVE",
       signalCategory: metric.signalCategory ?? null,
+      proxyStrength: metric.proxyStrength ?? null,
+      signalRationale: metric.signalRationale ?? null,
     })),
   };
 }

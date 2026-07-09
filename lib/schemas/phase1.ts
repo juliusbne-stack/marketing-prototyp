@@ -85,9 +85,8 @@ function competitorCountAcceptable(
   actual: number,
   expected: number
 ): boolean {
-  if (actual < MIN_COMPETITOR_COUNT || actual > MAX_COMPETITOR_COUNT) {
-    return false;
-  }
+  // Tolerance is relative to the per-run target — not a hard MIN_COMPETITOR_COUNT floor,
+  // otherwise e.g. target=6 with actual=5 fails despite ±1 tolerance.
   return Math.abs(actual - expected) <= COMPETITOR_COUNT_TOLERANCE;
 }
 
@@ -146,7 +145,7 @@ function validateStatementEvidence(
   }
 }
 
-const phase1StatementSchema = z
+export const phase1StatementSchema = z
   .object({
     category: phase1Category,
     content: z.string().trim().min(1),

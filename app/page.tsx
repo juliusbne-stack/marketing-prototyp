@@ -1,15 +1,8 @@
-import Link from "next/link";
-import { FolderOpen, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { NewProjectForm } from "@/components/NewProjectForm";
+import { ProjectListItem } from "@/components/ProjectListItem";
 
 export const dynamic = "force-dynamic";
-
-const dateFormatter = new Intl.DateTimeFormat("de-DE", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
 
 export default async function HomePage() {
   const projects = await prisma.project.findMany({
@@ -48,30 +41,13 @@ export default async function HomePage() {
         ) : (
           <ul className="flex flex-col gap-2">
             {projects.map((project) => (
-              <li key={project.id}>
-                <Link
-                  href={`/project/${project.id}/phase/1`}
-                  className="group flex items-center gap-3 rounded-[10px] border border-border bg-surface p-4 transition-colors hover:border-accent"
-                >
-                  <FolderOpen
-                    className="h-5 w-5 shrink-0 text-accent"
-                    aria-hidden
-                  />
-                  <div className="flex-1">
-                    <div className="font-heading text-base font-medium text-text">
-                      {project.name}
-                    </div>
-                    <div className="text-xs text-text-muted">
-                      Phase {project.currentPhase} von 5 · angelegt am{" "}
-                      {dateFormatter.format(project.createdAt)}
-                    </div>
-                  </div>
-                  <ChevronRight
-                    className="h-4 w-4 text-text-muted transition-colors group-hover:text-accent"
-                    aria-hidden
-                  />
-                </Link>
-              </li>
+              <ProjectListItem
+                key={project.id}
+                id={project.id}
+                name={project.name}
+                currentPhase={project.currentPhase}
+                createdAt={project.createdAt}
+              />
             ))}
           </ul>
         )}

@@ -1,6 +1,7 @@
 // Phase 4 scaling prompt — continuation mode after a confirmed CONTINUE decision.
 import {
   ASSUMPTION_TYPE_VALIDATION_MAP,
+  CRITERION_THRESHOLD_RULES,
   METRIC_ROLE_RULES,
   SCALING_MODE_RULES,
   SIGNAL_CATEGORY_RULES,
@@ -35,6 +36,7 @@ REGELN:
 - Je Schritt 1–3 Monitoring-Metriken mit signalCategory und klaren Schwellen.
 - ${METRIC_ROLE_RULES}
 - Erfolgskriterien: „Skalierung trägt wenn …" / „Skalierungsgrenze erreicht wenn …"
+- ${CRITERION_THRESHOLD_RULES}
 - criticalAssumptions: IDs aus der Whitelist, die von den Schritten beobachtet werden.
 
 AUSGABEFORMAT (JSON):

@@ -100,7 +100,7 @@ export function SegmentProfileDisclosure({
           )}
 
           {!isLoading && !error && statements && statements.length > 0 && (
-            <dl className="divide-y divide-border/70">
+            <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-3 divide-y divide-border/70">
               {SEGMENT_ASPECTS.map((aspect) => {
                 const statement = statements.find(
                   (candidate) => candidate.segmentAspect === aspect
@@ -109,12 +109,12 @@ export function SegmentProfileDisclosure({
                 return (
                   <div
                     key={aspect}
-                    className="flex items-start gap-2 py-1.5 first:pt-0 last:pb-0"
+                    className="col-span-2 grid grid-cols-subgrid items-start gap-x-3 py-1.5 first:pt-0 last:pb-0"
                   >
-                    <dt className="w-[7.5rem] shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                    <dt className="pt-0.5 text-right text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap text-text-muted">
                       {SEGMENT_ASPECT_LABELS[aspect]}
                     </dt>
-                    <dd className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                    <dd className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
                       <p className="text-xs leading-relaxed text-text">
                         {statement.content}
                       </p>

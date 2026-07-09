@@ -13,11 +13,14 @@ import {
 import type { StatementData } from "@/components/statements/types";
 import { OptionCard } from "./OptionCard";
 import type { OptionData, UnchangedDimension } from "./types";
+import { PhaseInputSection } from "@/components/phaseInput/PhaseInputSection";
+import type { PhaseInputState } from "@/lib/phaseInput";
 
 export function Phase2View({
   projectId,
   initialOptions,
   hasAdoptedAnalysis,
+  initialPhaseInputs,
   revisionMode = false,
   initialRevisions = [],
   initialHasAdoptedRevision = false,
@@ -25,6 +28,7 @@ export function Phase2View({
   projectId: string;
   initialOptions: OptionData[];
   hasAdoptedAnalysis: boolean;
+  initialPhaseInputs?: PhaseInputState;
   /** Active after an ADAPT decision in phase 5 while an option is prioritized. */
   revisionMode?: boolean;
   initialRevisions?: StatementData[];
@@ -33,6 +37,7 @@ export function Phase2View({
   const [options, setOptions] = useState(initialOptions);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generateKey, setGenerateKey] = useState("initial");
 
   // Revision mode state. The "unchanged" reasons come from the AI response and
   // are held in client state only (prototype simplification, not persisted).
@@ -85,6 +90,7 @@ export function Phase2View({
         );
       }
       setOptions(body.options);
+      setGenerateKey(String(Date.now()));
     } catch (err) {
       setError(
         err instanceof Error
@@ -195,7 +201,19 @@ export function Phase2View({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-border bg-surface px-4 py-3">
+      {!showRevisionMode && (
+        <PhaseInputSection
+          projectId={projectId}
+          phase={2}
+          initialState={initialPhaseInputs}
+          onInputsChange={() => setGenerateKey(String(Date.now()))}
+        />
+      )}
+
+      <div
+        key={generateKey}
+        className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-border bg-surface px-4 py-3"
+      >
         <p className="text-sm text-text-muted">
           {hasOptions
             ? "Neu entwickeln ersetzt nur Entwürfe — übernommene Optionen bleiben erhalten."

@@ -4,16 +4,63 @@ import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { TASKS_PROMPT } from "@/lib/prompts/tasks";
 import { tasksResponseSchemaWithValidIds } from "@/lib/schemas/tasks";
+import type { TaskItemResponse } from "@/lib/schemas/tasks";
+import {
+  buildPriorImplementationContext,
+  deriveLaufmodusAndBasis,
+  validateBereitsErfuelltTask,
+  type PriorImplementation,
+} from "@/lib/crossImplementation";
 import {
   buildImplementationStatements,
   implementationStatementsById,
 } from "@/lib/implementationStatements";
 import { buildStartupProfile } from "@/lib/implementationContext";
 import { taskSelect } from "@/lib/tasks";
+import { activeValidationStepWhere } from "@/lib/validationStep";
 
 const requestSchema = z.object({
   stepId: z.string().min(1),
 });
+
+function sanitizeGeneratedTask(
+  task: TaskItemResponse,
+  priorSteps: PriorImplementation[]
+): TaskItemResponse {
+  if (task.herkunft === "BEREITS_ERFUELLT") {
+    const check = validateBereitsErfuelltTask(
+      task.title,
+      task.erfuelltDurchUmsetzungId,
+      priorSteps
+    );
+    if (!check.valid) {
+      return {
+        ...task,
+        herkunft: "NEU",
+        erfuelltDurchUmsetzungId: null,
+      };
+    }
+    return {
+      ...task,
+      erfuelltDurchUmsetzungId: check.stepId,
+    };
+  }
+
+  if (task.herkunft === "GETEILT") {
+    const stepExists = priorSteps.some(
+      (step) => step.id === task.erfuelltDurchUmsetzungId
+    );
+    if (!stepExists) {
+      return {
+        ...task,
+        herkunft: "NEU",
+        erfuelltDurchUmsetzungId: null,
+      };
+    }
+  }
+
+  return task;
+}
 
 // Decomposes ONE adopted validation step into 3–7 small, chronologically
 // ordered tasks for the implementation period (Umsetzungs-Cockpit).
@@ -94,6 +141,47 @@ export async function POST(request: Request) {
     );
   }
 
+  const priorStepRows = await prisma.validationStep.findMany({
+    where: {
+      optionId: step.optionId,
+      adopted: true,
+      id: { not: step.id },
+      ...activeValidationStepWhere,
+    },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      title: true,
+      channel: true,
+      assumption: { select: { content: true } },
+      tasks: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          title: true,
+          done: true,
+          herkunft: true,
+        },
+      },
+      feedbacks: { select: { id: true }, take: 1 },
+    },
+  });
+
+  const priorSteps: PriorImplementation[] = priorStepRows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    channel: row.channel,
+    assumptionContent: row.assumption.content,
+    hasFeedback: row.feedbacks.length > 0,
+    tasks: row.tasks,
+  }));
+
+  const priorStepIds = new Set(priorSteps.map((entry) => entry.id));
+  const priorImplementationContext = buildPriorImplementationContext(priorSteps);
+  const { laufmodus, basiertAufUmsetzungId } = deriveLaufmodusAndBasis(
+    step.channel,
+    priorSteps
+  );
+
   const adoptedAnalysis = await prisma.statement.findMany({
     where: { projectId: step.projectId, phase: 1, adopted: true },
     orderBy: { createdAt: "asc" },
@@ -125,6 +213,9 @@ export async function POST(request: Request) {
       text: statement.content,
       evidenceStatus: statement.evidenceStatus,
     })),
+    priorImplementations: priorImplementationContext,
+    laufmodus,
+    basiertAufUmsetzungId,
     step: {
       title: step.title,
       validationQuestion: step.validationQuestion,
@@ -146,7 +237,7 @@ export async function POST(request: Request) {
     result = await callLLM(
       TASKS_PROMPT,
       context,
-      tasksResponseSchemaWithValidIds(validIds)
+      tasksResponseSchemaWithValidIds(validIds, priorStepIds)
     );
   } catch (error) {
     if (error instanceof LlmValidationError) {
@@ -168,18 +259,30 @@ export async function POST(request: Request) {
     );
   }
 
+  const sanitizedTasks = result.tasks.map((task) =>
+    sanitizeGeneratedTask(task, priorSteps)
+  );
+
   // Guard against a concurrent generation for the same step.
   const tasks = await prisma.$transaction(async (tx) => {
     const existing = await tx.task.count({ where: { stepId: step.id } });
     if (existing > 0) return null;
 
+    await tx.validationStep.update({
+      where: { id: step.id },
+      data: { laufmodus, basiertAufUmsetzungId },
+    });
+
     await tx.task.createMany({
-      data: result.tasks.map((task, index) => ({
+      data: sanitizedTasks.map((task, index) => ({
         stepId: step.id,
         title: task.title,
         hint: task.hint,
         annahmenBezugId: task.annahmenBezugId,
         erfolgskriterium: task.erfolgskriterium,
+        herkunft: task.herkunft,
+        erfuelltDurchUmsetzungId: task.erfuelltDurchUmsetzungId,
+        done: task.herkunft === "BEREITS_ERFUELLT",
         sortOrder: index,
       })),
     });
@@ -206,5 +309,12 @@ export async function POST(request: Request) {
       : null,
   }));
 
-  return NextResponse.json({ tasks: tasksWithRefs }, { status: 201 });
+  return NextResponse.json(
+    {
+      tasks: tasksWithRefs,
+      laufmodus,
+      basiertAufUmsetzungId,
+    },
+    { status: 201 }
+  );
 }

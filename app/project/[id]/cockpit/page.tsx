@@ -79,6 +79,9 @@ export default async function CockpitPage({
           assumption: {
             select: { content: true, evidenceStatus: true },
           },
+          basiertAufUmsetzung: {
+            select: { id: true, title: true },
+          },
           metrics: {
             include: {
               dataPoints: {
@@ -162,6 +165,8 @@ export default async function CockpitPage({
       assumptionEvidenceStatus: step.assumption.evidenceStatus,
       timeframe: step.timeframe,
       budgetFrame: step.budgetFrame,
+      laufmodus: step.laufmodus,
+      basiertAufUmsetzung: step.basiertAufUmsetzung,
       metrics: step.metrics.map((metric) => ({
         id: metric.id,
         name: metric.name,
@@ -187,6 +192,9 @@ export default async function CockpitPage({
             parsedElaboration?.success ? parsedElaboration.data : null,
           elaborationGeneratedAt:
             task.elaborationGeneratedAt?.toISOString() ?? null,
+          herkunft: task.herkunft,
+          erfuelltDurchUmsetzungId: task.erfuelltDurchUmsetzungId,
+          erfuelltDurchUmsetzung: task.erfuelltDurchUmsetzung,
         };
       }),
       adoptedStatements,

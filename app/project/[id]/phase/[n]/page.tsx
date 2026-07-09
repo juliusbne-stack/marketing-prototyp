@@ -10,8 +10,12 @@ import { Phase3View } from "@/components/phase3/Phase3View";
 import { Phase4View } from "@/components/phase4/Phase4View";
 import { Phase5View } from "@/components/phase5/Phase5View";
 import { parseMarketingActivities } from "@/components/phase4/types";
+import { buildImplementationStatements } from "@/lib/implementationStatements";
+import { taskSelect } from "@/lib/tasks";
+import { countActionableTasks } from "@/lib/taskActionable";
 import { getPhase4Mode } from "@/lib/phase4/mode";
-import type { Phase4Mode } from "@/lib/phase4/types";
+import type { AdoptedAussageInput } from "@/lib/phase4/strategyAssistant";
+import { loadPhaseInputsForPage } from "@/lib/phaseInput/context";
 
 const statementSelect = {
   id: true,
@@ -134,7 +138,7 @@ export default async function PhasePage({
   }
 
   if (phaseNumber === 2) {
-    const [options, adoptedAnalysisCount, latestAdaptation] =
+    const [options, adoptedAnalysisCount, latestAdaptation, phase2Inputs] =
       await Promise.all([
         prisma.strategyOption.findMany({
           where: { projectId: id },
@@ -151,6 +155,7 @@ export default async function PhasePage({
           orderBy: { createdAt: "desc" },
           select: { decision: true, createdAt: true },
         }),
+        loadPhaseInputsForPage(id, 2),
       ]);
 
     // Revision mode (learning loop): the latest phase 5 decision is ADAPT and
@@ -200,6 +205,7 @@ export default async function PhasePage({
           statements: option.statements.map((link) => link.statement),
         }))}
         hasAdoptedAnalysis={adoptedAnalysisCount > 0}
+        initialPhaseInputs={phase2Inputs}
         revisionMode={revisionMode}
         initialRevisions={initialRevisions}
         initialHasAdoptedRevision={adoptedRevisionCount > 0}
@@ -245,7 +251,7 @@ export default async function PhasePage({
 
   if (phaseNumber === 4) {
     // Phase 4 works exclusively on the prioritized option (M5).
-    const [option, phase4Mode] = await Promise.all([
+    const [optionWithStatements, phase4Mode, phase4Inputs] = await Promise.all([
       prisma.strategyOption.findFirst({
         where: { projectId: id, status: "PRIORITIZED" },
         select: {
@@ -255,13 +261,63 @@ export default async function PhasePage({
           prioritizationRationale: true,
           diversityNote: true,
           modeNote: true,
+          statements: {
+            include: {
+              statement: {
+                select: {
+                  id: true,
+                  category: true,
+                  content: true,
+                  evidenceStatus: true,
+                  adopted: true,
+                },
+              },
+            },
+          },
         },
       }),
       getPhase4Mode(id),
+      loadPhaseInputsForPage(id, 4),
     ]);
-    const rawSteps = option
+    const option = optionWithStatements
+      ? {
+          id: optionWithStatements.id,
+          title: optionWithStatements.title,
+          summary: optionWithStatements.summary,
+          prioritizationRationale: optionWithStatements.prioritizationRationale,
+          diversityNote: optionWithStatements.diversityNote,
+          modeNote: optionWithStatements.modeNote,
+        }
+      : null;
+
+    const adoptedAnalysis = optionWithStatements
+      ? await prisma.statement.findMany({
+          where: { projectId: id, phase: 1, adopted: true },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            category: true,
+            content: true,
+            evidenceStatus: true,
+          },
+        })
+      : [];
+
+    const adoptedAussagen: AdoptedAussageInput[] = optionWithStatements
+      ? buildImplementationStatements(
+          optionWithStatements.statements,
+          adoptedAnalysis
+        ).map((statement) => ({
+          id: statement.id,
+          text: statement.content,
+          evidenceStatus: statement.evidenceStatus,
+          kategorie: statement.category,
+        }))
+      : [];
+
+    const rawSteps = optionWithStatements
       ? await prisma.validationStep.findMany({
-          where: { optionId: option.id, ...activeValidationStepWhere },
+          where: { optionId: optionWithStatements.id, ...activeValidationStepWhere },
           orderBy: { createdAt: "asc" },
           include: {
             metrics: {
@@ -271,6 +327,8 @@ export default async function PhasePage({
                 evaluationMode: true,
                 metricRole: true,
                 signalCategory: true,
+                proxyStrength: true,
+                signalRationale: true,
                 successCriterion: true,
                 failureCriterion: true,
                 dataPoints: {
@@ -280,8 +338,10 @@ export default async function PhasePage({
               },
             },
             assumption: { select: statementSelect },
-            // Cockpit progress chip ("Aufgaben 3/6") on adopted step cards.
-            tasks: { select: { done: true } },
+            tasks: {
+              orderBy: { sortOrder: "asc" },
+              select: taskSelect,
+            },
           },
         })
       : [];
@@ -296,9 +356,11 @@ export default async function PhasePage({
       metrics: metrics.map(({ dataPoints: _dataPoints, ...metric }) => ({
         ...metric,
         signalCategory: metric.signalCategory ?? null,
+        proxyStrength: metric.proxyStrength ?? null,
+        signalRationale: metric.signalRationale ?? null,
       })),
       cockpitReadinessInput: {
-        tasks,
+        tasks: tasks.map((task) => ({ done: task.done })),
         metrics: metrics.map((metric) => ({
           evaluationMode: metric.evaluationMode,
           name: metric.name,
@@ -307,12 +369,16 @@ export default async function PhasePage({
           dataPoints: metric.dataPoints,
         })),
       },
+      assistantTasks: tasks.map((task) => ({
+        id: task.id,
+        text: task.title,
+        erfolgskriterium: task.erfolgskriterium ?? null,
+        annahmenBezugId: task.annahmenBezugId ?? null,
+      })),
+      hasKpiDataPoints: metrics.some((metric) => metric.dataPoints.length > 0),
       taskProgress:
         tasks.length > 0
-          ? {
-              done: tasks.filter((task) => task.done).length,
-              total: tasks.length,
-            }
+          ? countActionableTasks(tasks)
           : null,
     }));
 
@@ -342,6 +408,8 @@ export default async function PhasePage({
         initialSteps={steps}
         initialFeedbacks={feedbacks}
         phase4Mode={phase4Mode}
+        adoptedAussagen={adoptedAussagen}
+        initialPhaseInputs={phase4Inputs}
         initialMeta={{
           diversityNote: option?.diversityNote ?? null,
           modeNote: option?.modeNote ?? null,
@@ -397,6 +465,8 @@ export default async function PhasePage({
                 evaluationMode: true,
                 metricRole: true,
                 signalCategory: true,
+                proxyStrength: true,
+                signalRationale: true,
                 successCriterion: true,
                 failureCriterion: true,
               },
@@ -416,6 +486,8 @@ export default async function PhasePage({
       metrics: step.metrics.map((metric) => ({
         ...metric,
         signalCategory: metric.signalCategory ?? null,
+        proxyStrength: metric.proxyStrength ?? null,
+        signalRationale: metric.signalRationale ?? null,
       })),
     }));
 

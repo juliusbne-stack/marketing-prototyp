@@ -18,6 +18,7 @@ import {
   SCALING_MODE_BANNER,
 } from "@/lib/labels/phase4";
 import type { Phase4Mode } from "@/lib/phase4/types";
+import type { AdoptedAussageInput } from "@/lib/phase4/strategyAssistant";
 import {
   buildValidationHistoryMap,
   getAssessedFeedbackForStep,
@@ -28,11 +29,14 @@ import {
 import { CompletedAssumptionCard } from "./CompletedAssumptionCard";
 import { OpenValidationBlock } from "./OpenValidationBlock";
 import type {
+  AssistantTaskData,
   Phase4GenerationMeta,
   PrioritizedOptionData,
   StepWithAssumption,
 } from "./types";
 import { normalizeStepFromApi } from "./types";
+import { PhaseInputSection } from "@/components/phaseInput/PhaseInputSection";
+import type { PhaseInputState } from "@/lib/phaseInput";
 
 export function Phase4View({
   projectId,
@@ -41,6 +45,8 @@ export function Phase4View({
   initialFeedbacks,
   phase4Mode,
   initialMeta,
+  adoptedAussagen,
+  initialPhaseInputs,
 }: {
   projectId: string;
   option: PrioritizedOptionData | null;
@@ -48,6 +54,8 @@ export function Phase4View({
   initialFeedbacks: FeedbackData[];
   phase4Mode: Phase4Mode;
   initialMeta?: Phase4GenerationMeta;
+  adoptedAussagen: AdoptedAussageInput[];
+  initialPhaseInputs?: PhaseInputState;
 }) {
   const [steps, setSteps] = useState(initialSteps);
   const [feedbacks] = useState(initialFeedbacks);
@@ -61,6 +69,7 @@ export function Phase4View({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isScaling, setIsScaling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generateKey, setGenerateKey] = useState("initial");
   const isBusy = isGenerating || isScaling;
   const isScalingMode = phase4Mode === "SCALING";
 
@@ -90,6 +99,7 @@ export function Phase4View({
       modeNote: body.modeNote ?? null,
       emptyState: body.emptyState ?? null,
     });
+    setGenerateKey(String(Date.now()));
   }
 
   async function handleGenerate() {
@@ -200,6 +210,18 @@ export function Phase4View({
     );
   }
 
+  function handleTaskChanged(stepId: string, task: AssistantTaskData) {
+    setSteps((current) =>
+      current.map((step) => {
+        if (step.id !== stepId) return step;
+        const assistantTasks = (step.assistantTasks ?? []).map((entry) =>
+          entry.id === task.id ? task : entry
+        );
+        return { ...step, assistantTasks };
+      })
+    );
+  }
+
   if (!option) {
     return (
       <div className="flex flex-col gap-6">
@@ -289,7 +311,19 @@ export function Phase4View({
       </div>
 
       {!isScalingMode && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-border bg-surface px-4 py-3">
+        <PhaseInputSection
+          projectId={projectId}
+          phase={4}
+          initialState={initialPhaseInputs}
+          onInputsChange={() => setGenerateKey(String(Date.now()))}
+        />
+      )}
+
+      {!isScalingMode && (
+        <div
+          key={generateKey}
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-border bg-surface px-4 py-3"
+        >
           <p className="text-sm text-text-muted">
             {hasSteps
               ? "Erneutes Ableiten ersetzt nur Entwürfe — übernommene Schritte bleiben erhalten."
@@ -347,7 +381,7 @@ export function Phase4View({
                     : `Offene Validierung (${openGroups.length})`}
                 </h3>
                 <p className="mt-1 text-sm text-text-muted">
-                  {openValidationIntro} Pro Validierung: „Mit KI überarbeiten“ und
+                  {openValidationIntro} Pro Validierung: „Strategie Assistent“ und
                   „Löschen“ findest du rechts neben der Überschrift.
                 </p>
               </div>
@@ -363,12 +397,14 @@ export function Phase4View({
                     projectId={projectId}
                     assumption={group.assumption}
                     steps={activeSteps}
+                    adoptedAussagen={adoptedAussagen}
                     validationHistory={validationHistoryMap.get(
                       group.assumption.id
                     )}
                     onAssumptionChanged={handleAssumptionChanged}
                     onStepChanged={handleStepChanged}
                     onStepRemoved={handleStepDeleted}
+                    onTaskChanged={handleTaskChanged}
                     onRefinementAdopted={handleRefinementAdopted}
                   />
                 );

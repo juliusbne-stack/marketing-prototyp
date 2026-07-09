@@ -31,6 +31,8 @@ import { StepReadinessChip } from "./StepReadinessChip";
 import { CockpitTaskRow } from "./CockpitTaskRow";
 import { RESULT_CONFIG } from "@/components/phase5/types";
 import type { KpiScenario } from "@/lib/schemas/kpiSimulation";
+import { LAUFMODUS_LABELS } from "@/lib/crossImplementation";
+import { countActionableTasks, isActionableTask } from "@/lib/taskActionable";
 import {
   KPI_ASSESSMENT_CONFIG,
   type CockpitStepData,
@@ -83,6 +85,10 @@ export function CockpitStepCard({
   const [feedbackCreated, setFeedbackCreated] = useState(false);
   const [timeframe, setTimeframe] = useState(step.timeframe);
   const [budgetFrame, setBudgetFrame] = useState(step.budgetFrame);
+  const [laufmodus, setLaufmodus] = useState(step.laufmodus);
+  const [basiertAufUmsetzung, setBasiertAufUmsetzung] = useState(
+    step.basiertAufUmsetzung
+  );
   const [scenario, setScenario] = useState<KpiScenario>("MIXED");
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -97,12 +103,12 @@ export function CockpitStepCard({
     [step.adoptedStatements]
   );
 
-  const doneCount = tasks.filter((task) => task.done).length;
+  const actionableProgress = countActionableTasks(tasks);
   const hasDataPoints = metrics.some((metric) => metric.dataPoints.length > 0);
   const readiness = deriveStepReadiness(tasks, metrics, hasFeedback);
   const isReadyForFeedback = readiness === "READY_FOR_FEEDBACK";
   const nextTaskIndex = highlightNextTask
-    ? tasks.findIndex((task) => !task.done)
+    ? tasks.findIndex((task) => isActionableTask(task.herkunft) && !task.done)
     : -1;
   const implementationGoals = formatImplementationGoals(metrics, timeframe);
 
@@ -165,9 +171,30 @@ export function CockpitStepCard({
             erfolgskriterium: task.erfolgskriterium ?? null,
             elaboration: null,
             elaborationGeneratedAt: null,
+            herkunft: task.herkunft ?? "NEU",
+            erfuelltDurchUmsetzungId: task.erfuelltDurchUmsetzungId ?? null,
+            erfuelltDurchUmsetzung: task.erfuelltDurchUmsetzung ?? null,
           })
         )
       );
+      if (body.laufmodus) {
+        setLaufmodus(body.laufmodus);
+      }
+      if (body.basiertAufUmsetzungId && basiertAufUmsetzung === null) {
+        const basisTitle =
+          step.basiertAufUmsetzung?.title ??
+          body.tasks
+            .map(
+              (task: TaskData) => task.erfuelltDurchUmsetzung?.title ?? null
+            )
+            .find((title: string | null) => title !== null);
+        if (basisTitle) {
+          setBasiertAufUmsetzung({
+            id: body.basiertAufUmsetzungId,
+            title: basisTitle,
+          });
+        }
+      }
     } catch (err) {
       setError(
         err instanceof Error
@@ -194,11 +221,16 @@ export function CockpitStepCard({
   }
 
   async function handleToggleTask(task: TaskData) {
+    if (!isActionableTask(task.herkunft)) return;
+
     const nextDone = !task.done;
+    const actionable = tasks.filter((entry) => isActionableTask(entry.herkunft));
     const allTasksWillBeDone =
       nextDone &&
-      tasks.length > 0 &&
-      tasks.every((entry) => entry.id === task.id || entry.done);
+      actionable.length > 0 &&
+      actionable.every(
+        (entry) => entry.id === task.id || entry.done
+      );
     setTasks((current) =>
       current.map((entry) =>
         entry.id === task.id ? { ...entry, done: nextDone } : entry
@@ -325,6 +357,16 @@ export function CockpitStepCard({
         {getAnchorAssumptionInlinePrefix(step.assumptionEvidenceStatus)}:{" "}
         {step.assumptionContent}
       </p>
+      {basiertAufUmsetzung && laufmodus !== "EIGENSTAENDIG" && (
+        <p className="mt-1.5 text-xs text-text-muted">
+          Baut auf:{" "}
+          <span className="font-medium text-text">
+            {basiertAufUmsetzung.title}
+          </span>
+          <span className="mx-1.5 text-border">·</span>
+          {LAUFMODUS_LABELS[laufmodus]}
+        </p>
+      )}
       <StepImplementationFrame
         timeframe={timeframe}
         budgetFrame={budgetFrame}
@@ -347,9 +389,9 @@ export function CockpitStepCard({
             <ListChecks className="h-3.5 w-3.5" aria-hidden />
             Aufgaben
           </p>
-          {tasks.length > 0 && (
+          {actionableProgress.total > 0 && (
             <span className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs font-medium text-text-muted">
-              {doneCount}/{tasks.length}
+              {actionableProgress.done}/{actionableProgress.total}
             </span>
           )}
         </div>

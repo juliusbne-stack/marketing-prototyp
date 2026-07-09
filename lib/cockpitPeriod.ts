@@ -1,5 +1,6 @@
 import type { CockpitMetricData, CockpitStepData, TaskData } from "@/components/cockpit/types";
 import type { KpiDataPointData } from "@/components/cockpit/types";
+import { countActionableTasks } from "@/lib/taskActionable";
 import {
   derivePeriodAssessment,
   isCumulativeEarlySupporting,
@@ -47,7 +48,8 @@ export function getLatestKpiPointsPerMetric(
 }
 
 export function allTasksDone(tasks: TaskData[]): boolean {
-  return tasks.length === 0 || tasks.every((task) => task.done);
+  const { done, total } = countActionableTasks(tasks);
+  return total === 0 || done === total;
 }
 
 export function hasAnyKpiDataPoint(metrics: CockpitMetricData[]): boolean {

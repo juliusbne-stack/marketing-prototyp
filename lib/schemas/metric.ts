@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const evaluationModeSchema = z.enum(["PER_POINT", "CUMULATIVE"]);
 export const metricRoleSchema = z.enum(["DECISIVE", "SUPPORTING"]);
+export const proxyStrengthSchema = z.enum(["DIRECT", "PROXY"]);
 
 export const signalCategorySchema = z.enum([
   "COMMITMENT",
@@ -34,18 +35,43 @@ export const metricInputSchema = z.object({
   evaluationMode: evaluationModeSchema,
   metricRole: metricRoleSchema.default("DECISIVE"),
   signalCategory: signalCategorySchema.optional(),
+  proxyStrength: proxyStrengthSchema.nullish(),
+  signalRationale: z.string().trim().min(1).nullish(),
   successCriterion: z.string().trim().min(1),
   failureCriterion: z.string().trim().min(1),
 });
 
-/** LLM output metric — signalCategory is required. */
-export const metricLlmSchema = metricInputSchema.extend({
-  signalCategory: signalCategorySchema,
-});
+/** LLM output metric — signalCategory is required; DECISIVE needs proxyStrength + signalRationale. */
+export const metricLlmSchema = metricInputSchema
+  .extend({
+    signalCategory: signalCategorySchema,
+  })
+  .superRefine((metric, ctx) => {
+    if (metric.metricRole !== "DECISIVE") return;
+
+    if (!metric.proxyStrength) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Entscheidende Metriken (DECISIVE) benötigen proxyStrength (DIRECT | PROXY).",
+        path: ["proxyStrength"],
+      });
+    }
+
+    if (!metric.signalRationale?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Entscheidende Metriken (DECISIVE) benötigen signalRationale mit Bezug zur Annahme.",
+        path: ["signalRationale"],
+      });
+    }
+  });
 
 export type MetricInput = z.infer<typeof metricInputSchema>;
 export type MetricLlmOutput = z.infer<typeof metricLlmSchema>;
 export type SignalCategoryValue = z.infer<typeof signalCategorySchema>;
+export type ProxyStrengthValue = z.infer<typeof proxyStrengthSchema>;
 export type StrategyDimensionValue = z.infer<typeof strategyDimensionSchema>;
 export type TestSubjectValue = z.infer<typeof testSubjectSchema>;
 

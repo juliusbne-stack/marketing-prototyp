@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Check,
   CircleCheck,
@@ -55,6 +55,19 @@ export function ValidationRefinementPanel({
   const [isRefining, setIsRefining] = useState(false);
   const [isAdopting, setIsAdopting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const instructionRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isRefining || proposal) return;
+    const timeout = window.setTimeout(() => {
+      instructionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      instructionRef.current?.focus({ preventScroll: true });
+    }, 100);
+    return () => window.clearTimeout(timeout);
+  }, [isRefining, proposal]);
 
   async function handleRefine() {
     if (!userInstruction.trim()) return;
@@ -328,6 +341,7 @@ export function ValidationRefinementPanel({
           <label className="block text-xs font-medium text-text">
             Was soll an dieser Validierung geändert werden?
             <textarea
+              ref={instructionRef}
               value={userInstruction}
               onChange={(event) => setUserInstruction(event.target.value)}
               rows={3}

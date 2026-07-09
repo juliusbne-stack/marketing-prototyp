@@ -3,6 +3,9 @@ export const PHASE2_PROMPT = `AUFGABE: Entwickle aus dem übergebenen Analysebil
 GENAU 2 bis 3 klar voneinander abgegrenzte, vorläufige Strategieoptionen als
 Hypothesenbündel.
 
+Der Projektkontext enthält ggf. phasenEingaben (Rahmenbedingungen des Nutzers,
+KEINE Aussagen) und phasenEingabenRegeln. Wende diese Regeln strikt an.
+
 REGELN:
 - Mindestens eine Option ist marktbezogen (greift einen MARKET_PATH auf),
   mindestens eine ist mittelorientiert (setzt an vorhandenen Ressourcen,

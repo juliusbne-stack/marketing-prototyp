@@ -3,6 +3,8 @@ import type {
   EvidenceStatus,
   FeedbackResult,
   KpiAssessment,
+  Laufmodus,
+  TaskHerkunft,
 } from "@prisma/client";
 import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
 import { getMetricDisplayAssessment } from "@/lib/cockpitPeriod";
@@ -28,6 +30,14 @@ export type TaskData = {
   erfolgskriterium: string | null;
   elaboration: TaskElaborationResponse | null;
   elaborationGeneratedAt: string | null;
+  herkunft: TaskHerkunft;
+  erfuelltDurchUmsetzungId: string | null;
+  erfuelltDurchUmsetzung: { id: string; title: string } | null;
+};
+
+export type StepBasisRef = {
+  id: string;
+  title: string;
 };
 
 export type KpiDataPointData = {
@@ -56,6 +66,8 @@ export type CockpitStepData = {
   assumptionEvidenceStatus: EvidenceStatus;
   timeframe: string | null;
   budgetFrame: string | null;
+  laufmodus: Laufmodus;
+  basiertAufUmsetzung: StepBasisRef | null;
   metrics: CockpitMetricData[];
   tasks: TaskData[];
   adoptedStatements: StatementRef[];

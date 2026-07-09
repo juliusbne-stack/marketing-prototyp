@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { PHASE2_PROMPT } from "@/lib/prompts/phase2";
 import { phase2ResponseSchema } from "@/lib/schemas/phase2";
+import { buildPhaseInputLlmContext } from "@/lib/phaseInput/context";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -84,6 +85,8 @@ export async function POST(request: Request) {
     );
   }
 
+  const phaseInputContext = await buildPhaseInputLlmContext(project.id, 2);
+
   const context = {
     startupProfile: {
       businessIdea: project.businessIdea,
@@ -100,6 +103,7 @@ export async function POST(request: Request) {
       existingCustomerInsights: project.existingInsights,
     },
     adoptedAnalysisStatements: adoptedAnalysis,
+    ...phaseInputContext,
   };
 
   let result;

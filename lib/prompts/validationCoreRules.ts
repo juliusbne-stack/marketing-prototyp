@@ -7,7 +7,18 @@ export const VALIDATION_CORE_THINKING = `VALIDIERUNGSKERN — so musst du denken
 3. Welches begrenzte Testdesign erzeugt genau diese Beobachtung?
 4. Welche Marketingaktivitäten dienen nur der Durchführung dieses Tests?
 Kanäle (Instagram, TikTok, Ads) sind Durchführungsmittel — nicht automatisch der Test.
-Ein Kanaltest prüft Erreichbarkeit; er prüft NICHT allein Zahlungsbereitschaft.`;
+Ein Kanaltest prüft Erreichbarkeit; er prüft NICHT allein Zahlungsbereitschaft.
+
+ANNAHMENBEZUG (PFLICHT je Whitelist-Eintrag):
+- Jeder Whitelist-Eintrag liefert text, justification und ggf. uncertainty der KONKRETEN
+  Annahme. validationQuestion UND testDesign MÜSSEN daraus abgeleitet werden — nicht aus
+  der priorisierten Option allgemein und nicht aus anderen Aussagen.
+- Der zu prüfende Gegenstand ist die in justification/uncertainty benannte Unsicherheit.
+  Die Prüffrage muss genau diese Unsicherheit adressieren.
+- Verboten: Die Prüffrage auf eine generische Kanal- oder Erreichbarkeitsfrage verengen,
+  wenn text/justification/uncertainty inhaltlich Nutzenversprechen, Interesse, Problem-
+  relevanz, Zahlungsbereitschaft oder Verständnis betreffen. Dann ist Erreichbarkeit
+  höchstens Durchführungsmittel — nicht der Validierungskern.`;
 
 export const SIGNAL_CATEGORY_RULES = `SIGNAL-PASSUNG (PFLICHT — jeder Messpunkt erhält genau eine signalCategory):
 
@@ -46,11 +57,39 @@ export const ASSUMPTION_TYPE_VALIDATION_MAP = `ANNAHMENTYP → PRÜFLOGIK (gleic
 - Erlösmechanik: Entscheidend: COMMITMENT oder BEHAVIOR (Preissignale, Conversion).
 - Zielgruppe: Entscheidend: BEHAVIOR oder QUALITATIVE (Segment-Treffer, qualifizierte Gespräche).`;
 
+export const CRITERION_THRESHOLD_RULES = `SCHWELLENWERTE IN ERFOLGSKRITERIEN (Stützend/Widerlegend — PFLICHT):
+- Jeder Schwellenwert MUSS sich auf eine Bezugsgröße beziehen, die der gewählte
+  Test-Kanal messbar erzeugt (z. B. erreichte Personen/Reichweite, Story-Views,
+  Link-Klicks, Registrierungen, Einlösungen).
+- VERBOTEN sind Bezugsgrößen, die das Start-up in dieser Phase nicht kennt oder
+  die der Test nicht erzeugt — insbesondere die abstrakte Gesamt-Zielgruppe bzw.
+  Marktgröße („% der Zielgruppe").
+- Die Bezugsgröße MUSS im Kriteriumstext explizit ausgeschrieben werden
+  (z. B. „über 2 % der durch die Kampagne erreichten Personen lösen den Code ein"),
+  nicht implizit gelassen.
+- Die Bezugsgröße muss zur Kennzahl-Definition passen: Ist die Kennzahl eine
+  „Conversion Rate", ist der Nenner die erreichte/klickende Menge, nicht die
+  Gesamt-Zielgruppe.
+- Stützendes und widerlegendes Kriterium MÜSSEN dieselbe Bezugsgröße verwenden.
+- Ist keine messbare relative Bezugsgröße sinnvoll bestimmbar, formuliere das
+  Kriterium in absoluten Zahlen (z. B. „mindestens N Einlösungen bei einer
+  Reichweite von mind. M") statt in Prozent auf unbekanntem Nenner.`;
+
 export const METRIC_ROLE_RULES = `MESSLOGIK (PFLICHT):
 - Jeder Schritt braucht mindestens EINE entscheidende Metrik (metricRole: DECISIVE),
   die die geprüfte Annahme direkt adressiert und die Signal-Passungsregeln erfüllt.
 - 0–2 unterstützende Metriken (metricRole: SUPPORTING) sind optional.
 - Wenn nur ATTENTION als entscheidendes Signal möglich wäre, wähle ein anderes Testdesign.`;
+
+export const METRIC_EFFECT_LOGIC_RULES = `WIRKUNGSLOGIK JE METRIK (PFLICHT für DECISIVE):
+- Jede entscheidende Metrik (metricRole: DECISIVE) braucht proxyStrength und signalRationale.
+- proxyStrength: DIRECT = das Signal belegt die Annahme unmittelbar (z. B. tatsächliche zahlende
+  Nutzung für Zahlungsbereitschaft, aktive Tool-Nutzung für Nutzungsbereitschaft).
+  PROXY = das Signal belegt die Annahme nur mittelbar (z. B. Anmeldung/Klick/Interesse-Indikator
+  für tatsächliche Nutzung oder Zahlung — Anmeldung ist noch keine Nutzung).
+- signalRationale: 1–2 Sätze, WARUM dieses Signal die konkrete Unsicherheit der Annahme
+  (content/justification/uncertainty aus der Whitelist) stützt oder widerlegt.
+- Für SUPPORTING-Metriken sind proxyStrength und signalRationale optional.`;
 
 export const VALIDATION_STEP_OUTPUT_FIELDS = `- validationQuestion: Eine präzise Frage — was muss beobachtet werden?
 - testDesign: Kurzbeschreibung des eigentlichen Experiments (nicht nur Kanal).

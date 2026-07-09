@@ -191,7 +191,7 @@ function SegmentProfileCard({
         className={
           layout === "horizontal"
             ? "mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2"
-            : "divide-y divide-border/70"
+            : "grid grid-cols-[auto_max-content_minmax(0,1fr)] divide-y divide-border/70"
         }
       >
         {SEGMENT_ASPECTS.map((aspect) => {
