@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  metricLlmSchema,
+  metricLlmParseSchema,
   metricsHaveDecisive,
   strategyDimensionSchema,
   testSubjectSchema,
@@ -18,7 +18,7 @@ const stepLlmSchema = z.object({
   channel: z.string().trim().min(1).nullish(),
   timeframe: z.string().trim().min(1),
   budgetFrame: z.string().trim().min(1),
-  metrics: z.array(metricLlmSchema).min(1).max(3),
+  metrics: z.array(metricLlmParseSchema).min(1).max(3),
 });
 
 export type Phase4StepOutput = z.infer<typeof stepLlmSchema>;

@@ -17,6 +17,8 @@ export type FeedbackData = {
   interpretation: string | null;
   proposedNewStatus: EvidenceStatus | null;
   statusApplied: boolean;
+  /** Set when post-LLM proxy guard capped result/status (Stufe 3b). */
+  proxyDamped?: boolean;
 };
 
 // AI adaptation proposal — a suggestion only, the user decides (F9/NF3).

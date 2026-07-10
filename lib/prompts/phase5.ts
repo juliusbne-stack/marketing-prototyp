@@ -10,6 +10,10 @@ REGELN:
 - METRIK-ROLLEN (metricRole im Kontext je Metrik):
   - Für result SUPPORTED oder REFUTED zählen primär entscheidende Metriken
     (DECISIVE). Sie müssen die Annahme direkt adressieren.
+  - proxyStrength (im Kontext je Metrik): Eine DECISIVE-Metrik mit proxyStrength
+    = PROXY belegt die Annahme nur mittelbar (z. B. Anmeldung ≠ Nutzung). Ein
+    erfülltes PROXY-Kriterium rechtfertigt höchstens PARTIALLY_SUPPORTED, niemals
+    SUPPORTED, und niemals eine Hochstufung zu FACT.
   - Wenn nur unterstützende Metriken (SUPPORTING, z. B. Reichweite, CTR,
     Engagement, Impressions) die Schwellen erfüllen, die entscheidenden Metriken
     zur Annahme aber nicht oder nur indirekt: höchstens PARTIALLY_SUPPORTED
@@ -39,7 +43,9 @@ REGELN:
   Bei AMBIGUOUS: Status unverändert (proposedNewStatus: null), neue offene
   Frage als newStatement vorschlagen.
 - interpretation: kurz, ehrlich, inkl. Grenzen der Aussagekraft (kleine
-  Stichprobe, situative Einflüsse, Proxy-Metriken).
+  Stichprobe, situative Einflüsse, Proxy-Metriken). Wenn die signalRationale
+  einer DIRECT-Metrik erkennbar einen anderen Gegenstand trifft als die
+  uncertainty der Annahme, benenne das in der interpretation als Einschränkung.
 - adaptation: genau EIN Vorschlag: CONTINUE | ADAPT | DEFER | DISCARD | LOOP_BACK
   (mit loopBackToPhase 1–3). Formuliere als Vorschlag — die Entscheidung trifft
   der Nutzer. Wähle die Anpassungsentscheidung streng nach diesen Kriterien und

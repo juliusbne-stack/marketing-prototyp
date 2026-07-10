@@ -15,12 +15,17 @@ export function PhaseInputPreview({
   answers,
   skippedKeys,
   title,
+  interactive = false,
+  onStepSelect,
 }: {
   phase: PhaseInputPhase;
   stepIndex: number;
   answers: Record<string, PhaseInputAnswer>;
   skippedKeys: Set<string>;
   title: string;
+  /** Erlaubt Sprung zu einer Frage (z. B. beim erneuten Öffnen des Fragebogens). */
+  interactive?: boolean;
+  onStepSelect?: (index: number) => void;
 }) {
   const questions = getQuestionsForPhase(phase);
   const answeredCount = questions.filter((question, index) => {
@@ -57,16 +62,10 @@ export function PhaseInputPreview({
             : null;
           const isAnswered = isPast && !isSkipped && Boolean(display);
 
-          return (
-            <motion.li
-              key={question.key}
-              initial={isPast && (isAnswered || isSkipped) ? { opacity: 0, y: 6 } : false}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className={`flex items-start gap-2 rounded-md px-2 py-1.5 text-xs ${
-                isCurrent ? "bg-accent-soft" : ""
-              }`}
-            >
+          const canJump = interactive && onStepSelect != null;
+
+          const content = (
+            <>
               <span className="mt-0.5 shrink-0" aria-hidden>
                 {isAnswered ? (
                   <Check className="h-3.5 w-3.5 text-evidence-fact-text" />
@@ -94,6 +93,32 @@ export function PhaseInputPreview({
                   <p className="mt-0.5 line-clamp-2 text-text-muted">{display}</p>
                 )}
               </div>
+            </>
+          );
+
+          return (
+            <motion.li
+              key={question.key}
+              initial={isPast && (isAnswered || isSkipped) ? { opacity: 0, y: 6 } : false}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className={`flex items-start gap-2 rounded-md px-2 py-1.5 text-xs ${
+                isCurrent ? "bg-accent-soft" : ""
+              } ${canJump ? "cursor-pointer transition-colors hover:bg-background" : ""}`}
+            >
+              {canJump ? (
+                <button
+                  type="button"
+                  onClick={() => onStepSelect(index)}
+                  className="flex w-full items-start gap-2 text-left"
+                  aria-current={isCurrent ? "step" : undefined}
+                  aria-label={`Zu Frage ${index + 1}: ${question.label}`}
+                >
+                  {content}
+                </button>
+              ) : (
+                content
+              )}
             </motion.li>
           );
         })}

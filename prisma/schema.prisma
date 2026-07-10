@@ -9,8 +9,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")   // Supabase Transaction Pooler (Port 6543)
-  directUrl = env("DIRECT_URL")     // Supabase Direct Connection (Port 5432, für Migrationen)
+  url       = env("DATABASE_URL") // Supabase Transaction Pooler (Port 6543)
+  directUrl = env("DIRECT_URL") // Supabase Direct Connection (Port 5432, für Migrationen)
 }
 
 // ----------------------------------------------------------------------------
@@ -44,12 +44,49 @@ model Project {
   // Phase-1-Metadaten: KI-Relevanzentscheidungen je PESTEL-Dimension (JSON-Array)
   pestelRelevance Json?
 
-  statements  Statement[]
-  options     StrategyOption[]
-  steps       ValidationStep[]
-  feedbacks   MarketFeedback[]
-  adaptations AdaptationDecision[]
-  phaseInputs PhaseInput[]
+  statements         Statement[]
+  options            StrategyOption[]
+  steps              ValidationStep[]
+  feedbacks          MarketFeedback[]
+  adaptations        AdaptationDecision[]
+  phaseInputs        PhaseInput[]
+  phase1ModuleCaches Phase1ModuleCache[]
+  phase1Runs         Phase1Run[]
+}
+
+// ----------------------------------------------------------------------------
+// Phase-1 modular analysis cache (reusable draft modules, not adopted decisions)
+// ----------------------------------------------------------------------------
+model Phase1ModuleCache {
+  id        String   @id @default(cuid())
+  projectId String
+  moduleKey String
+  inputHash String
+  payload   Json
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, moduleKey])
+  @@index([projectId])
+}
+
+// ----------------------------------------------------------------------------
+// Phase-1 run tracking for idempotent persistence
+// ----------------------------------------------------------------------------
+model Phase1Run {
+  id          String    @id @default(cuid())
+  runId       String    @unique
+  projectId   String
+  status      String
+  createdAt   DateTime  @default(now())
+  finalizedAt DateTime?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
 }
 
 // ----------------------------------------------------------------------------
@@ -58,7 +95,7 @@ model Project {
 model PhaseInput {
   id          String   @id @default(cuid())
   projectId   String
-  phase       Int      // 2 | 4
+  phase       Int // 2 | 4
   questionKey String
   value       Json?
   skipped     Boolean  @default(false)
@@ -74,15 +111,15 @@ model PhaseInput {
 // Aussage: zentrales Datenobjekt (Kapitel 5.2, F5/NF2)
 // ----------------------------------------------------------------------------
 enum EvidenceStatus {
-  FACT           // Fakt (belegt)
-  ASSUMPTION     // plausible Annahme
-  OPEN_QUESTION  // offene Frage
+  FACT // Fakt (belegt)
+  ASSUMPTION // plausible Annahme
+  OPEN_QUESTION // offene Frage
 }
 
 enum Origin {
-  USER_INPUT         // Nutzereingabe
+  USER_INPUT // Nutzereingabe
   SIMULATED_RESEARCH // simulierte Recherche (fiktive Quelle!)
-  AI_DERIVATION      // KI-Ableitung aus vorhandenem Kontext
+  AI_DERIVATION // KI-Ableitung aus vorhandenem Kontext
 }
 
 // Fachliche Verortung einer Aussage innerhalb der Phasenergebnisse
@@ -94,15 +131,15 @@ enum StatementCategory {
   PESTEL_TECHNOLOGICAL
   PESTEL_ECOLOGICAL
   PESTEL_LEGAL
-  TARGET_SEGMENT     // Zielgruppen-/Segmenthypothese
+  TARGET_SEGMENT // Zielgruppen-/Segmenthypothese
   CUSTOMER_PROBLEM
-  COMPETITOR         // Wettbewerber / Alternative / Ersatzlösung
-  RESOURCE           // interne Ressource/Fähigkeit
+  COMPETITOR // Wettbewerber / Alternative / Ersatzlösung
+  RESOURCE // interne Ressource/Fähigkeit
   SWOT_STRENGTH
   SWOT_WEAKNESS
   SWOT_OPPORTUNITY
   SWOT_THREAT
-  MARKET_PATH        // erkennbarer Marktpfad
+  MARKET_PATH // erkennbarer Marktpfad
   // Phase 2 — Dimensionen einer Strategieoption
   OPT_TARGET_GROUP
   OPT_CUSTOMER_PROBLEM
@@ -111,60 +148,60 @@ enum StatementCategory {
   OPT_MARKET_ACCESS
   OPT_REVENUE_GROWTH
   // Phase 5
-  LEARNING           // neu gewonnene Erkenntnis / neue offene Frage
+  LEARNING // neu gewonnene Erkenntnis / neue offene Frage
   OTHER
 }
 
 model Statement {
-  id             String            @id @default(cuid())
-  projectId      String
-  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  phase          Int               // Phase, in der die Aussage entstand (1..5)
-  category       StatementCategory @default(OTHER)
-  content        String            @db.Text
-  evidenceStatus EvidenceStatus
-  origin         Origin
-  justification  String?           @db.Text // Begründung der KI (NF1)
-  sourceRef      String?           // fiktive Quellenangabe bei SIMULATED_RESEARCH (NF9)
-  uncertainty    String?           @db.Text // Unsicherheitshinweis (NF2)
-  isCritical     Boolean           @default(false) // kritische Annahme (Phase 4)
-  adopted        Boolean           @default(false) // Übernahme-Prinzip (F10/NF3/NF5)
-  segmentLabel     String?           // Zielgruppensegment-Name (nur TARGET_SEGMENT)
-  segmentAspect    String?           // Segmentdimension: DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
-  competitorLabel  String?           // Wettbewerber-/Alternativen-Name (nur COMPETITOR-Profile)
-  competitorAspect String?           // Profildimension: ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id               String            @id @default(cuid())
+  projectId        String
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase            Int // Phase, in der die Aussage entstand (1..5)
+  category         StatementCategory @default(OTHER)
+  content          String            @db.Text
+  evidenceStatus   EvidenceStatus
+  origin           Origin
+  justification    String?           @db.Text // Begründung der KI (NF1)
+  sourceRef        String? // fiktive Quellenangabe bei SIMULATED_RESEARCH (NF9)
+  uncertainty      String?           @db.Text // Unsicherheitshinweis (NF2)
+  isCritical       Boolean           @default(false) // kritische Annahme (Phase 4)
+  adopted          Boolean           @default(false) // Übernahme-Prinzip (F10/NF3/NF5)
+  segmentLabel     String? // Zielgruppensegment-Name (nur TARGET_SEGMENT)
+  segmentAspect    String? // Segmentdimension: DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
+  competitorLabel  String? // Wettbewerber-/Alternativen-Name (nur COMPETITOR-Profile)
+  competitorAspect String? // Profildimension: ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
-  optionLinks     OptionStatement[]
-  validationSteps ValidationStep[]  @relation("StepAssumption")
-  taskAssumptionRefs Task[]         @relation("TaskAssumptionRef")
-  feedbacks       MarketFeedback[]
+  optionLinks        OptionStatement[]
+  validationSteps    ValidationStep[]  @relation("StepAssumption")
+  taskAssumptionRefs Task[]            @relation("TaskAssumptionRef")
+  feedbacks          MarketFeedback[]
 }
 
 // ----------------------------------------------------------------------------
 // Strategieoption = Hypothesenbündel (Kapitel 4.3.2 / 5.2, F6)
 // ----------------------------------------------------------------------------
 enum OptionStatus {
-  DRAFT       // Entwurf
-  ADOPTED     // übernommen, noch nicht bewertet/priorisiert
+  DRAFT // Entwurf
+  ADOPTED // übernommen, noch nicht bewertet/priorisiert
   PRIORITIZED // begründet priorisiert (Phase 3)
-  DEFERRED    // zurückgestellt
-  DISCARDED   // verworfen
+  DEFERRED // zurückgestellt
+  DISCARDED // verworfen
 }
 
 model StrategyOption {
-  id                     String       @id @default(cuid())
-  projectId              String
-  project                Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title                  String
-  summary                String?      @db.Text
-  status                 OptionStatus @default(DRAFT)
-  prioritizationRationale String?     @db.Text // Begründung der Priorisierung (F7, nutzerbestätigt)
-  diversityNote          String?      @db.Text // Hinweis der letzten VALIDATION-Generierung (Diversität)
-  modeNote               String?      @db.Text // Hinweis der letzten SCALING-Generierung (Modus/Kanal)
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
+  id                      String       @id @default(cuid())
+  projectId               String
+  project                 Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title                   String
+  summary                 String?      @db.Text
+  status                  OptionStatus @default(DRAFT)
+  prioritizationRationale String?      @db.Text // Begründung der Priorisierung (F7, nutzerbestätigt)
+  diversityNote           String?      @db.Text // Hinweis der letzten VALIDATION-Generierung (Diversität)
+  modeNote                String?      @db.Text // Hinweis der letzten SCALING-Generierung (Modus/Kanal)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
 
   statements  OptionStatement[]
   evaluations Evaluation[]
@@ -186,12 +223,12 @@ model OptionStatement {
 // Bewertung (Phase 3, F7) — Kriterien aus Kapitel 4.3.3
 // ----------------------------------------------------------------------------
 enum Criterion {
-  ATTRACTIVENESS    // strategische Attraktivität & inhaltliche Stimmigkeit
-  RESOURCE_FIT      // Ressourcenpassung
-  RISK              // tragbares Risiko (hoher Score = tragbar)
+  ATTRACTIVENESS // strategische Attraktivität & inhaltliche Stimmigkeit
+  RESOURCE_FIT // Ressourcenpassung
+  RISK // tragbares Risiko (hoher Score = tragbar)
   VALIDATION_EFFORT // Prüfaufwand (hoher Score = gering)
-  LEARNING_VALUE    // erwartbarer Lernwert
-  EVIDENCE          // Evidenzstatus der zugrunde liegenden Annahmen
+  LEARNING_VALUE // erwartbarer Lernwert
+  EVIDENCE // Evidenzstatus der zugrunde liegenden Annahmen
 }
 
 model Evaluation {
@@ -199,7 +236,7 @@ model Evaluation {
   optionId  String
   option    StrategyOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   criterion Criterion
-  score     Int            // 1..5
+  score     Int // 1..5
   rationale String         @db.Text // Begründung (NF1)
   createdAt DateTime       @default(now())
 
@@ -253,69 +290,69 @@ enum TaskHerkunft {
 }
 
 model ValidationStep {
-  id           String         @id @default(cuid())
-  projectId    String
-  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  optionId     String
-  option       StrategyOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  assumptionId String         // geprüfte kritische Annahme
-  assumption   Statement      @relation("StepAssumption", fields: [assumptionId], references: [id], onDelete: Cascade)
-  title        String
-  description  String         @db.Text // Maßnahme/Experiment/MVP-Schritt
+  id                    String             @id @default(cuid())
+  projectId             String
+  project               Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  optionId              String
+  option                StrategyOption     @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  assumptionId          String // geprüfte kritische Annahme
+  assumption            Statement          @relation("StepAssumption", fields: [assumptionId], references: [id], onDelete: Cascade)
+  title                 String
+  description           String             @db.Text // Maßnahme/Experiment/MVP-Schritt
   // Validierungskern: was wird beobachtet und wie wird getestet (Phase 4 Sprint 2)
-  validationQuestion  String? @db.Text
-  testDesign          String? @db.Text
-  marketingActivities Json?   // string[] — Durchführungsmaßnahmen
-  channel      String?        // z.B. Landingpage, Instagram, Interviews
-  timeframe    String?        // z.B. "3 Wochen" — begrenzter Umsetzungszeitraum
-  budgetFrame  String?        // z.B. "max. 150 € von 500 €/Monat"
-  stepType           StepType            @default(VALIDATION)
-  strategyDimension  StrategyDimension?
-  testSubject        TestSubject?
-  methodWarning      String?             @db.Text
-  adopted      Boolean        @default(false)
+  validationQuestion    String?            @db.Text
+  testDesign            String?            @db.Text
+  marketingActivities   Json? // string[] — Durchführungsmaßnahmen
+  channel               String? // z.B. Landingpage, Instagram, Interviews
+  timeframe             String? // z.B. "3 Wochen" — begrenzter Umsetzungszeitraum
+  budgetFrame           String? // z.B. "max. 150 € von 500 €/Monat"
+  stepType              StepType           @default(VALIDATION)
+  strategyDimension     StrategyDimension?
+  testSubject           TestSubject?
+  methodWarning         String?            @db.Text
+  adopted               Boolean            @default(false)
   // Soft discard for adopted steps — preserves tasks, KPIs and feedback for
   // traceability; hard DELETE is only allowed for non-adopted drafts.
-  discardedAt  DateTime?
-  laufmodus    Laufmodus @default(EIGENSTAENDIG)
+  discardedAt           DateTime?
+  laufmodus             Laufmodus          @default(EIGENSTAENDIG)
   basiertAufUmsetzungId String?
-  basiertAufUmsetzung   ValidationStep?  @relation("StepDependency", fields: [basiertAufUmsetzungId], references: [id], onDelete: SetNull)
-  abhaengigeUmsetzungen ValidationStep[] @relation("StepDependency")
-  createdAt    DateTime       @default(now())
+  basiertAufUmsetzung   ValidationStep?    @relation("StepDependency", fields: [basiertAufUmsetzungId], references: [id], onDelete: SetNull)
+  abhaengigeUmsetzungen ValidationStep[]   @relation("StepDependency")
+  createdAt             DateTime           @default(now())
 
-  metrics   Metric[]
-  feedbacks MarketFeedback[]
-  tasks     Task[]
-  erfuellteTasks Task[] @relation("TaskFulfillment")
+  metrics        Metric[]
+  feedbacks      MarketFeedback[]
+  tasks          Task[]
+  erfuellteTasks Task[]           @relation("TaskFulfillment")
 }
 
 enum EvaluationMode {
-  PER_POINT   // je Messzeitpunkt eigenständig interpretierbar (z. B. Rate, Quote)
-  CUMULATIVE  // Zähler über die Prüfperiode — Bewertung über kumulierte Summe
+  PER_POINT // je Messzeitpunkt eigenständig interpretierbar (z. B. Rate, Quote)
+  CUMULATIVE // Zähler über die Prüfperiode — Bewertung über kumulierte Summe
 }
 
 enum MetricRole {
-  DECISIVE    // adressiert die Annahme direkt — zählt für Evidenz in Phase 5
-  SUPPORTING  // Nebensignal (Traffic, Reichweite) — nicht allein entscheidend
+  DECISIVE // adressiert die Annahme direkt — zählt für Evidenz in Phase 5
+  SUPPORTING // Nebensignal (Traffic, Reichweite) — nicht allein entscheidend
 }
 
 enum ProxyStrength {
   DIRECT // Signal belegt die Annahme unmittelbar
-  PROXY  // Signal belegt die Annahme nur mittelbar (Stellvertreter)
+  PROXY // Signal belegt die Annahme nur mittelbar (Stellvertreter)
 }
 
 model Metric {
-  id               String         @id @default(cuid())
+  id               String          @id @default(cuid())
   stepId           String
-  step             ValidationStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
-  name             String         // z.B. "Registrierungen in 2 Wochen"
-  evaluationMode   EvaluationMode @default(PER_POINT)
-  metricRole       MetricRole     @default(DECISIVE)
+  step             ValidationStep  @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  name             String // z.B. "Registrierungen in 2 Wochen"
+  evaluationMode   EvaluationMode  @default(PER_POINT)
+  metricRole       MetricRole      @default(DECISIVE)
   signalCategory   SignalCategory?
   proxyStrength    ProxyStrength?
   signalRationale  String?
-  successCriterion String         // gilt als stützend, wenn ...
-  failureCriterion String         // gilt als widerlegend, wenn ...
+  successCriterion String // gilt als stützend, wenn ...
+  failureCriterion String // gilt als widerlegend, wenn ...
 
   dataPoints KpiDataPoint[]
 }
@@ -324,29 +361,29 @@ model Metric {
 // Umsetzungs-Cockpit: Begleitansicht der Umsetzungsperiode zwischen Phase 4 und 5
 // ----------------------------------------------------------------------------
 model Task {
-  id        String         @id @default(cuid())
-  stepId    String
-  step      ValidationStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
-  title     String         // kleinteilige Aufgabe in Verb-Form
-  hint      String?        // kurzer Praxistipp (1 Satz)
-  sortOrder Int            // chronologische Reihenfolge innerhalb des Schritts
-  done      Boolean        @default(false)
+  id                       String          @id @default(cuid())
+  stepId                   String
+  step                     ValidationStep  @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  title                    String // kleinteilige Aufgabe in Verb-Form
+  hint                     String? // kurzer Praxistipp (1 Satz)
+  sortOrder                Int // chronologische Reihenfolge innerhalb des Schritts
+  done                     Boolean         @default(false)
   // Bezug zur Aussage, deren Prüfung diese Aufgabe primär unterstützt (optional)
-  annahmenBezugId String?
-  annahmenBezug   Statement? @relation("TaskAssumptionRef", fields: [annahmenBezugId], references: [id], onDelete: SetNull)
-  erfolgskriterium String?  @db.Text // vollständiger Satz, passend zu den Kennzahlen
+  annahmenBezugId          String?
+  annahmenBezug            Statement?      @relation("TaskAssumptionRef", fields: [annahmenBezugId], references: [id], onDelete: SetNull)
+  erfolgskriterium         String?         @db.Text // vollständiger Satz, passend zu den Kennzahlen
   // On-Demand-Ausarbeitung (Arbeitspaket) — ersetzt bei Neu-Generierung, keine Historie
-  elaboration            Json?
-  elaborationGeneratedAt DateTime?
-  elaborationModel       String?
-  herkunft               TaskHerkunft @default(NEU)
+  elaboration              Json?
+  elaborationGeneratedAt   DateTime?
+  elaborationModel         String?
+  herkunft                 TaskHerkunft    @default(NEU)
   erfuelltDurchUmsetzungId String?
   erfuelltDurchUmsetzung   ValidationStep? @relation("TaskFulfillment", fields: [erfuelltDurchUmsetzungId], references: [id], onDelete: SetNull)
 }
 
 enum KpiAssessment {
-  SUPPORTING    // Wert stützt das Erfolgskriterium
-  NEUTRAL       // Wert ist uneindeutig
+  SUPPORTING // Wert stützt das Erfolgskriterium
+  NEUTRAL // Wert ist uneindeutig
   CONTRADICTING // Wert reißt das Misserfolgskriterium
 }
 
@@ -354,8 +391,8 @@ model KpiDataPoint {
   id          String        @id @default(cuid())
   metricId    String
   metric      Metric        @relation(fields: [metricId], references: [id], onDelete: Cascade)
-  periodLabel String        // z.B. "Woche 1"
-  value       String        // fiktiver Perioden-Wert (Text, z.B. "12 Registrierungen")
+  periodLabel String // z.B. "Woche 1"
+  value       String // fiktiver Perioden-Wert (Text, z.B. "12 Registrierungen")
   assessment  KpiAssessment
   createdAt   DateTime      @default(now())
 }
@@ -364,10 +401,10 @@ model KpiDataPoint {
 // Lernen & Anpassung (Phase 5, F9)
 // ----------------------------------------------------------------------------
 enum FeedbackResult {
-  SUPPORTED           // Annahme gestützt
+  SUPPORTED // Annahme gestützt
   PARTIALLY_SUPPORTED // teilweise gestützt
-  REFUTED             // widerlegt
-  AMBIGUOUS           // mehrdeutig
+  REFUTED // widerlegt
+  AMBIGUOUS // mehrdeutig
 }
 
 model MarketFeedback {
@@ -376,7 +413,7 @@ model MarketFeedback {
   project           Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
   stepId            String?
   step              ValidationStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
-  statementId       String          // geprüfte Annahme
+  statementId       String // geprüfte Annahme
   statement         Statement       @relation(fields: [statementId], references: [id], onDelete: Cascade)
   content           String          @db.Text // die (fiktive) Marktrückmeldung
   result            FeedbackResult
@@ -387,10 +424,10 @@ model MarketFeedback {
 }
 
 enum AdaptationType {
-  CONTINUE  // fortführen / breiter umsetzen
-  ADAPT     // einzelne Bestandteile anpassen
-  DEFER     // Option zurückstellen
-  DISCARD   // Option verwerfen
+  CONTINUE // fortführen / breiter umsetzen
+  ADAPT // einzelne Bestandteile anpassen
+  DEFER // Option zurückstellen
+  DISCARD // Option verwerfen
   LOOP_BACK // Rückkopplung in frühere Phase
 }
 
@@ -402,7 +439,7 @@ model AdaptationDecision {
   option          StrategyOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   decision        AdaptationType
   rationale       String         @db.Text
-  loopBackToPhase Int?           // bei LOOP_BACK: Zielphase 1..3
+  loopBackToPhase Int? // bei LOOP_BACK: Zielphase 1..3
   userConfirmed   Boolean        @default(false) // Entscheidung liegt beim Nutzer (NF3)
   createdAt       DateTime       @default(now())
 }

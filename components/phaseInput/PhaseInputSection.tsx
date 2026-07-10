@@ -31,11 +31,14 @@ export function PhaseInputSection({
   const [showWizard, setShowWizard] = useState(
     () => needsPhaseInputWizard(initialState ?? defaultPhaseInputState(phase))
   );
+  const [wizardMode, setWizardMode] = useState<"initial" | "edit">("initial");
+  const [wizardStartStep, setWizardStartStep] = useState(0);
   const [remountKey, setRemountKey] = useState("initial");
 
   function handleComplete(updated: PhaseInputState) {
     setState(updated);
     setShowWizard(false);
+    setWizardMode("initial");
     setRemountKey(String(Date.now()));
     onInputsChange?.(updated);
   }
@@ -44,6 +47,12 @@ export function PhaseInputSection({
     setState(updated);
     setRemountKey(String(Date.now()));
     onInputsChange?.(updated);
+  }
+
+  function handleReopenWizard(stepIndex = 0) {
+    setWizardStartStep(stepIndex);
+    setWizardMode("edit");
+    setShowWizard(true);
   }
 
   const previewTitle = PREVIEW_TITLES[phase];
@@ -55,6 +64,8 @@ export function PhaseInputSection({
         phase={phase}
         initialState={state}
         previewTitle={previewTitle}
+        mode={wizardMode}
+        initialStepIndex={wizardMode === "edit" ? wizardStartStep : undefined}
         onComplete={handleComplete}
       />
     );
@@ -67,6 +78,7 @@ export function PhaseInputSection({
       initialState={state}
       previewTitle={previewTitle}
       onSaved={handleSaved}
+      onReopenWizard={handleReopenWizard}
       remountKey={remountKey}
     />
   );

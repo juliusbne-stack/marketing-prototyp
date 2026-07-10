@@ -55,7 +55,7 @@ type StepContentForWarning = {
   title?: string;
   description?: string;
   testDesign?: string | null;
-  marketingActivities?: string[];
+  marketingActivities?: string[] | null;
 };
 
 function stepContentText(step: StepContentForWarning): string {

@@ -12,6 +12,7 @@
 import {
   ALLOWED_DECISIVE_SIGNAL,
   computeWhitelistDimensionState,
+  validateMetricEffectLogic,
   validateSteps,
   type GuardContext,
   type WhitelistCandidate,
@@ -462,6 +463,35 @@ assert(
     (violation) => violation.rule === "V7"
   ),
   "(e2) GEGENPROBE — REACHABILITY + DECISIVE Klickrate/CTR → V7 (structural)"
+);
+
+const zielMissingEffectLogic: Phase4LlmResponse = {
+  criticalAssumptions: ["ziel"],
+  steps: [
+    {
+      ...baseStep,
+      assumptionId: "ziel",
+      strategyDimension: "TARGET_GROUP",
+      testSubject: "VALUE_UNDERSTANDING",
+      metrics: [
+        {
+          name: "Demo-Anmeldungen",
+          evaluationMode: "CUMULATIVE",
+          metricRole: "DECISIVE",
+          signalCategory: "BEHAVIOR",
+          successCriterion: "stützend wenn mindestens 10",
+          failureCriterion: "widerlegend wenn unter 3",
+        },
+      ],
+    },
+  ],
+};
+
+assert(
+  validateMetricEffectLogic(zielMissingEffectLogic).some(
+    (violation) => violation.rule === "V8"
+  ),
+  "V8 — fehlende proxyStrength/signalRationale werden erkannt (Repair-Pfad, kein Zod-502)"
 );
 
 console.log(

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
+import { dampenProxyResults, wasProxyDamped } from "@/lib/phase5/guards";
 import { PHASE5_PROMPT } from "@/lib/prompts/phase5";
 import { phase5ResponseSchema } from "@/lib/schemas/phase5";
 
@@ -104,6 +105,8 @@ export async function POST(request: Request) {
           failureCriterion: true,
           metricRole: true,
           evaluationMode: true,
+          proxyStrength: true,
+          signalRationale: true,
         },
       },
       assumption: {
@@ -307,11 +310,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const dampenedAssessments = dampenProxyResults(
+    result.feedbackAssessments,
+    steps.map((step) => ({
+      id: step.id,
+      assumption: { id: step.assumption.id },
+      metrics: step.metrics,
+    })),
+    feedbacks
+  );
+
   const { updatedFeedbacks, newStatements } = await prisma.$transaction(
     async (tx) => {
       // Assessments overwrite previous ones; the user re-confirms status
       // changes afterwards (statusApplied is reset).
-      for (const assessment of result.feedbackAssessments) {
+      for (const assessment of dampenedAssessments) {
         await tx.marketFeedback.update({
           where: { id: assessment.feedbackId },
           data: {
@@ -365,9 +378,19 @@ export async function POST(request: Request) {
 
   // The adaptation is a PROPOSAL only — it is persisted as an
   // AdaptationDecision only after the user confirms it (NF3).
+  const dampedIds = new Set(
+    dampenedAssessments
+      .filter((assessment) => assessment.proxyDamped)
+      .map((assessment) => assessment.feedbackId)
+  );
+
   return NextResponse.json(
     {
-      feedbacks: updatedFeedbacks,
+      feedbacks: updatedFeedbacks.map((feedback) => ({
+        ...feedback,
+        proxyDamped:
+          dampedIds.has(feedback.id) || wasProxyDamped(feedback.interpretation),
+      })),
       newStatements,
       adaptation: {
         decision: result.adaptation.decision,

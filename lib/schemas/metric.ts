@@ -41,35 +41,38 @@ export const metricInputSchema = z.object({
   failureCriterion: z.string().trim().min(1),
 });
 
-/** LLM output metric — signalCategory is required; DECISIVE needs proxyStrength + signalRationale. */
-export const metricLlmSchema = metricInputSchema
-  .extend({
-    signalCategory: signalCategorySchema,
-  })
-  .superRefine((metric, ctx) => {
-    if (metric.metricRole !== "DECISIVE") return;
+/** LLM parse schema — effect-logic fields optional at parse time (enforced via V8 + repairOnce). */
+export const metricLlmParseSchema = metricInputSchema.extend({
+  signalCategory: signalCategorySchema,
+});
 
-    if (!metric.proxyStrength) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          "Entscheidende Metriken (DECISIVE) benötigen proxyStrength (DIRECT | PROXY).",
-        path: ["proxyStrength"],
-      });
-    }
+/**
+ * Strict validation for tests/tooling. Production uses metricLlmParseSchema + V8 in guards.
+ */
+export const metricLlmSchema = metricLlmParseSchema.superRefine((metric, ctx) => {
+  if (metric.metricRole !== "DECISIVE") return;
 
-    if (!metric.signalRationale?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          "Entscheidende Metriken (DECISIVE) benötigen signalRationale mit Bezug zur Annahme.",
-        path: ["signalRationale"],
-      });
-    }
-  });
+  if (!metric.proxyStrength) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        "Entscheidende Metriken (DECISIVE) benötigen proxyStrength (DIRECT | PROXY).",
+      path: ["proxyStrength"],
+    });
+  }
+
+  if (!metric.signalRationale?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        "Entscheidende Metriken (DECISIVE) benötigen signalRationale mit Bezug zur Annahme.",
+      path: ["signalRationale"],
+    });
+  }
+});
 
 export type MetricInput = z.infer<typeof metricInputSchema>;
-export type MetricLlmOutput = z.infer<typeof metricLlmSchema>;
+export type MetricLlmOutput = z.infer<typeof metricLlmParseSchema>;
 export type SignalCategoryValue = z.infer<typeof signalCategorySchema>;
 export type ProxyStrengthValue = z.infer<typeof proxyStrengthSchema>;
 export type StrategyDimensionValue = z.infer<typeof strategyDimensionSchema>;

@@ -1,0 +1,438 @@
+================================================================================
+VOLLSTÄNDIGER PROJEKTKONTEXT: KI-GESTÜTZTES MARKETINGSTRATEGIE-SYSTEM
+(Bachelorarbeit-Prototyp) — für externe KI-Nutzung (z. B. ChatGPT)
+================================================================================
+Stand: Juli 2026
+
+
+1. WAS IST DAS PROJEKT?
+--------------------------------------------------------------------------------
+
+Projektname:   marketing-strategie-prototyp
+Pfad:          e:\EUfom\Bachelorarbeit\Prototyp_V1\marketing-strategie-prototyp
+Zweck:         Prototyp für eine Bachelorarbeit an der EUfom. Er implementiert ein
+               prozessgeführtes Unterstützungssystem zur Entwicklung einer
+               hypothesen- und evidenzbasierten Marketingstrategie für Start-ups.
+
+Kernidee in einem Satz:
+Ein Start-up legt ein Projekt an, beschreibt sein Profil, erhält ein KI-generiertes
+Analysebild, entwickelt daraus Strategieoptionen, priorisiert eine Option, plant
+validierende Umsetzungsschritte mit Messpunkten, simuliert Umsetzung und
+Marktrückmeldungen, und lernt daraus mit Evidenz-Updates und einer strategischen
+Anpassungsentscheidung — alles evidenzmarkiert und nutzerkontrolliert.
+
+Was es NICHT ist:
+- Kein Chatbot (keine freie Konversation)
+- Kein „fertige Strategie aus der KI"-Tool
+- Keine echte Marktrecherche (alles simuliert)
+- Keine Authentifizierung / kein Multi-User
+- Keine Versionshistorie (genau ein Projektstand)
+
+Wissenschaftlicher Bezug:
+Das Tool operationalisiert das 5-Phasen-Prozessmodell aus Kapitel 4 der
+Bachelorarbeit (standBA_040726_V6.pdf). Abgleich mit funktionalen Anforderungen
+F1–F11 und nicht-funktionalen NF1–NF9 ist in docs/THESIS_ALIGNMENT.md dokumentiert.
+
+
+2. ZENTRALE FACHLICHE PRINZIPIEN
+--------------------------------------------------------------------------------
+
+2.1 Statement (Aussage) — das Kerndatenobjekt
+
+Jede inhaltliche Behauptung im System ist ein Statement mit Pflichtfeldern:
+
+  content          Vollständiger, prüfbarer Aussagesatz
+  evidenceStatus   FACT / ASSUMPTION / OPEN_QUESTION
+  origin           USER_INPUT / SIMULATED_RESEARCH / AI_DERIVATION
+  justification    Begründung (meist KI)
+  sourceRef        Fiktive Quelle bei simulierter Recherche, endet mit „(fiktiv)"
+  uncertainty      Unsicherheitshinweis
+  adopted          false = KI-Entwurf, true = in Projektstand übernommen
+  phase            Entstehungsphase 1–5
+  category         Fachliche Verortung (z. B. PESTEL_SOCIAL, OPT_VALUE_PROPOSITION)
+  isCritical       Kritische Annahme (Phase 4)
+
+Übernahme-Prinzip (Adoption):
+KI erzeugt Entwürfe mit adopted=false. Erst nach Nutzer-Klick „In Projektstand
+übernehmen" wird adopted=true. Nachfolgende Phasen und alle KI-Aufrufe nutzen
+NUR adopted=true Statements als Kontext (harte Architekturregel, in M6 verifiziert).
+
+2.2 Strategieoption = Hypothesenbündel
+
+Eine StrategyOption besteht aus 6 Dimensions-Statements:
+  OPT_TARGET_GROUP, OPT_CUSTOMER_PROBLEM, OPT_VALUE_PROPOSITION,
+  OPT_POSITIONING, OPT_MARKET_ACCESS, OPT_REVENUE_GROWTH
+
+Status: DRAFT → ADOPTED → PRIORITIZED / DEFERRED / DISCARDED
+
+2.3 Simulierte Recherche (bewusste Prototyp-Abweichung)
+
+Alle „Recherche"- und Marktdaten werden von gpt-4o simuliert — plausible, aber
+fiktive Informationen mit fiktiven Quellen. Das wird transparent im UI
+kommuniziert (permanentes Amber-Banner oben).
+
+
+3. DER 5-PHASEN-PROZESS (+ UMSETZUNGS-COCKPIT)
+--------------------------------------------------------------------------------
+
+Phase 1: Situationsanalyse
+    ↓ (≥1 adopted Statement)
+Phase 2: Strategieoptionen (2–3 Hypothesenbündel)
+    ↓ (≥2 übernommene Optionen)
+Phase 3: Bewertung & Priorisierung (6-Kriterien-Matrix)
+    ↓ (1 priorisierte Option)
+Phase 4: Validierende Umsetzung (kritische Annahmen → Experimente)
+    ↓ (≥1 adopted ValidationStep)
+Umsetzungs-Cockpit (Tasks, KPI-Simulation, Brücke zu Phase 5)
+    ↓
+Phase 5: Lernen & Anpassung (Evidenz-Updates, AdaptationDecision)
+
+Rücksprünge: Alle Phasen bis currentPhase bleiben editierbar.
+currentPhase steigt nur, sinkt nie.
+
+Lernschleife (Phase 5 → zurück):
+  CONTINUE   → Phase 4 Skalierungsmodus (/api/ai/4/scale)
+  ADAPT      → Phase 2 Revisionsmodus (/api/ai/2/revise)
+  LOOP_BACK  → Rücksprung zu Phase 1–3
+  DEFER      → Option zurückstellen
+  DISCARD    → Option verwerfen
+
+
+4. PHASEN IM DETAIL
+--------------------------------------------------------------------------------
+
+Phase 1 — Situationsanalyse
+  - Profil-Onboarding: 12 Fragen in 3 Kapiteln (nur bei neuen Projekten)
+  - ProfileForm: Strukturierte Eingaben (Geschäftsidee, Zielgruppe, Budget, Team, Skills …)
+  - KI-Analyse (POST /api/ai/1): PESTEL, Zielgruppensegmente (je 5 Aspekte),
+    Wettbewerberprofile (je 6 Aspekte), SWOT, Marktpfade
+  - Darstellung: PestelGrid, SegmentCards, CompetitorCards, SwotMatrix
+  - Inkrementelle Analyse: Bei erneuter Generierung nur neue Aussagen ergänzen
+
+Phase 2 — Strategieoptionen
+  - KI erzeugt 2–3 StrategyOptions als Hypothesenbündel
+  - Mindestens eine marktbezogene, eine ressourcenorientierte Option
+  - Ganze Option wird übernommen (nicht einzelne Dimensionen)
+  - Revision-Modus nach ADAPT in Phase 5
+
+Phase 3 — Bewertung & Priorisierung
+  - 6 Kriterien (ATTRACTIVENESS, RESOURCE_FIT, RISK, VALIDATION_EFFORT,
+    LEARNING_VALUE, EVIDENCE), Score 1–5
+  - KI-Vorschlag mit Begründung + Gegenargumenten
+  - Nutzer bestätigt oder übersteuert Priorisierung
+
+Phase 4 — Validierende Umsetzung
+  - Arbeitet nur mit priorisierter Option (status=PRIORITIZED)
+  - Phase-4-Fragebogen (PhaseInput, optional): Budget/Zeit, Zielgruppen-Zugang, Kanäle etc.
+  - KI identifiziert 2–4 kritischste Annahmen → ValidationStep je Annahme
+  - Jeder Schritt enthält:
+      validationQuestion, testDesign, marketingActivities
+      strategyDimension, testSubject (z. B. WILLINGNESS_TO_PAY, REACHABILITY)
+      1–3 Metrics mit evaluationMode, metricRole (DECISIVE/SUPPORTING),
+      signalCategory, proxyStrength, Schwellen
+  - Strategie-Assistent: Dialogische Überarbeitung einzelner Schritte
+  - Refinement / Scale: Verfeinerung und Skalierung nach Phase-5-Entscheidungen
+
+Umsetzungs-Cockpit (/project/[id]/cockpit)
+  - Aufgaben-Generierung (POST /api/ai/tasks)
+  - Task-Elaboration (detailliertes Arbeitspaket on-demand)
+  - Copy-Refinement für Texte
+  - KPI-Simulation mit Szenarien (Stützend/Gemischt/Widersprechend)
+  - Brücke zu Phase 5: KPIs als MarketFeedback übernehmen
+
+Phase 5 — Lernen & Anpassung
+  - Nutzer erfasst fiktive Marktrückmeldungen
+  - KI wertet aus (POST /api/ai/5): Evidenz-Status-Updates, AdaptationDecision
+  - Nutzer bestätigt Statusänderungen und Anpassungsentscheidung explizit
+
+
+5. TECHNISCHER STACK
+--------------------------------------------------------------------------------
+
+Framework:     Next.js 16 (App Router), React 19, TypeScript
+Styling:       Tailwind CSS 4, eigene Design-Tokens in globals.css
+Datenbank:     PostgreSQL via Supabase
+ORM:           Prisma 6
+KI:            OpenAI SDK, Modell gpt-4o, JSON-Mode (response_format: json_object)
+Validierung:   Zod 4 (LLM-Ausgaben + API-Requests)
+Icons:         lucide-react
+Animation:     framer-motion (Onboarding)
+
+Umgebungsvariablen (.env):
+  DATABASE_URL=...    # Supabase Transaction Pooler (Port 6543)
+  DIRECT_URL=...      # Direct Connection für Migrationen (Port 5432)
+  OPENAI_API_KEY=...  # Nur serverseitig
+
+Starten:
+  cd marketing-strategie-prototyp
+  npm install
+  npx prisma migrate dev
+  npm run dev
+  → http://localhost:3000
+
+
+6. ARCHITEKTUR & CODE-STRUKTUR
+--------------------------------------------------------------------------------
+
+marketing-strategie-prototyp/
+├── .cursorrules              # Projektregeln für KI-Entwicklung
+├── docs/
+│   ├── IMPLEMENTIERUNGSPLAN.md    # Meilensteine M0–M6
+│   ├── UI_KONZEPT.md              # Layout, Design-Tokens
+│   ├── PROMPTS.md                 # Systemprompts + JSON-Schemas
+│   ├── PrototypBeschreibung_KONTEXT.txt  # Vollständiger Kontext
+│   ├── THESIS_ALIGNMENT.md         # F1–F11 / NF1–NF9 Abgleich
+│   └── M6_KONSISTENZCHECK.md      # adopted=true Verifikation
+├── prisma/schema.prisma
+├── prisma/migrations/        # 16 Migrationen (Stand Juli 2026)
+├── app/
+│   ├── page.tsx              # Startseite: Projektliste
+│   ├── project/[id]/
+│   │   ├── layout.tsx        # Header + PhaseStepper
+│   │   ├── phase/[n]/page.tsx
+│   │   └── cockpit/page.tsx
+│   └── api/
+│       ├── projects/, statements/, options/, steps/, tasks/
+│       ├── feedback/, adaptation/, phase-inputs/
+│       ├── kpi/simulate, kpi/feedback
+│       ├── implementation/assistant, implementation/tasks/...
+│       └── ai/1..5, ai/4/scale, ai/4/refine, ai/tasks, ...
+├── components/
+│   ├── ui/, wizard/, statements/
+│   ├── phase1/..phase5/, phaseInput/
+│   └── cockpit/
+└── lib/
+    ├── prisma.ts, openai.ts
+    ├── prompts/              # phase1.ts .. phase5.ts, global.ts, validationCoreRules.ts
+    ├── schemas/              # Zod-Schemata je Phase
+    ├── phase4/               # guards, context, persist, strategyDimension, testSubjectDerivation
+    ├── phase5/               # guards
+    ├── phaseInput/           # Fragebogen-Logik Phase 2/4
+    ├── kpiAssessment.ts, kpiSummary.ts, kpiSimulationAdjust.ts
+    └── cockpitPeriod.ts, tasks.ts, ...
+
+KI-Architektur (jeder LLM-Aufruf):
+  1. Server lädt Projekt + nur adopted=true Kontext aus DB
+  2. Baut JSON-Kontext (Profil, Statements, Phase-Inputs …)
+  3. Systemprompt = GLOBAL_PROMPT + PHASE_N_PROMPT
+  4. callLLM() in lib/openai.ts: gpt-4o, JSON-Mode
+  5. Zod-Validierung; bei Fehler genau 1 Retry
+  6. Ergebnis als Entwurf in DB (adopted=false)
+
+Wichtig: temperature ist in callLLM nicht gesetzt (OpenAI-Default).
+
+Sprachkonventionen:
+  UI: Deutsch
+  Code/DB: Englisch
+  Begriffszuordnung DE↔EN in .cursorrules und PrototypBeschreibung_KONTEXT.txt Abschnitt 18
+
+
+7. DATENMODELL (PRISMA — ÜBERSICHT)
+--------------------------------------------------------------------------------
+
+Hauptmodelle:
+  Project              Strategiedurchlauf + Start-up-Profil + currentPhase + Onboarding-Status
+  Statement            Zentrales Objekt (siehe Abschnitt 2.1)
+  StrategyOption       + OptionStatement — Hypothesenbündel
+  Evaluation           Bewertung je Option × Kriterium
+  PhaseInput           Phasenbezogene Rahmenbedingungen (Phase 2/4)
+  ValidationStep       Umsetzungsschritt mit assumptionId, validationQuestion, testDesign,
+                       stepType (VALIDATION/SCALING), laufmodus, Abhängigkeiten
+  Metric               Messpunkt mit evaluationMode (PER_POINT/CUMULATIVE), metricRole,
+                       signalCategory, proxyStrength, signalRationale, Schwellen
+  Task                 Cockpit-Aufgaben mit optionaler elaboration (JSON)
+  KpiDataPoint         Simulierte Periodenwerte
+  MarketFeedback       Marktrückmeldung mit result, proposedNewStatus
+  AdaptationDecision   Strategische Anpassung mit loopBackToPhase
+
+
+8. IMPLEMENTIERUNGSSTAND (MEILENSTEINE M0–M6)
+--------------------------------------------------------------------------------
+
+M0  Setup: Next.js, Supabase, Prisma, .env                          ✅
+M1  Projektanlage, Grundlayout, PhaseStepper                        ✅
+M2  StatementCard, Badges, Statements-API, Übernahme                ✅
+M3  Phase 1 komplett inkl. Onboarding + KI-Analyse                  ✅
+M4  Phasen 2 und 3                                                  ✅
+M5  Phasen 4 und 5                                                  ✅
+M6  Politur, dynamischer Stepper, Konsistenzcheck                   ✅
+
+Zusätzliche Erweiterungen über den Basisplan hinaus:
+  - Profil-Onboarding-Wizard (12 Schritte, 3 Kapitel)
+  - Segment- und Wettbewerberprofile (strukturierte Profile mit Aspekten)
+  - Umsetzungs-Cockpit mit Tasks, KPI-Simulation, KPI→Feedback-Brücke
+  - Task-Elaboration und Copy-Refinement
+  - Phase-4-Fragebogen (PhaseInput) mit serverseitiger Anreicherung
+  - Strategie-Assistent (dialogische Schritt-Überarbeitung)
+  - Cross-Implementation Tasks (geteilte/abhängige Umsetzungsschritte)
+  - Erweiterte Validierungslogik: testSubject, metricRole, signalCategory, proxyStrength
+  - evaluationMode für korrekte kumulative vs. punktuelle KPI-Auswertung
+  - Phase-5-Guards für Proxy-Metriken
+
+
+9. WAS IN DER ENTWICKLUNG KONKRET GEMACHT WURDE
+--------------------------------------------------------------------------------
+
+Basisaufbau (M0–M6)
+  Schrittweiser Aufbau gemäß IMPLEMENTIERUNGSPLAN.md: Fundament → Statement-System
+  → Phase 1 → Phasen 2/3 → Phasen 4/5 → Politur.
+  Demo-Szenario: Yoga-Start-up bzw. digitales Marketingstrategie-Tool.
+
+KPI/Metrik-System (Juli 2026)
+  Problem: Kumulative Zählgrößen („mindestens 20 Anfragen in 3 Wochen") wurden
+  fälschlich pro Datenpunkt bewertet; Szenario-Simulation passte nicht zur Auswertungsebene.
+
+  Lösung:
+  - Prisma: Metric.evaluationMode (PER_POINT | CUMULATIVE) statt altem metricType
+  - Prompts in phase4/scale/refine/kpiSimulation angepasst
+  - lib/kpiAssessment.ts: getrennte Bewertungslogik
+  - lib/kpiSimulationAdjust.ts: szenario-treue Nachjustierung
+  - lib/kpiSummary.ts: Phase-5-Rückmeldungstext mit kumulativer Darstellung
+  - Reifegrad-Chip „Eindeutige Signale" nur für PER_POINT-Widerlegung
+  - Bugfix: Prisma-Client nach Migration neu generieren
+
+Phase-4-Fragebogen & gelbe Warnungen (Juli 2026)
+  Problem: Nutzer konnte Fragebogen-Felder (Zeitrahmen, Zielgruppen-Zugang) freiwillig
+  offen lassen, bekam aber widersprüchliche gelbe methodWarning-Meldungen
+  („Zeitrahmen nicht angegeben"), obwohl die KI oben bereits „2–3 Wochen" empfahl.
+
+  Ursache: Zwei getrennte Systeme — KI setzt timeframe als Empfehlung, enrichPhase4.ts
+  hängt unabhängig Warnungen an basierend auf Fragebogen-skipped-Flags.
+
+  Lösung:
+  - Keine Zeitrahmen-Warnung mehr bei weeksSkipped (KI empfiehlt still)
+  - lib/phase4/methodWarning.ts: Warnungen verschwinden bei Nachtragen auf der Karte
+  - „teilweise" bei Zielgruppen-Zugang: keine Echo-Warnung mehr; KI plant Reichweitenlogik still
+  - Warnung nur bei echtem Widerspruch (z. B. direkter Kundenkontakt trotz
+    „Zugang muss aufgebaut werden")
+
+Phase-4 Validierungs-Audit & Stufe 1 (Juli 2026)
+  Problem (Thesis 4.3.4/4.3.5): Prüffrage und Signale müssen aus der konkreten Annahme
+  abgeleitet sein — Verdacht auf Fehlausrichtung (z. B. Interesse-/Nutzenversprechen-
+  Annahme wird mit Erreichbarkeits-/Klickraten-Test geprüft).
+
+  Audit-Ergebnis:
+    Prüffrage              schwach — nur text, nicht justification im Kontext
+    Signale                schwach — testSubject LLM-frei wählbar
+    Dimension              stark — strategyDimension serverseitig abgeleitet
+    Wirkungslogik          fehlend — kein explizites Kausalketten-Objekt
+    Phase-5-Auswertung     schwach — LLM-abhängig, keine harte Signal↔Annahme-Prüfung
+
+  Stufe 1 umgesetzt:
+  - justification + uncertainty in Whitelist-Kontext (lib/phase4/guards.ts, context.ts)
+  - Prompt-Pflicht in validationCoreRules.ts: Prüffrage/Testdesign müssen aus
+    Annahme-Begründung abgeleitet werden
+
+  Stufe-1-Verhaltenstest (A/B):
+  - Ohne justification: Prüffrage = „Sind frühphasige Start-ups über digitale Netzwerke
+    effektiv erreichbar?" + Klickrate
+  - Mit justification: identisches Ergebnis — Stufe 1 allein reicht nicht
+  - Diagnose: Annahme ist OPT_TARGET_GROUP → LLM interpretiert Dimension als Erreichbarkeitstest
+  - Stufe 2 (geplant, noch nicht umgesetzt): testSubject serverseitig ableiten/validieren
+
+
+10. WICHTIGE API-ENDPUNKTE
+--------------------------------------------------------------------------------
+
+GET/POST/PATCH       /api/projects                    Projekte, Profil
+PATCH                /api/projects/[id]/phase         Phase freischalten
+CRUD                 /api/statements                  Statements, adopt, Status ändern
+POST                 /api/ai/1                        Phase-1-Analyse
+POST                 /api/ai/1/competitor-research   Wettbewerber-Recherche
+POST                 /api/ai/2                        Strategieoptionen
+POST                 /api/ai/2/revise                 Optionen überarbeiten (ADAPT)
+POST                 /api/ai/3                        Bewertung + Priorisierung
+POST                 /api/ai/4                        Validierungsschritte
+POST                 /api/ai/4/scale                  Skalierung (CONTINUE)
+POST                 /api/ai/4/refine                 Schritt verfeinern
+POST                 /api/ai/4/refine-validation      Validierungskern verfeinern
+POST                 /api/ai/5                        Rückmeldungen auswerten
+POST                 /api/ai/tasks                    Cockpit-Aufgaben
+POST                 /api/kpi/simulate                KPI simulieren
+POST                 /api/kpi/feedback                KPI → MarketFeedback
+POST                 /api/implementation/assistant    Strategie-Assistent
+POST                 /api/implementation/tasks/[id]/elaborate   Task-Ausarbeitung
+PATCH                /api/steps                       ValidationSteps bearbeiten
+PATCH                /api/phase-inputs                Phase-4-Fragebogen
+
+
+11. UI/UX-GRUNDLAGEN
+--------------------------------------------------------------------------------
+
+Design:          Ruhiges Arbeitswerkzeug, kein Marketing-Dashboard
+Hintergrund:     #FAFAF7 (warmes Off-White)
+Akzent:          Petrol #0E5A63
+Evidenzfarben:   Grün (Fakt), Amber (Annahme), Violett (Offene Frage)
+Schriften:       Space Grotesk (Überschriften), Inter (Body)
+Layout:          Sidebar-Stepper (240px) + Hauptbereich (max. 960px)
+StatementCard:   EvidenceBadge (klickbar), OriginTag, Begründung/Quelle/Unsicherheit
+Entwürfe:        gestrichelter Rahmen, heller Petrol-Hintergrund
+Übernommen:      solider Rahmen, weiß
+
+
+12. BEKANNTE PROTOTYP-EINSCHRÄNKUNGEN (THESIS KAPITEL 5.3)
+--------------------------------------------------------------------------------
+
+1. Simulierte Recherche — keine echten Marktdaten (F3-Abweichung, transparent via NF9)
+2. Keine Auth / kein Multi-User
+3. Ein Projektstand ohne Versionierung
+4. Kein echter Internetzugang der KI
+5. KPI-Simulation und Marktrückmeldungen sind fiktiv
+6. Prototypischer Reifegrad — Fokus auf Prozessmodell und Evidenzführung
+
+
+13. OFFENE PUNKTE / BEKANNTE SCHWÄCHEN
+--------------------------------------------------------------------------------
+
+1. Phase-4 Annahmen↔Test-Kopplung: Stufe 1 (justification im Kontext) reicht nicht;
+   Stufe 2 (testSubject-Ableitung) und ggf. Stufe 3 (effectLogic-Feld) noch ausstehend
+2. Strategie-Assistent kann methodWarning nicht bearbeiten (nur Schrittinhalt)
+3. Phase-5-Auswertung prüft Signal↔Annahme-Passung nur per Prompt, nicht programmatisch
+4. NF6 (Datenschutz): Keine explizite Privacy-UI
+
+
+14. REFERENZDOKUMENTE IM REPO
+--------------------------------------------------------------------------------
+
+docs/PrototypBeschreibung_KONTEXT.txt   Vollständigster Kontext (~640 Zeilen)
+docs/THESIS_ALIGNMENT.md              F1–F11 / NF1–NF9 Mapping
+docs/IMPLEMENTIERUNGSPLAN.md          Meilensteine, Projektstruktur
+docs/UI_KONZEPT.md                      Layout, Komponenten
+docs/PROMPTS.md                         Alle Systemprompts
+docs/M6_KONSISTENZCHECK.md              adopted=true Verifikation
+.cursorrules                            Entwicklungsregeln
+prisma/schema.prisma                    Datenmodell (nicht eigenmächtig ändern)
+
+
+15. DEMO-SZENARIO ZUM TESTEN
+--------------------------------------------------------------------------------
+
+Typischer Durchlauf mit Projekt „digitales Marketingstrategie-Tool" oder Yoga-Start-up:
+
+  1. Profil: Geschäftsidee, Zielgruppe Frühphasen-Start-ups, begrenztes Budget
+  2. Phase 1: Fiktive PESTEL-Trends, Segmente, Wettbewerber → übernehmen
+  3. Phase 2: 2–3 Optionen → mindestens 2 übernehmen
+  4. Phase 3: Matrix → eine Option priorisieren
+  5. Phase 4: Validierungsschritte → übernehmen (Fragebogen optional)
+  6. Cockpit: Aufgaben + KPI-Simulation
+  7. Phase 5: Rückmeldung → Evidenz-Update → CONTINUE/ADAPT/…
+
+
+16. WICHTIGE DESIGN-REGELN (FÜR WEITERENTWICKLUNG)
+--------------------------------------------------------------------------------
+
+1. KI schlägt vor, Nutzer entscheidet — keine Auto-Adoption
+2. Evidenz ist immer sichtbar
+3. Nur adopted=true fließt in Folgephasen
+4. Ressourcensensibilität in allen Prompts
+5. Simulierte Recherche transparent kennzeichnen
+6. Rücksprünge erlaubt
+7. Statement als durchgängiges Objekt Phase 1–5
+8. OpenAI nur serverseitig in app/api/ai/
+9. Keine weiteren UI-Bibliotheken ohne Rückfrage
+10. Schema-Änderungen nur mit Begründung vorschlagen
+
+
+================================================================================
+Ende des Kontextdokuments
+================================================================================

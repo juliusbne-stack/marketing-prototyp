@@ -8,6 +8,7 @@ import { CATEGORY_LABELS } from "@/components/statements/categoryLabels";
 import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
 import { RESULT_CONFIG, type FeedbackData } from "./types";
 import type { StepWithAssumption } from "@/components/phase4/types";
+import { wasProxyDamped } from "@/lib/phase5/guards";
 
 // Evidence updates grouped per tested assumption (UI_KONZEPT §4, phase 5):
 // ONE row per statement bundling all assessed, not-yet-processed feedbacks.
@@ -160,6 +161,9 @@ function EvidenceUpdateGroupRow({
   const proposesChange =
     proposal !== null && proposal !== statement.evidenceStatus;
   const anyApplied = group.feedbacks.some((feedback) => feedback.statusApplied);
+  const showProxyBadge = group.feedbacks.some(
+    (feedback) => feedback.proxyDamped || wasProxyDamped(feedback.interpretation)
+  );
 
   async function handleApply() {
     setIsBusy(true);
@@ -221,6 +225,11 @@ function EvidenceUpdateGroupRow({
             </span>
           ))}
         {compact && <EvidenceBadge status={statement.evidenceStatus} />}
+        {showProxyBadge && (
+          <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-text-muted">
+            indirekter Beleg / Proxy
+          </span>
+        )}
       </div>
 
       <p className="mt-2 text-sm leading-relaxed text-text">
@@ -236,6 +245,9 @@ function EvidenceUpdateGroupRow({
               feedback.stepId
                 ? (stepsById.get(feedback.stepId)?.title ?? null)
                 : null
+            }
+            showProxyBadge={
+              feedback.proxyDamped || wasProxyDamped(feedback.interpretation)
             }
           />
         ))}
@@ -270,9 +282,11 @@ function EvidenceUpdateGroupRow({
 function FeedbackAssessmentItem({
   feedback,
   stepTitle,
+  showProxyBadge = false,
 }: {
   feedback: FeedbackData;
   stepTitle: string | null;
+  showProxyBadge?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const resultConfig = RESULT_CONFIG[feedback.result];
@@ -290,6 +304,11 @@ function FeedbackAssessmentItem({
         >
           {resultConfig.label}
         </span>
+        {showProxyBadge && (
+          <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-text-muted">
+            Proxy
+          </span>
+        )}
         {stepTitle && (
           <span className="min-w-0 truncate text-xs font-medium text-text">
             {stepTitle}

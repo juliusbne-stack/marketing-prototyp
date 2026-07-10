@@ -83,12 +83,18 @@ export const METRIC_ROLE_RULES = `MESSLOGIK (PFLICHT):
 
 export const METRIC_EFFECT_LOGIC_RULES = `WIRKUNGSLOGIK JE METRIK (PFLICHT für DECISIVE):
 - Jede entscheidende Metrik (metricRole: DECISIVE) braucht proxyStrength und signalRationale.
-- proxyStrength: DIRECT = das Signal belegt die Annahme unmittelbar (z. B. tatsächliche zahlende
-  Nutzung für Zahlungsbereitschaft, aktive Tool-Nutzung für Nutzungsbereitschaft).
-  PROXY = das Signal belegt die Annahme nur mittelbar (z. B. Anmeldung/Klick/Interesse-Indikator
-  für tatsächliche Nutzung oder Zahlung — Anmeldung ist noch keine Nutzung).
+- proxyStrength PROXY = das Signal belegt die Annahme nur MITTELBAR.
+  Merksatz: Anmeldung/Registrierung/Klick/Interesse-Bekundung ist ein PROXY für tatsächliche
+  Nutzung oder Zahlung, kein direkter Beleg.
+- proxyStrength DIRECT nur bei unmittelbarem Beleg der IN DER UNCERTAINTY BENANNTEN Sache
+  (z. B. tatsächliche aktive Nutzung für Nutzungsbereitschaft, tatsächliche Zahlung für
+  Zahlungsbereitschaft).
 - signalRationale: 1–2 Sätze, WARUM dieses Signal die konkrete Unsicherheit der Annahme
   (content/justification/uncertainty aus der Whitelist) stützt oder widerlegt.
+- Prüfgegenstand-Treue: signalRationale und Signalwahl müssen die in uncertainty benannte
+  Unsicherheit treffen. Wenn uncertainty „Nutzung" oder „Bereitwilligkeit zur Nutzung" sagt,
+  ist „Verständnis" oder „Interesse" NICHT dasselbe — dann ist ein Verständnis-/Interesse-
+  Signal höchstens PROXY für Nutzung, nicht DIRECT.
 - Für SUPPORTING-Metriken sind proxyStrength und signalRationale optional.`;
 
 export const VALIDATION_STEP_OUTPUT_FIELDS = `- validationQuestion: Eine präzise Frage — was muss beobachtet werden?

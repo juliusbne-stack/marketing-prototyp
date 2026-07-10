@@ -22,17 +22,25 @@ export function PhaseInputWizard({
   phase,
   initialState,
   previewTitle,
+  mode = "initial",
+  initialStepIndex,
   onComplete,
 }: {
   projectId: string;
   phase: PhaseInputPhase;
   initialState: PhaseInputState;
   previewTitle: string;
+  /** `edit` = Fragebogen nach Abschluss erneut öffnen. */
+  mode?: "initial" | "edit";
+  initialStepIndex?: number;
   onComplete: (state: PhaseInputState) => void;
 }) {
   const questions = getQuestionsForPhase(phase);
   const resumeStep = getResumeStep(initialState);
-  const [stepIndex, setStepIndex] = useState(resumeStep);
+  const startStep =
+    initialStepIndex ??
+    (mode === "edit" ? 0 : Math.min(resumeStep, questions.length - 1));
+  const [stepIndex, setStepIndex] = useState(startStep);
   const [phase_ui, setPhaseUi] = useState<"question" | "finishing">("question");
   const [state, setState] = useState<PhaseInputState>(initialState);
   const [skippedKeys, setSkippedKeys] = useState<Set<string>>(() => {
@@ -54,6 +62,14 @@ export function PhaseInputWizard({
   async function saveProgress(nextState: PhaseInputState) {
     setIsSaving(true);
     setError(null);
+    const entries =
+      mode === "edit"
+        ? Object.entries(nextState.answers).map(([questionKey, answer]) => ({
+            questionKey,
+            value: answer.skipped ? null : answer.value,
+            skipped: answer.skipped,
+          }))
+        : buildWizardSaveEntries(phase, nextState);
     try {
       const response = await fetch("/api/phase-inputs", {
         method: "PATCH",
@@ -61,7 +77,7 @@ export function PhaseInputWizard({
         body: JSON.stringify({
           projectId,
           phase,
-          entries: buildWizardSaveEntries(phase, nextState),
+          entries,
           onboarding: nextState.onboarding,
         }),
       });
@@ -86,24 +102,41 @@ export function PhaseInputWizard({
   }
 
   const finishWizard = useCallback(
-    async (nextState: PhaseInputState) => {
-      setFinishing(true);
-      setPhaseUi("finishing");
+    async (nextState: PhaseInputState, options?: { showFinishingUi?: boolean }) => {
+      const showFinishingUi = options?.showFinishingUi ?? mode === "initial";
+      if (showFinishingUi) {
+        setFinishing(true);
+        setPhaseUi("finishing");
+      }
       const completed: PhaseInputState = {
         ...nextState,
         onboarding: { stepIndex: questions.length - 1, complete: true },
       };
       const saved = await saveProgress(completed);
       if (saved) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        if (showFinishingUi) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
         onComplete(saved);
       } else {
         setFinishing(false);
         setPhaseUi("question");
       }
     },
-    [onComplete, questions.length]
+    [mode, onComplete, questions.length]
   );
+
+  async function returnToOverview() {
+    if (isSaving || finishing) return;
+    const completed: PhaseInputState = {
+      ...state,
+      onboarding: { stepIndex: stepIndex, complete: true },
+    };
+    const saved = await saveProgress(completed);
+    if (saved) {
+      onComplete(saved);
+    }
+  }
 
   async function advanceFromStep(skipped = false) {
     const nextAnswers = { ...state.answers };
@@ -131,7 +164,9 @@ export function PhaseInputWizard({
     setState(nextState);
 
     if (isLast) {
-      await finishWizard(nextState);
+      await finishWizard(nextState, {
+        showFinishingUi: mode === "initial",
+      });
       return;
     }
 
@@ -156,6 +191,11 @@ export function PhaseInputWizard({
     setStepIndex((current) => current - 1);
   }
 
+  function handleJumpToStep(index: number) {
+    if (isSaving || finishing || index < 0 || index >= questions.length) return;
+    setStepIndex(index);
+  }
+
   function handleAnswerChange(answer: typeof currentAnswer) {
     setState((current) => ({
       ...current,
@@ -167,11 +207,23 @@ export function PhaseInputWizard({
 
   return (
     <div className="flex flex-col gap-6">
-      <PhaseInputProgress
-        stepIndex={stepIndex}
-        totalSteps={questions.length}
-        title={previewTitle}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PhaseInputProgress
+          stepIndex={stepIndex}
+          totalSteps={questions.length}
+          title={previewTitle}
+        />
+        {mode === "edit" && (
+          <button
+            type="button"
+            onClick={() => void returnToOverview()}
+            disabled={busy}
+            className="shrink-0 rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-muted transition-colors hover:bg-background hover:text-text disabled:opacity-50"
+          >
+            Zur Übersicht zurück
+          </button>
+        )}
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-5 lg:gap-8">
         <div className="lg:col-span-3">
@@ -250,6 +302,8 @@ export function PhaseInputWizard({
               answers={state.answers}
               skippedKeys={skippedKeys}
               title={previewTitle}
+              interactive={mode === "edit"}
+              onStepSelect={handleJumpToStep}
             />
           </div>
         </div>
@@ -266,6 +320,8 @@ export function PhaseInputWizard({
             answers={state.answers}
             skippedKeys={skippedKeys}
             title={previewTitle}
+            interactive={mode === "edit"}
+            onStepSelect={handleJumpToStep}
           />
         </CollapsibleSection>
       </div>

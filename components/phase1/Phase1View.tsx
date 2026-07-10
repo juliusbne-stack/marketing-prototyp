@@ -16,6 +16,7 @@ import {
 } from "@/components/wizard/phaseStates";
 import { isOnboardingNeeded } from "@/lib/profileQuestions";
 import type { Phase1Statement, PestelRelevance } from "@/lib/schemas/phase1";
+import type { Phase1StreamEvent } from "@/lib/phase1/events";
 import { ProfileForm, type ProfileData } from "./ProfileForm";
 import { ProfileOnboardingWizard } from "./onboarding/ProfileOnboardingWizard";
 import { AddStatementForm } from "./AddStatementForm";
@@ -39,18 +40,17 @@ type Phase1FinalResponse = {
   filteredDuplicateCount?: number;
 };
 
-type StreamEvent =
-  | { type: "statement"; data: Phase1Statement }
-  | { type: "final"; data: Phase1FinalResponse }
-  | { type: "error"; message: string; details?: string };
+type StreamEvent = Phase1StreamEvent & {
+  details?: string;
+};
 
 function previewStatementToData(
   statement: Phase1Statement,
-  index: number,
+  previewId: string,
   projectId: string
 ): StatementData {
   return {
-    id: `preview-${index}`,
+    id: previewId,
     projectId,
     phase: 1,
     category: statement.category,
@@ -117,7 +117,8 @@ function applyFinalResponse(
 
 async function consumeNdjsonStream(
   response: Response,
-  onStatement: (statement: Phase1Statement, index: number) => void
+  onStatement: (statement: Phase1Statement, previewId: string) => void,
+  onStatus?: (message: string) => void
 ): Promise<Phase1FinalResponse> {
   const reader = response.body?.getReader();
   if (!reader) {
@@ -126,7 +127,7 @@ async function consumeNdjsonStream(
 
   const decoder = new TextDecoder();
   let lineBuffer = "";
-  let previewIndex = 0;
+  const seenPreviewIds = new Set<string>();
   let finalPayload: Phase1FinalResponse | null = null;
 
   while (true) {
@@ -143,16 +144,30 @@ async function consumeNdjsonStream(
 
       const event = JSON.parse(trimmed) as StreamEvent;
       if (event.type === "statement") {
-        onStatement(event.data, previewIndex);
-        previewIndex += 1;
+        if (!seenPreviewIds.has(event.previewId)) {
+          seenPreviewIds.add(event.previewId);
+          onStatement(event.data as Phase1Statement, event.previewId);
+        }
+      } else if (event.type === "module_started") {
+        onStatus?.(event.label);
+      } else if (event.type === "anchor_started") {
+        onStatus?.("Analysegrundlage wird erstellt");
+      } else if (event.type === "synthesis_started") {
+        onStatus?.("SWOT und Marktpfade werden abgeleitet");
+      } else if (event.type === "consistency_check_started") {
+        onStatus?.("Analyse wird auf Konsistenz geprüft");
+      } else if (event.type === "persisting") {
+        onStatus?.("Analyse wird gespeichert");
       } else if (event.type === "final") {
         finalPayload = event.data;
       } else if (event.type === "error") {
         const detail =
-          typeof event.details === "string"
-            ? `\n\nTechnisch: ${event.details}`
+          typeof (event as { details?: string }).details === "string"
+            ? `\n\nTechnisch: ${(event as { details?: string }).details}`
             : "";
         throw new Error(event.message + detail);
+      } else if (event.type === "warning") {
+        onStatus?.(event.message);
       }
     }
   }
@@ -163,7 +178,9 @@ async function consumeNdjsonStream(
       finalPayload = event.data;
     } else if (event.type === "error") {
       const detail =
-        typeof event.details === "string" ? `\n\nTechnisch: ${event.details}` : "";
+        typeof (event as { details?: string }).details === "string"
+          ? `\n\nTechnisch: ${(event as { details?: string }).details}`
+          : "";
       throw new Error(event.message + detail);
     }
   }
@@ -191,6 +208,7 @@ export function Phase1View({
   const [error, setError] = useState<string | null>(null);
   const [analysisInfo, setAnalysisInfo] = useState<string | null>(null);
   const [previewStatements, setPreviewStatements] = useState<StatementData[]>([]);
+  const [streamStatus, setStreamStatus] = useState<string | null>(null);
   const [profile, setProfile] = useState(project);
   const [showOnboarding, setShowOnboarding] = useState(
     isOnboardingNeeded(project)
@@ -201,6 +219,7 @@ export function Phase1View({
     setError(null);
     setAnalysisInfo(null);
     setPreviewStatements([]);
+    setStreamStatus(null);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000);
     try {
@@ -218,14 +237,19 @@ export function Phase1View({
           throw new Error(AI_ERROR_FALLBACK);
         }
 
-        const finalPayload = await consumeNdjsonStream(response, (statement, index) => {
-          setPreviewStatements((current) => [
-            ...current,
-            previewStatementToData(statement, index, project.id),
-          ]);
-        });
+        const finalPayload = await consumeNdjsonStream(
+          response,
+          (statement, previewId) => {
+            setPreviewStatements((current) => [
+              ...current,
+              previewStatementToData(statement, previewId, project.id),
+            ]);
+          },
+          (status) => setStreamStatus(status)
+        );
 
         setPreviewStatements([]);
+        setStreamStatus(null);
         applyFinalResponse(
           finalPayload,
           setStatements,
@@ -357,7 +381,7 @@ export function Phase1View({
 
       {isGenerating && !showPreview && (
         <p className="text-sm text-text-muted" aria-live="polite" aria-busy="true">
-          {AI_LOADING_MESSAGES[1]}
+          {streamStatus ?? AI_LOADING_MESSAGES[1]}
         </p>
       )}
 
@@ -368,8 +392,8 @@ export function Phase1View({
           className="flex flex-col gap-3"
         >
           <p className="text-sm text-text-muted">
-            {AI_LOADING_MESSAGES[1]} — Aussagen erscheinen vorläufig, solange die
-            Analyse läuft.
+            {streamStatus ?? AI_LOADING_MESSAGES[1]} — Aussagen erscheinen vorläufig,
+            solange die Analyse läuft.
           </p>
           <div className="flex flex-col gap-3">
             {previewStatements.map((statement) => (

@@ -39,7 +39,7 @@ export type GuardContext = {
 
 export type StepViolation = {
   stepIndex: number;
-  rule: "V1" | "V2" | "V3" | "V3b" | "V4" | "V5" | "V6" | "V7" | "V7s";
+  rule: "V1" | "V2" | "V3" | "V3b" | "V4" | "V5" | "V6" | "V7" | "V7s" | "V8";
   message: string;
 };
 
@@ -258,6 +258,44 @@ function isReachProxyDecisiveMetric(metric: {
   return /\b(klick|ctr|klickrate|reichweite|impression|cpc|cpm|reach)\b/.test(
     blob
   );
+}
+
+/** V8: DECISIVE metrics must carry proxyStrength + signalRationale (repairOnce, not Zod 502). */
+export function validateMetricEffectLogic(
+  result: Phase4LlmResponse
+): StepViolation[] {
+  const violations: StepViolation[] = [];
+
+  result.steps.forEach((step, stepIndex) => {
+    const stepNum = stepIndex + 1;
+    for (const metric of step.metrics) {
+      if (metric.metricRole !== "DECISIVE") continue;
+
+      if (!metric.proxyStrength) {
+        violations.push({
+          stepIndex,
+          rule: "V8",
+          message: `Schritt ${stepNum} verletzt V8: entscheidende Metrik '${metric.name}' fehlt proxyStrength (DIRECT | PROXY).`,
+        });
+      }
+      if (!metric.signalRationale?.trim()) {
+        violations.push({
+          stepIndex,
+          rule: "V8",
+          message: `Schritt ${stepNum} verletzt V8: entscheidende Metrik '${metric.name}' fehlt signalRationale mit Bezug zur Unsicherheit der Annahme.`,
+        });
+      }
+    }
+  });
+
+  return violations;
+}
+
+function collectStepViolations(
+  result: Phase4LlmResponse,
+  ctx: GuardContext
+): StepViolation[] {
+  return [...validateSteps(result, ctx), ...validateMetricEffectLogic(result)];
 }
 
 function applyDerivedStrategyDimensions(
@@ -490,7 +528,7 @@ function applyPostValidation(
   result: Phase4LlmResponse,
   violations: StepViolation[]
 ): ProcessedStep[] {
-  const structuralRules = new Set(["V1", "V2", "V3", "V3b", "V7"]);
+  const structuralRules = new Set(["V1", "V2", "V3", "V3b", "V7", "V8"]);
   const warnableRules = new Set(["V4", "V5", "V6", "V7s"]);
 
   if (violations.some((violation) => violation.rule === "V3")) {
@@ -567,6 +605,18 @@ export async function repairOnce(
     ),
   ];
 
+  const v8AssumptionIds = [
+    ...new Set(
+      violations
+        .filter((violation) => violation.rule === "V8")
+        .map(
+          (violation) =>
+            original.steps[violation.stepIndex]?.assumptionId ?? null
+        )
+        .filter((id): id is string => id != null)
+    ),
+  ];
+
   const repairContext = {
     modus: ctx.mode,
     whitelist: ctx.whitelist.map((candidate) => ({
@@ -589,6 +639,15 @@ export async function repairOnce(
           "DECISIVE-testSubject NUR aus allowedDecisiveTestSubjects wählen. REACHABILITY höchstens als SUPPORTING, wenn die Annahme keine Erreichbarkeits-Unsicherheit prüft.",
       };
     }),
+    v8RepairHints: v8AssumptionIds.map((assumptionId) => {
+      const candidate = ctx.whitelist.find((entry) => entry.id === assumptionId);
+      return {
+        assumptionId,
+        uncertainty: candidate?.uncertainty ?? null,
+        instruction:
+          "Jede DECISIVE-Metrik braucht proxyStrength und signalRationale. Anmeldung/Registrierung/Klick = PROXY für Nutzung, nicht DIRECT.",
+      };
+    }),
   };
 
   return callLLM(
@@ -608,7 +667,7 @@ export async function processLlmResult(
   let repairSucceeded = false;
 
   let result = applyDerivedStrategyDimensions(initial, ctx);
-  let violations = validateSteps(result, ctx);
+  let violations = collectStepViolations(result, ctx);
 
   if (violations.length > 0) {
     log.push(
@@ -630,7 +689,7 @@ export async function processLlmResult(
       console.error("[phase4/guards] Repair-Call fehlgeschlagen:", error);
     }
 
-    violations = validateSteps(result, ctx);
+    violations = collectStepViolations(result, ctx);
     if (violations.length > 0) {
       log.push(
         `Nach Repair: ${violations.length} verbleibender Verstoß/Verstöße — ${violations.map((violation) => violation.rule).join(", ")}`

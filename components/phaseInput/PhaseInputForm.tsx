@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { ClipboardList, Pencil } from "lucide-react";
 import {
   answerToDisplayText,
   getQuestionsForPhase,
@@ -18,6 +18,7 @@ export function PhaseInputForm({
   initialState,
   previewTitle,
   onSaved,
+  onReopenWizard,
   remountKey,
 }: {
   projectId: string;
@@ -25,6 +26,7 @@ export function PhaseInputForm({
   initialState: PhaseInputState;
   previewTitle: string;
   onSaved?: (state: PhaseInputState) => void;
+  onReopenWizard?: (stepIndex?: number) => void;
   /** Changes after save to remount children (F11). */
   remountKey?: string;
 }) {
@@ -35,6 +37,10 @@ export function PhaseInputForm({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  const questionIndexByKey = new Map(
+    questions.map((question, index) => [question.key, index])
+  );
 
   async function saveState(nextState: PhaseInputState) {
     setIsSaving(true);
@@ -102,6 +108,18 @@ export function PhaseInputForm({
       title={previewTitle}
       intro="Diese Angaben steuern die KI-Generierung. Du kannst sie jederzeit ändern — bei erneuter Generierung gelten die neuen Werte."
       defaultOpen={!state.onboarding.complete}
+      actions={
+        onReopenWizard ? (
+          <button
+            type="button"
+            onClick={() => onReopenWizard()}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-text transition-colors hover:bg-background"
+          >
+            <ClipboardList className="h-3.5 w-3.5" aria-hidden />
+            Fragebogen erneut öffnen
+          </button>
+        ) : undefined
+      }
     >
       <div key={remountKey ?? savedAt ?? "initial"} className="flex flex-col gap-3">
         {questions.map((question) => {
@@ -183,16 +201,30 @@ export function PhaseInputForm({
                   </p>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setEditingKey(question.key)}
-                disabled={isSaving}
-                className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs text-text-muted transition-colors hover:bg-surface hover:text-text disabled:opacity-50"
-                aria-label={`${question.label} bearbeiten`}
-              >
-                <Pencil className="h-3 w-3" aria-hidden />
-                Bearbeiten
-              </button>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <button
+                  type="button"
+                  onClick={() => setEditingKey(question.key)}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-text-muted transition-colors hover:bg-surface hover:text-text disabled:opacity-50"
+                  aria-label={`${question.label} bearbeiten`}
+                >
+                  <Pencil className="h-3 w-3" aria-hidden />
+                  Bearbeiten
+                </button>
+                {onReopenWizard && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onReopenWizard(questionIndexByKey.get(question.key) ?? 0)
+                    }
+                    disabled={isSaving}
+                    className="rounded-md px-2 py-1 text-[10px] text-text-muted transition-colors hover:bg-surface hover:text-text disabled:opacity-50"
+                  >
+                    Im Fragebogen
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}

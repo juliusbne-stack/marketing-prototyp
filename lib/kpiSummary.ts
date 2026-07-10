@@ -1,4 +1,4 @@
-import type { EvaluationMode, KpiAssessment } from "@prisma/client";
+import type { EvaluationMode, KpiAssessment, ProxyStrength } from "@prisma/client";
 import {
   assessmentLabel,
   computeCumulativeTotal,
@@ -16,8 +16,30 @@ import {
 } from "@/lib/kpiAssessment";
 
 export type KpiSummaryMetric = MetricForAssessment & {
+  proxyStrength?: ProxyStrength | null;
   dataPoints: KpiPoint[];
 };
+
+function assessmentDisplayLabel(
+  assessment: KpiAssessment,
+  isProxy: boolean
+): string {
+  if (assessment === "SUPPORTING" && isProxy) {
+    return "mittelbarer Beleg (Proxy)";
+  }
+  return assessmentLabel(assessment);
+}
+
+function periodDisplayLabel(
+  assessment: KpiAssessment,
+  evaluationMode: EvaluationMode,
+  isProxy: boolean
+): string {
+  if (evaluationMode === "CUMULATIVE" && assessment === "NEUTRAL") {
+    return periodAssessmentLabel(assessment, evaluationMode);
+  }
+  return assessmentDisplayLabel(assessment, isProxy);
+}
 
 function extractPeriodCountLabel(points: KpiPoint[]): string {
   const count = points.length;
@@ -41,14 +63,15 @@ function formatCumulativeTrendLine(
   return `- ${point.value} · kumuliert ${runningLabel}`;
 }
 
-function formatPerPointLine(point: KpiPoint): string {
-  return `- ${point.periodLabel}: ${point.value} (${assessmentLabel(point.assessment)})`;
+function formatPerPointLine(point: KpiPoint, isProxy: boolean): string {
+  return `- ${point.periodLabel}: ${point.value} (${assessmentDisplayLabel(point.assessment, isProxy)})`;
 }
 
 export function buildKpiFeedbackSummary(metrics: KpiSummaryMetric[]): string {
   const sections = metrics
     .filter((metric) => metric.dataPoints.length > 0)
     .map((metric) => {
+      const isProxy = metric.proxyStrength === "PROXY";
       const reassessed = reassessDataPoints(metric, metric.dataPoints);
       const mode = resolveEvaluationMode(metric);
       const successText = formatCriterionInline(metric.successCriterion);
@@ -66,14 +89,14 @@ export function buildKpiFeedbackSummary(metrics: KpiSummaryMetric[]): string {
         const overall = derivePeriodAssessment(metric, metric.dataPoints);
         const periodLabel = extractPeriodCountLabel(reassessed);
         lines.push(
-          `Gesamt nach ${periodLabel}: ${formatCumulativeTotal(metric, metric.dataPoints)} — ${periodAssessmentLabel(overall, mode)}`
+          `Gesamt nach ${periodLabel}: ${formatCumulativeTotal(metric, metric.dataPoints)} — ${periodDisplayLabel(overall, mode, isProxy)}`
         );
       } else {
-        lines.push(...reassessed.map((point) => formatPerPointLine(point)));
+        lines.push(...reassessed.map((point) => formatPerPointLine(point, isProxy)));
         const overall = deriveOverallAssessment(metric, metric.dataPoints);
         if (reassessed.length > 1) {
           lines.push(
-            `Gesamturteil über die Periode: ${assessmentLabel(overall)}`
+            `Gesamturteil über die Periode: ${assessmentDisplayLabel(overall, isProxy)}`
           );
         }
       }
