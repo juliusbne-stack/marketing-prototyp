@@ -14,6 +14,7 @@ import {
   getMissingImplementationCategories,
 } from "@/lib/implementationContext";
 import { formatImplementationGoals } from "@/lib/formatImplementationGoals";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { taskSelect } from "@/lib/tasks";
 
 const MODEL = "gpt-4o";
@@ -52,6 +53,7 @@ export async function POST(
                       content: true,
                       evidenceStatus: true,
                       adopted: true,
+                      supersededByStatementId: true,
                     },
                   },
                 },
@@ -110,7 +112,7 @@ export async function POST(
   }
 
   const adoptedAnalysis = await prisma.statement.findMany({
-    where: { projectId: task.step.projectId, phase: 1, adopted: true },
+    where: { projectId: task.step.projectId, phase: 1, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,

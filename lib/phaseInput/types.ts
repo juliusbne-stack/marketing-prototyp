@@ -52,6 +52,7 @@ export type PhaseInputQuestionBase = {
   label: string;
   question: string;
   hint?: string;
+  promptLabel?: string;
   placeholder?: string;
   skippable: boolean;
 };

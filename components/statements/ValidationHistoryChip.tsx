@@ -36,7 +36,7 @@ export function ValidationHistoryChip({
     return (
       <span
         title={tooltip}
-        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${SINGLE_CHIP_CLASS[result]}`}
+        className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium ${SINGLE_CHIP_CLASS[result]}`}
       >
         {label}
       </span>
@@ -46,7 +46,7 @@ export function ValidationHistoryChip({
   return (
     <span
       title={tooltip}
-      className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium"
+      className="inline-flex items-center whitespace-nowrap rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium"
     >
       {segments.map((segment, index) => (
         <span key={segment.result}>

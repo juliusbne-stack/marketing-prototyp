@@ -137,7 +137,9 @@ export function buildPhaseInputContextBlock(
       result[question.key] = { status: "übersprungen", hinweis: "keine Angabe" };
       continue;
     }
-    result[question.key] = answer.value;
+    result[question.key] = question.promptLabel
+      ? { beschriftung: question.promptLabel, antwort: answer.value }
+      : answer.value;
   }
 
   return result;
@@ -150,10 +152,14 @@ export const PHASE2_INPUT_RULES = `VERWERTUNG DER PHASEN-EINGABEN (Rahmenbedingu
 - Übersprungene Felder generell = keine Einschränkung angegeben — niemals erfinden.`;
 
 export const PHASE4_INPUT_RULES = `VERWERTUNG DER PHASEN-EINGABEN (Rahmenbedingungen, KEINE Aussagen):
-- p4_methoden: Methoden mit "nein" NICHT verwenden. Wenn die naheliegende Prüfmethode einer kritischen Annahme ausgeschlossen ist, für DIESELBE Annahme eine alternative Erhebungsform vorschlagen (nicht die Annahme fallenlassen). In methodWarning oder testDesign kurz begründen (z. B. "Interviews ausgeschlossen (deine Angabe) → Online-Umfrage vorgeschlagen").
-- p4_budget_zeit: Anzahl und Umfang der Schritte ressourcensensibel dimensionieren. Wenn Zeit übersprungen (weeksSkipped): einen passenden Zeitraum in timeframe empfehlen — kein Warnhinweis. Wenn Budget übersprungen (budgetSkipped): KEINE konkrete Budgetzahl erfinden — konservativ dimensionieren; budgetFrame als offene Frage kennzeichnen.
-- p4_assets: Nur angegebene Assets als Mess-/Umsetzungspunkte annehmen. Nicht vorhandene Kanäle NICHT voraussetzen.
-- p4_zielgruppen_zugang: "teilweise" → Zugang nicht als vollständig gegeben annehmen; Reichweite-/Zugangslogik im Schritt abbilden, kein Warnhinweis. "muss erst aufgebaut werden" → keinen direkten Kontakt voraussetzen; bei Bedarf Reichweiten-/Zugangs-Schritt ergänzen — Warnhinweis nur bei Widerspruch im Schritttext.
-- p4_kapazitaet: Schritte müssen mit den angegebenen Fähigkeiten ausführbar sein (z. B. kein "MVP bauen" ohne Bau-Fähigkeit).
-- p4_oeffentlichkeit: "lieber klein/verdeckt" → keine großen öffentlichen Marken-Kampagnen vorschlagen.
-- Übersprungene Felder = keine Angabe — im Zweifel offene Frage erzeugen, niemals Fakten oder Ressourcen erfinden.`;
+- p4_methoden: Methoden mit "nein" NICHT verwenden. "nein" = EXCLUDED. "ja" = verfügbar. "egal" = zulässig mit Setup.
+- p4_assets ("Für die Validierung eingesetzte Mittel"): Nur angekreuzte Mittel für die Tests einplanen. Nicht angekreuzt bedeutet nicht für die Validierung freigegeben, nicht zwingend nicht vorhanden.
+  Wenn "Social-Media-Reichweite" nicht eingesetzt wird, erfordert Social Media einen externen Verbreitungsweg
+  auf den eigenen Profil- oder Vertriebskanälen (bestehende Community dort, Direktansprache,
+  Partner/Multiplikator/Influencer/Kooperation/Creator, bezahlte Ausspielung/Ads/Anzeigen).
+  „Community" meint keine neuen fremden Plattformen.
+- p4_budget_zeit: Ressourcensensibel dimensionieren. budgetSkipped → budgetFrame offen kennzeichnen.
+- p4_zielgruppen_zugang: "muss erst aufgebaut werden" → keinen direkten Kontakt voraussetzen; Zugangsweg im Test benennen.
+- p4_kapazitaet: Schritte müssen mit angegebenen Fähigkeiten ausführbar sein.
+- p4_oeffentlichkeit: "lieber klein/verdeckt" → keine großen öffentlichen Marken-Kampagnen.
+- Übersprungene Felder = keine Angabe — im Zweifel offene Frage, keine Fakten erfinden.`;

@@ -1,5 +1,14 @@
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import type { WhitelistCandidate } from "./guards";
+import {
+  buildVerfuegbareKanaeleContext,
+  type AvailableChannelsInput,
+  type VerfuegbareKanaeleContext,
+} from "./availableChannels";
+
+export type { AvailableChannelsInput, VerfuegbareKanaeleContext };
+export { buildVerfuegbareKanaeleContext };
 
 export async function loadStartupProfile(projectId: string) {
   const project = await prisma.project.findUnique({
@@ -24,7 +33,7 @@ export async function loadStartupProfile(projectId: string) {
 
 export async function loadAdoptedAnalysis(projectId: string) {
   return prisma.statement.findMany({
-    where: { projectId, phase: 1, adopted: true },
+    where: { projectId, phase: 1, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,

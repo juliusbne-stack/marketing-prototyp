@@ -22,4 +22,7 @@ export type StatementData = {
   segmentAspect: string | null;
   competitorLabel: string | null;
   competitorAspect: string | null;
+  /** Loaded where supersession matters (e.g. Phase 5 assumptions). */
+  supersededByStatementId?: string | null;
+  supersededBy?: { id: string; content: string } | null;
 };

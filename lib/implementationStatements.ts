@@ -1,4 +1,5 @@
 import type { StatementCategory } from "@prisma/client";
+import { isActiveAdopted } from "@/lib/statementFilters";
 
 // Relevant adopted statements for implementation cockpit context (task
 // generation + on-demand elaboration).
@@ -36,6 +37,7 @@ export function buildImplementationStatements(
       content: string;
       evidenceStatus: string;
       adopted: boolean;
+      supersededByStatementId: string | null;
     };
   }[],
   adoptedAnalysis: {
@@ -49,7 +51,7 @@ export function buildImplementationStatements(
     .map((link) => link.statement)
     .filter(
       (statement) =>
-        statement.adopted &&
+        isActiveAdopted(statement) &&
         isImplementationRelevantCategory(statement.category)
     );
 

@@ -51,7 +51,10 @@ const ZUGANG_TEILWEISE_NOTE =
 const ZUGANG_AUFBAU_NOTE =
   "Zielgruppen-Zugang muss erst aufgebaut werden (deine Angabe) — kein direkter Kontakt vorausgesetzt.";
 
-type StepContentForWarning = {
+const SOCIAL_REACH_NOTE =
+  /Keine eigene Social-Media-Reichweite vorhanden[^.]*\./i;
+
+export type StepContentForWarning = {
   title?: string;
   description?: string;
   testDesign?: string | null;
@@ -70,7 +73,7 @@ function stepContentText(step: StepContentForWarning): string {
 }
 
 function stepAddressesAccessBuildup(step: StepContentForWarning): boolean {
-  return /zugang|reichweite|kontakt aufbau|reichweiten|zielgruppe erreichen|anzeigen|ads|werbung/i.test(
+  return /zugang|reichweite|kontakt aufbau|reichweiten|zielgruppe erreichen|anzeigen|ads|werbung|community|direktansprache/i.test(
     stepContentText(step)
   );
 }
@@ -84,6 +87,30 @@ function stripZugangEchoNotes(
     result = result.replace(ZUGANG_AUFBAU_NOTE, "");
   }
   return result;
+}
+
+function stepHasExternalDistribution(step: StepContentForWarning): boolean {
+  const text = [
+    step.title ?? "",
+    step.description ?? "",
+    step.testDesign ?? "",
+    ...(step.marketingActivities ?? []),
+  ]
+    .join(" ")
+    .toLowerCase();
+  return /\b(community|communities|gruppe|gruppen|direktansprache|multiplikator|newsletter|bezahlt)\b/i.test(
+    text
+  );
+}
+
+function stripSocialReachEchoNote(
+  warning: string,
+  step: StepContentForWarning
+): string {
+  if (stepHasExternalDistribution(step)) {
+    return warning.replace(SOCIAL_REACH_NOTE, "");
+  }
+  return warning;
 }
 
 /** Hides stale budget/timeframe notes when the step card already shows concrete values. */
@@ -105,5 +132,6 @@ export function resolveMethodWarningForDisplay(
   if (!result) return null;
 
   result = stripZugangEchoNotes(result, step);
+  result = stripSocialReachEchoNote(result, step);
   return normalizeMethodWarning(result);
 }

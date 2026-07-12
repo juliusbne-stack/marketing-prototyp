@@ -466,7 +466,10 @@ export function CompetitorCards({
   const hasProfiles = profileGroups.size > 0;
 
   return (
-    <section id="wettbewerb" className="scroll-mt-6">
+    <section
+      id="wettbewerb"
+      className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
+    >
       <h3 className="font-heading text-base font-medium text-text">
         Wettbewerb & Alternativen
       </h3>

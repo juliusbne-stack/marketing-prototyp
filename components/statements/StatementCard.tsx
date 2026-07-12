@@ -135,12 +135,12 @@ export function StatementCard({
 
   return (
     <div
-      className={`rounded-[10px] transition-colors ${compact ? "p-3" : "p-4"} ${cardClasses} ${
+      className={`min-w-0 rounded-[10px] transition-colors ${compact ? "p-3" : "p-4"} ${cardClasses} ${
         isBusy ? "opacity-60" : ""
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
           <EvidenceBadge
             status={statement.evidenceStatus}
             onChange={handleStatusChange}
@@ -150,7 +150,7 @@ export function StatementCard({
             <ValidationHistoryChip counts={validationHistory} />
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
           <OriginTag origin={statement.origin} />
           <button
             type="button"
@@ -160,7 +160,7 @@ export function StatementCard({
             }}
             disabled={isBusy || isEditing}
             aria-label="Aussage bearbeiten"
-            className="rounded p-1 text-text-muted transition-colors hover:text-accent disabled:opacity-50"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors hover:border-border hover:bg-background hover:text-accent disabled:opacity-50"
           >
             <Pencil className="h-3.5 w-3.5" aria-hidden />
           </button>
@@ -170,7 +170,7 @@ export function StatementCard({
               onClick={handleDelete}
               disabled={isBusy}
               aria-label="Aussage löschen"
-              className="rounded p-1 text-text-muted transition-colors hover:text-danger-text disabled:opacity-50"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors hover:border-border hover:bg-background hover:text-danger-text disabled:opacity-50"
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden />
             </button>
@@ -210,7 +210,7 @@ export function StatementCard({
           </div>
         </div>
       ) : (
-        <p className="mt-2 text-sm leading-relaxed text-text">
+        <p className="mt-2 break-words text-sm leading-relaxed text-text">
           {statement.content}
         </p>
       )}
@@ -218,7 +218,7 @@ export function StatementCard({
       {metaParts.length > 0 && (
         <div className="mt-2 border-t border-border/70 pt-2">
           <div
-            className={`text-[13px] text-text-muted ${
+            className={`break-words text-[13px] text-text-muted ${
               metaCollapsible && !metaExpanded ? "line-clamp-1" : ""
             }`}
           >
@@ -241,7 +241,7 @@ export function StatementCard({
       )}
 
       {!statement.adopted && showAdoptAction && (
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-accent/20 pt-2.5">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-accent/20 pt-2.5">
           <span className="text-xs font-medium uppercase tracking-wide text-accent">
             Entwurf
           </span>

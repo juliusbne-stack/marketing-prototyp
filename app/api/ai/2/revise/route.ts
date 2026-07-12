@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE, isActiveAdopted } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { PHASE2_REVISION_PROMPT } from "@/lib/prompts/phase2Revision";
 import { phase2RevisionResponseSchema } from "@/lib/schemas/phase2Revision";
@@ -24,6 +25,7 @@ const statementSelect = {
   uncertainty: true,
   isCritical: true,
   adopted: true,
+  supersededByStatementId: true,
   segmentLabel: true,
   segmentAspect: true,
 } satisfies Prisma.StatementSelect;
@@ -97,7 +99,7 @@ export async function POST(request: Request) {
 
   const optionDimensions = option.statements
     .map((link) => link.statement)
-    .filter((statement) => statement.adopted);
+    .filter((statement) => isActiveAdopted(statement));
 
   // Segment profiles from phase 1 (single source): needed so a revised
   // OPT_TARGET_GROUP can reference an existing segmentLabel and the other
@@ -107,8 +109,8 @@ export async function POST(request: Request) {
       projectId: project.id,
       phase: 1,
       category: "TARGET_SEGMENT",
-      adopted: true,
       segmentLabel: { not: null },
+      ...ACTIVE_ADOPTED_WHERE,
     },
     orderBy: { createdAt: "asc" },
     select: {
@@ -127,7 +129,7 @@ export async function POST(request: Request) {
         projectId: project.id,
         phase: 5,
         category: "LEARNING",
-        adopted: true,
+        ...ACTIVE_ADOPTED_WHERE,
       },
       orderBy: { createdAt: "asc" },
       select: {

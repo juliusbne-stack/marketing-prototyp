@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError, mapLlmCallError } from "@/lib/openai";
 import {
   buildAddressedSegmentProfile,
+  buildVerfuegbareKanaeleContext,
   loadAdoptedAnalysis,
   loadStartupProfile,
   whitelistToContext,
@@ -13,6 +14,10 @@ import {
   computeWhitelistDimensionState,
   processLlmResult,
 } from "@/lib/phase4/guards";
+import {
+  buildPhase4Planning,
+  planningToLlmContext,
+} from "@/lib/phase4/pipeline";
 import { getPhase4Mode } from "@/lib/phase4/mode";
 import { phase4StepInclude, persistPhase4GenerationNotes, persistPhase4Steps } from "@/lib/phase4/persist";
 import { EMPTY_WHITELIST_VALIDATION } from "@/lib/labels/phase4";
@@ -115,11 +120,30 @@ export async function POST(request: Request) {
 
   const phaseInputContext = await buildPhaseInputLlmContext(projectId, 4);
   const phaseInputState = await loadPhaseInputsForPage(projectId, 4);
+  const planningBundle = buildPhase4Planning(whitelist, phaseInputState);
+  const planningContext = planningToLlmContext(planningBundle);
+  const verfuegbareKanaele = buildVerfuegbareKanaeleContext({
+    skills: project.skills,
+    businessIdea: project.businessIdea,
+    phaseInputState,
+    option: {
+      title: option.title,
+      summary: option.summary,
+      prioritizationRationale: option.prioritizationRationale,
+      statementTexts: option.statements.map((link) => link.statement.content),
+    },
+  });
 
   const context = {
     modus: "VALIDATION",
     whitelist: whitelistToContext(whitelist),
     validatedChannels: [],
+    verfuegbareKanaele: {
+      kanaele: verfuegbareKanaele.kanaele,
+      vertriebskanaele: verfuegbareKanaele.vertriebskanaele,
+      quellen: verfuegbareKanaele.quellen,
+    },
+    ...planningContext,
     startupProfile: await loadStartupProfile(projectId),
     prioritizedOption: {
       title: option.title,
@@ -139,6 +163,9 @@ export async function POST(request: Request) {
     whitelist,
     validatedChannels: [],
     whitelistDimensionState: computeWhitelistDimensionState(whitelist),
+    availablePlatformKeys: verfuegbareKanaele.platformKeys,
+    availableChannelLabels: verfuegbareKanaele.kanaele,
+    availableSalesChannels: verfuegbareKanaele.vertriebskanaele,
   };
 
   let llmResult;
@@ -166,7 +193,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const processed = await processLlmResult(llmResult, guardCtx);
+  const processed = await processLlmResult(llmResult, guardCtx, planningBundle);
   const enrichedSteps = enrichStepsWithPhaseInputContext(
     processed.steps,
     phaseInputState

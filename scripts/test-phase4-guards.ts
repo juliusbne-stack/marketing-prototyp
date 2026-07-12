@@ -19,7 +19,6 @@ import {
 } from "../lib/phase4/guards";
 import {
   deriveAllowedDecisiveTestSubjects,
-  serializeAllowedTestSubjects,
 } from "../lib/phase4/testSubjectDerivation";
 import type { Phase4LlmResponse } from "../lib/schemas/phase4";
 
@@ -28,13 +27,11 @@ function withAllowed(
 ): WhitelistCandidate {
   return {
     ...candidate,
-    allowedDecisiveTestSubjects: serializeAllowedTestSubjects(
-      deriveAllowedDecisiveTestSubjects({
+    allowedDecisiveTestSubjects: deriveAllowedDecisiveTestSubjects({
         content: candidate.content,
         justification: candidate.justification,
         uncertainty: candidate.uncertainty,
-      })
-    ),
+    }),
   };
 }
 

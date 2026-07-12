@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { isActiveAdopted } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError, mapLlmCallError } from "@/lib/openai";
 import {
   loadScalingTestedWith,
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
               justification: true,
               uncertainty: true,
               adopted: true,
+              supersededByStatementId: true,
             },
           },
         },
@@ -113,7 +115,7 @@ export async function POST(request: Request) {
   const testedWithByAssumption = await loadScalingTestedWith(projectId);
   const dimensions = option.statements
     .map((link) => link.statement)
-    .filter((statement) => statement.adopted);
+    .filter((statement) => isActiveAdopted(statement));
 
   const completedRuns = await prisma.adaptationDecision.count({
     where: { optionId: option.id, userConfirmed: true },
@@ -198,6 +200,16 @@ export async function POST(request: Request) {
 
   const processed = await processLlmResult(llmResult, guardCtx);
   console.log("[phase4/scale] Guard-Log:", processed.log.join(" | "));
+
+  if (processed.steps.length < 1) {
+    return NextResponse.json(
+      {
+        error:
+          "Es konnte kein gültiger Skalierungsschritt erzeugt werden. Manche Vorschläge wurden verworfen, weil sie nicht zur gestützten Annahme oder zu den validierten Kanälen passten. Erneut versuchen — deine Fortführungsentscheidung bleibt erhalten.",
+      },
+      { status: 502 }
+    );
+  }
 
   let steps;
   try {

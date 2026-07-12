@@ -203,6 +203,12 @@ describe("runPhase1Analysis integration", () => {
     phase1Config.monolithicFallback = true;
     phase1Config.modularGeneration = true;
     phase1Config.moduleCache = true;
+    vi.mocked(runMonolithicPhase1).mockResolvedValue({
+      statements: [],
+      pestelRelevance: [],
+      incremental: false,
+      filteredDuplicateCount: 0,
+    });
   });
 
   it("1: all modules successful", async () => {
@@ -220,6 +226,22 @@ describe("runPhase1Analysis integration", () => {
     vi.mocked(generateAnchor).mockRejectedValue(new Error("anchor fail"));
     await runPhase1Analysis({ projectId: "proj-test" });
     expect(runMonolithicPhase1).toHaveBeenCalled();
+  });
+
+  it("marks the run failed when monolithic fallback also fails", async () => {
+    vi.mocked(generateAnchor).mockRejectedValue(new Error("anchor fail"));
+    vi.mocked(runMonolithicPhase1).mockRejectedValue(
+      new Error("fallback invalid")
+    );
+
+    await expect(runPhase1Analysis({ projectId: "proj-test" })).rejects.toThrow(
+      "fallback invalid"
+    );
+
+    expect(prisma.phase1Run.update).toHaveBeenCalledWith({
+      where: { runId: expect.any(String) },
+      data: expect.objectContaining({ status: "FAILED" }),
+    });
   });
 
   it("20: fallback disabled throws", async () => {

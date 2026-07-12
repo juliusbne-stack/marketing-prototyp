@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayoutGroup } from "framer-motion";
-import { CheckCheck } from "lucide-react";
+import { CheckCheck, CheckCircle2 } from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
 import { EvidenceBadge } from "@/components/statements/EvidenceBadge";
 import { OriginTag } from "@/components/statements/OriginTag";
@@ -32,6 +32,24 @@ const ANCHORS = [
   { href: "#ressourcen", label: "Ressourcen" },
   { href: "#swot", label: "SWOT & Marktpfade" },
 ];
+
+const SUMMARY_ITEMS = [
+  {
+    key: "facts",
+    label: "Fakten",
+    tone: "border-[#28b7a4] bg-[#e7f8f5] text-[#08796c]",
+  },
+  {
+    key: "assumptions",
+    label: "Annahmen",
+    tone: "border-[#5aa7e8] bg-[#eef7ff] text-[#1d67a6]",
+  },
+  {
+    key: "questions",
+    label: "offene Fragen",
+    tone: "border-[#f3a536] bg-[#fff5e8] text-[#a55b00]",
+  },
+] as const;
 
 type Phase1FinalResponse = {
   statements: StatementData[];
@@ -213,6 +231,58 @@ export function Phase1View({
   const [showOnboarding, setShowOnboarding] = useState(
     isOnboardingNeeded(project)
   );
+  const [activeAnchor, setActiveAnchor] = useState(ANCHORS[0].href);
+
+  useEffect(() => {
+    if (!statements.length || isGenerating) {
+      return;
+    }
+
+    let frameId: number | null = null;
+
+    function updateActiveAnchorFromScroll() {
+      frameId = null;
+      const markerY = 170;
+      let currentAnchor = ANCHORS[0].href;
+
+      for (const anchor of ANCHORS) {
+        const section = document.getElementById(anchor.href.slice(1));
+
+        if (!section) {
+          continue;
+        }
+
+        if (section.getBoundingClientRect().top <= markerY) {
+          currentAnchor = anchor.href;
+        }
+      }
+
+      setActiveAnchor((current) =>
+        current === currentAnchor ? current : currentAnchor
+      );
+    }
+
+    function scheduleUpdate() {
+      if (frameId !== null) {
+        return;
+      }
+
+      frameId = window.requestAnimationFrame(updateActiveAnchorFromScroll);
+    }
+
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    scheduleUpdate();
+
+    return () => {
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, [isGenerating, statements.length]);
 
   async function handleAnalyze() {
     setIsGenerating(true);
@@ -342,6 +412,11 @@ export function Phase1View({
   const questionCount = statements.filter(
     (statement) => statement.evidenceStatus === "OPEN_QUESTION"
   ).length;
+  const summaryCounts = {
+    facts: factCount,
+    assumptions: assumptionCount,
+    questions: questionCount,
+  };
   const draftCount = statements.filter(
     (statement) => !statement.adopted
   ).length;
@@ -405,49 +480,86 @@ export function Phase1View({
 
       {hasResults && !isGenerating && (
         <>
-          <div className="sticky top-0 z-10 -mx-1 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] border border-border bg-surface px-4 py-3 shadow-sm">
-            <p className="text-sm text-text">
-              <span className="font-medium">{factCount} Fakten</span>
-              <span className="text-text-muted"> · </span>
-              <span className="font-medium">{assumptionCount} Annahmen</span>
-              <span className="text-text-muted"> · </span>
-              <span className="font-medium">
-                {questionCount} offene Fragen
-              </span>
-            </p>
+          <div className="sticky top-0 z-10 -mx-1 overflow-hidden rounded-[14px] border border-border/80 bg-surface shadow-[0_12px_32px_rgba(31,36,33,0.12)]">
+            <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[31rem]">
+                {SUMMARY_ITEMS.map((item) => (
+                  <div
+                    key={item.key}
+                    className="flex min-h-12 items-center gap-3 rounded-[10px] border border-border/70 bg-background/60 px-3"
+                  >
+                    <span
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border text-sm font-semibold ${item.tone}`}
+                    >
+                      {summaryCounts[item.key]}
+                    </span>
+                    <span className="text-xs font-semibold text-text">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center lg:justify-end">
+                {draftCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={handleAdoptAll}
+                    disabled={isAdoptingAll}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-accent px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-accent/90 disabled:opacity-50"
+                  >
+                    <CheckCheck className="h-3.5 w-3.5" aria-hidden />
+                    <span className="leading-tight">
+                      {isAdoptingAll
+                        ? "Wird übernommen ..."
+                        : `Alle Entwürfe übernehmen (${draftCount})`}
+                    </span>
+                  </button>
+                ) : (
+                  <span className="inline-flex items-center gap-3 text-xs font-bold leading-tight text-[#16864f]">
+                    <CheckCircle2
+                      className="h-8 w-8 shrink-0 fill-[#36aa55] text-white"
+                      aria-hidden
+                    />
+                    <span className="max-w-28">Alle Aussagen übernommen</span>
+                  </span>
+                )}
+              </div>
+            </div>
             <nav
               aria-label="Abschnitte"
-              className="flex flex-wrap gap-3 text-xs"
+              className="flex min-w-0 overflow-x-auto border-t border-border/80 px-3 text-xs font-semibold"
             >
-              {ANCHORS.map((anchor) => (
-                <a
+              {ANCHORS.map((anchor, index) => (
+                <div
                   key={anchor.href}
-                  href={anchor.href}
-                  className="text-accent hover:underline"
+                  className="flex min-w-max flex-1 items-stretch"
                 >
-                  {anchor.label}
-                </a>
+                  {index > 0 && (
+                    <span
+                      className="my-3 w-px shrink-0 bg-border"
+                      aria-hidden
+                    />
+                  )}
+                  <a
+                    href={anchor.href}
+                    onClick={() => setActiveAnchor(anchor.href)}
+                    className={`relative flex min-h-14 w-full items-center justify-center px-4 text-center transition-colors hover:text-accent ${
+                      activeAnchor === anchor.href
+                        ? "text-accent"
+                        : "text-text hover:bg-accent-soft/35"
+                    }`}
+                  >
+                    {anchor.label}
+                    {activeAnchor === anchor.href && (
+                      <span
+                        className="absolute inset-x-4 bottom-0 h-1 rounded-t-full bg-accent"
+                        aria-hidden
+                      />
+                    )}
+                  </a>
+                </div>
               ))}
             </nav>
-            <div className="ml-auto">
-              {draftCount > 0 ? (
-                <button
-                  type="button"
-                  onClick={handleAdoptAll}
-                  disabled={isAdoptingAll}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
-                >
-                  <CheckCheck className="h-3.5 w-3.5" aria-hidden />
-                  {isAdoptingAll
-                    ? "Wird übernommen …"
-                    : `Alle Entwürfe übernehmen (${draftCount})`}
-                </button>
-              ) : (
-                <span className="text-xs font-medium text-evidence-fact-text">
-                  Alle Aussagen übernommen
-                </span>
-              )}
-            </div>
           </div>
 
           <PestelGrid
@@ -476,7 +588,10 @@ export function Phase1View({
             onAdded={handleAdded}
           />
 
-          <section id="ressourcen" className="scroll-mt-6">
+          <section
+            id="ressourcen"
+            className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
+          >
             <h3 className="font-heading text-base font-medium text-text">
               Ressourcen & Fähigkeiten
             </h3>

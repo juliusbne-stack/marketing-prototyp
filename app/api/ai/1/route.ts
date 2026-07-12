@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { LlmValidationError } from "@/lib/openai";
 import { runPhase1Analysis, Phase1RunConflictError } from "@/lib/phase1/orchestrator";
 import type { Phase1StreamEvent } from "@/lib/phase1/events";
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   const adoptedCount = await prisma.statement.count({
-    where: { projectId: project.id, phase: 1, adopted: true },
+    where: { projectId: project.id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
   });
   const isIncremental = adoptedCount > 0;
 

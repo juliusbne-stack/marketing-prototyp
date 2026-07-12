@@ -56,11 +56,16 @@ export function buildVentureAnchors(project: ProjectProfile): VentureAnchors {
 
 /** Adopted statements that can anchor PESTEL (segments, price, market). */
 export function filterAdoptedAnchorsForPestel<
-  T extends { category: string; adopted?: boolean },
+  T extends {
+    category: string;
+    adopted?: boolean;
+    supersededByStatementId?: string | null;
+  },
 >(statements: T[]): T[] {
   return statements.filter(
     (statement) =>
       statement.adopted !== false &&
+      !statement.supersededByStatementId &&
       adoptedPestelRelevantCategories.has(statement.category)
   );
 }

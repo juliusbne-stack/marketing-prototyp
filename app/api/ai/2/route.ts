@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { PHASE2_PROMPT } from "@/lib/prompts/phase2";
 import { phase2ResponseSchema } from "@/lib/schemas/phase2";
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
 
   // Context rule (docs/PROMPTS.md): profile + ONLY adopted statements of phase 1.
   const adoptedAnalysis = await prisma.statement.findMany({
-    where: { projectId: project.id, phase: 1, adopted: true },
+    where: { projectId: project.id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: {
       category: true,

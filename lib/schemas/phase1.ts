@@ -478,6 +478,53 @@ function validateStatementContents(
   });
 }
 
+function validateRequiredAnalysisSections(
+  statements: Phase1StatementInput[],
+  ctx: z.RefinementCtx
+) {
+  const resourceCount = statements.filter(
+    (statement) => statement.category === "RESOURCE"
+  ).length;
+  if (resourceCount < 2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Es müssen mindestens 2 RESOURCE-Aussagen vorhanden sein (gefunden: ${resourceCount}).`,
+      path: ["statements"],
+    });
+  }
+
+  const swotCategories = [
+    "SWOT_STRENGTH",
+    "SWOT_WEAKNESS",
+    "SWOT_OPPORTUNITY",
+    "SWOT_THREAT",
+  ] as const;
+
+  for (const category of swotCategories) {
+    const count = statements.filter(
+      (statement) => statement.category === category
+    ).length;
+    if (count < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Es müssen mindestens 2 ${category}-Aussagen vorhanden sein (gefunden: ${count}).`,
+        path: ["statements"],
+      });
+    }
+  }
+
+  const marketPathCount = statements.filter(
+    (statement) => statement.category === "MARKET_PATH"
+  ).length;
+  if (marketPathCount < 2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Es müssen mindestens 2 MARKET_PATH-Aussagen vorhanden sein (gefunden: ${marketPathCount}).`,
+      path: ["statements"],
+    });
+  }
+}
+
 /** Schema for the initial Phase-1 analysis with a fixed actor target count. */
 export function createPhase1ResponseSchema(targetCompetitorCount: number) {
   return z
@@ -492,6 +539,7 @@ export function createPhase1ResponseSchema(targetCompetitorCount: number) {
         targetCompetitorCount,
         ctx
       );
+      validateRequiredAnalysisSections(data.statements, ctx);
       validateStatementContents(data.statements, ctx);
     });
 }

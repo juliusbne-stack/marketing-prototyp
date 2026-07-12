@@ -1,24 +1,28 @@
 // Shared validation-core rules for Phase 4 prompts (initial, scale, refine).
 // Keeps assumption → test design → activities → metrics logic consistent.
 
-export const VALIDATION_CORE_THINKING = `VALIDIERUNGSKERN — so musst du denken (PFLICHT vor jedem Vorschlag):
-1. Welche konkrete Unsicherheit steckt in der Annahme?
-2. Welche Beobachtung würde diese Unsicherheit wirklich stützen oder widerlegen?
-3. Welches begrenzte Testdesign erzeugt genau diese Beobachtung?
-4. Welche Marketingaktivitäten dienen nur der Durchführung dieses Tests?
-Kanäle (Instagram, TikTok, Ads) sind Durchführungsmittel — nicht automatisch der Test.
-Ein Kanaltest prüft Erreichbarkeit; er prüft NICHT allein Zahlungsbereitschaft.
+export const VALIDATION_CORE_THINKING = `VALIDIERUNGSKERN — strikte Reihenfolge (PFLICHT):
+1. Was behauptet die Annahme genau? (validationCore.claim im Kontext)
+2. Welche Beobachtung könnte diese Behauptung stützen oder widerlegen?
+3. Welche Testmethoden können diese Evidenz erzeugen? (interne Kandidaten im Kontext)
+4. Welche Methode ist unter den Nutzerbedingungen umsetzbar? (nutzerbedingungen)
+5. Welche Aktivitäten sind für diesen Test erforderlich?
+6. Welche Metrik entscheidet über das Ergebnis? (EvidenceContract)
+7. Ist die gesamte Kette fachlich konsistent?
+
+VERBOTEN: Zuerst einen Kanal wählen und nachträglich Metriken formulieren.
+strategyDimension ist nur fachliche Einordnung — sie bestimmt NICHT allein den Prüfgegenstand.
+Nutze primaryTestSubject und ausgewaehlterTestansatz aus annahmenPlanung.
 
 ANNAHMENBEZUG (PFLICHT je Whitelist-Eintrag):
-- Jeder Whitelist-Eintrag liefert text, justification und ggf. uncertainty der KONKRETEN
-  Annahme. validationQuestion UND testDesign MÜSSEN daraus abgeleitet werden — nicht aus
-  der priorisierten Option allgemein und nicht aus anderen Aussagen.
-- Der zu prüfende Gegenstand ist die in justification/uncertainty benannte Unsicherheit.
-  Die Prüffrage muss genau diese Unsicherheit adressieren.
-- Verboten: Die Prüffrage auf eine generische Kanal- oder Erreichbarkeitsfrage verengen,
-  wenn text/justification/uncertainty inhaltlich Nutzenversprechen, Interesse, Problem-
-  relevanz, Zahlungsbereitschaft oder Verständnis betreffen. Dann ist Erreichbarkeit
-  höchstens Durchführungsmittel — nicht der Validierungskern.`;
+- validationQuestion UND testDesign MÜSSEN aus validationCore und der Unsicherheit abgeleitet werden.
+- Die Prüffrage muss den Aussagekern prüfen — nicht nur Erreichbarkeit oder einen Kanal.
+- „Keine eigene Social-Media-Reichweite" bedeutet NICHT „Social Media ausgeschlossen".
+  Dann externen Verbreitungsweg auf den eigenen Profil- oder Vertriebskanälen benennen
+  (bestehende Community dort, Direktansprache, Partner/Multiplikator/Influencer/Kooperation/Creator,
+  bezahlte Ausspielung/Ads/Anzeigen auf verfügbaren Plattformen).
+  „Community" ist KEIN Freifahrschein für neue fremde Plattformen.
+- Keine interne Prozesssprache (kein „Fallback", „ersetzt", „die KI hat gewählt").`;
 
 export const SIGNAL_CATEGORY_RULES = `SIGNAL-PASSUNG (PFLICHT — jeder Messpunkt erhält genau eine signalCategory):
 
@@ -121,3 +125,10 @@ export const SCALING_MODE_RULES = `MODUS SCALING (im Kontext als modus übergebe
 - Kanalregel: ausschließlich Kanäle aus validatedChannels. Neuer Kanal → modeNote (ADAPT statt CONTINUE).
 - Diversitätsregel gilt NICHT — mehrere Schritte auf derselben Dimension sind zulässig.
 - Erfolgskriterien: „Skalierung trägt wenn …" / „Skalierungsgrenze erreicht wenn …"`;
+
+export const CHANNEL_SELECTION_RULES = `KANALWAHL (PFLICHT):
+- Der Kontext enthält verfuegbareKanaele (Profil-Skills, Fragebogen, priorisierte Strategieoption).
+- Bevorzuge Kanäle aus verfuegbareKanaele.kanaele und vertriebskanaele.
+- Führe KEINE Plattform ein, die nicht aus Profil-Skills, Fragebogen oder Strategieoption ableitbar ist.
+- „Community" meint bestehende Communities auf den eigenen Profil- oder Vertriebskanälen
+  (z. B. Instagram-, Vinted- oder Shop-Community) — keine neuen fremden Plattformen.`;

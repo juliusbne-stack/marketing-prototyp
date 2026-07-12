@@ -31,9 +31,9 @@ function RelevanceNote({
         type="button"
         onClick={() => setIsOpen((current) => !current)}
         aria-expanded={isOpen}
-        className="flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left"
+        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left"
       >
-        <span className="text-xs text-text-muted">
+        <span className="min-w-0 truncate text-xs text-text-muted">
           {entry.relevant
             ? "Warum diese Dimension relevant ist"
             : "Warum diese Dimension nachrangig ist"}
@@ -46,7 +46,7 @@ function RelevanceNote({
         />
       </button>
       {isOpen && (
-        <p className="border-t border-border/80 px-2.5 py-2 text-xs leading-relaxed text-text-muted">
+        <p className="border-t border-border/80 px-3 py-2 text-xs leading-relaxed text-text-muted">
           {entry.relevanceJustification}
         </p>
       )}
@@ -74,7 +74,10 @@ export function PestelGrid({
   );
 
   return (
-    <section id="pestel" className="scroll-mt-6">
+    <section
+      id="pestel"
+      className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
+    >
       <h3 className="font-heading text-base font-medium text-text">
         PESTEL-Umfeld
       </h3>
@@ -82,7 +85,7 @@ export function PestelGrid({
         Die KI bewertet zuerst, welche Umfelddimensionen für dein Geschäftsmodell
         strategisch relevant sind — nicht alle sechs müssen Aussagen erhalten.
       </p>
-      <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(min(100%,19rem),1fr))] gap-4 xl:gap-5">
         {PESTEL_FIELDS.map((field) => {
           const entry = relevanceByCategory.get(field.category);
           const isRelevant = entry?.relevant ?? true;
@@ -93,22 +96,22 @@ export function PestelGrid({
           return (
             <div
               key={field.category}
-              className={`flex flex-col gap-2 rounded-[10px] border p-3 ${
+              className={`flex min-w-0 flex-col gap-2.5 rounded-[10px] border p-3.5 sm:p-4 ${
                 isRelevant
                   ? "border-border bg-background/60"
                   : "border-dashed border-border/80 bg-background/30"
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
                 <h4
-                  className={`text-xs font-semibold uppercase tracking-wide ${
+                  className={`min-w-0 text-xs font-semibold uppercase tracking-wide ${
                     isRelevant ? "text-text" : "text-text-muted"
                   }`}
                 >
                   {field.label}
                 </h4>
                 <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                  className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium ${
                     isRelevant
                       ? "bg-evidence-fact-bg text-evidence-fact-text"
                       : "bg-background text-text-muted"

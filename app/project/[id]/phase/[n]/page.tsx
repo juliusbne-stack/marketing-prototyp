@@ -11,6 +11,7 @@ import { Phase4View } from "@/components/phase4/Phase4View";
 import { Phase5View } from "@/components/phase5/Phase5View";
 import { parseMarketingActivities } from "@/components/phase4/types";
 import { buildImplementationStatements } from "@/lib/implementationStatements";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { taskSelect } from "@/lib/tasks";
 import { countActionableTasks } from "@/lib/taskActionable";
 import { getPhase4Mode } from "@/lib/phase4/mode";
@@ -34,6 +35,12 @@ const statementSelect = {
   segmentAspect: true,
   competitorLabel: true,
   competitorAspect: true,
+} as const;
+
+const phase5AssumptionSelect = {
+  ...statementSelect,
+  supersededByStatementId: true,
+  supersededBy: { select: { id: true, content: true } },
 } as const;
 
 const PHASE_INFO: Record<
@@ -148,7 +155,7 @@ export default async function PhasePage({
           },
         }),
         prisma.statement.count({
-          where: { projectId: id, phase: 1, adopted: true },
+          where: { projectId: id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
         }),
         prisma.adaptationDecision.findFirst({
           where: { projectId: id },
@@ -270,6 +277,7 @@ export default async function PhasePage({
                   content: true,
                   evidenceStatus: true,
                   adopted: true,
+                  supersededByStatementId: true,
                 },
               },
             },
@@ -292,7 +300,7 @@ export default async function PhasePage({
 
     const adoptedAnalysis = optionWithStatements
       ? await prisma.statement.findMany({
-          where: { projectId: id, phase: 1, adopted: true },
+          where: { projectId: id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
           orderBy: { createdAt: "asc" },
           select: {
             id: true,
@@ -471,7 +479,7 @@ export default async function PhasePage({
                 failureCriterion: true,
               },
             },
-            assumption: { select: statementSelect },
+            assumption: { select: phase5AssumptionSelect },
           },
         })
       : [];

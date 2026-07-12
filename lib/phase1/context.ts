@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import {
   countAdoptedCompetitorLabels,
   pickRandomTargetCompetitorCount,
@@ -8,6 +9,7 @@ import {
   buildVentureAnchors,
   filterAdoptedAnchorsForPestel,
 } from "@/lib/ventureAnchors";
+import { hasRequiredPhase1Sections } from "./requiredSections";
 import { createRunId } from "./hashing";
 import { createPhase1ModuleHashes } from "./dependencies";
 import type { AdoptedContextStatement, Phase1Context } from "./types";
@@ -37,12 +39,14 @@ export async function loadPhase1Context(
   });
 
   const adoptedAnalysis = (await prisma.statement.findMany({
-    where: { projectId, phase: 1, adopted: true },
+    where: { projectId, phase: 1, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: adoptedContextSelect,
   })) as AdoptedContextStatement[];
 
-  const isIncremental = adoptedAnalysis.length > 0;
+  const hasAdoptedAnalysis = adoptedAnalysis.length > 0;
+  const isIncremental =
+    hasAdoptedAnalysis && hasRequiredPhase1Sections(adoptedAnalysis);
   const targetCompetitorCount = pickRandomTargetCompetitorCount();
   const adoptedCompetitorLabelCount =
     countAdoptedCompetitorLabels(adoptedAnalysis);
@@ -60,7 +64,7 @@ export async function loadPhase1Context(
     requiredNewProfiles,
     ventureAnchors: buildVentureAnchors(project),
     adoptedAnchorsForPestel: filterAdoptedAnchorsForPestel(
-      isIncremental ? adoptedAnalysis : []
+      hasAdoptedAnalysis ? adoptedAnalysis : []
     ) as AdoptedContextStatement[],
     adoptedAnalysis,
     startupProfile: {

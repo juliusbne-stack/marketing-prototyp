@@ -16,6 +16,7 @@ import {
   implementationStatementsById,
 } from "@/lib/implementationStatements";
 import { buildStartupProfile } from "@/lib/implementationContext";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { taskSelect } from "@/lib/tasks";
 import { activeValidationStepWhere } from "@/lib/validationStep";
 
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
                   content: true,
                   evidenceStatus: true,
                   adopted: true,
+                  supersededByStatementId: true,
                 },
               },
             },
@@ -183,7 +185,7 @@ export async function POST(request: Request) {
   );
 
   const adoptedAnalysis = await prisma.statement.findMany({
-    where: { projectId: step.projectId, phase: 1, adopted: true },
+    where: { projectId: step.projectId, phase: 1, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,

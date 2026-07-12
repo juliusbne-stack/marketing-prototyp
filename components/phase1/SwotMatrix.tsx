@@ -34,7 +34,10 @@ export function SwotMatrix({
   onAdded: (statement: StatementData) => void;
 }) {
   return (
-    <section id="swot" className="scroll-mt-6">
+    <section
+      id="swot"
+      className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
+    >
       <h3 className="font-heading text-base font-medium text-text">
         SWOT-Matrix
       </h3>

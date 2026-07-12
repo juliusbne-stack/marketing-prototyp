@@ -3,6 +3,18 @@ import type {
   EvidenceStatus,
   FeedbackResult,
 } from "@prisma/client";
+import type { StepData } from "@/components/phase4/types";
+import type { StatementData } from "@/components/statements/types";
+
+/** Assumption on a Phase-5 validation step — supersession fields always loaded server-side. */
+export type Phase5AssumptionData = StatementData & {
+  supersededByStatementId: string | null;
+  supersededBy: { id: string; content: string } | null;
+};
+
+export type Phase5StepWithAssumption = StepData & {
+  assumption: Phase5AssumptionData;
+};
 
 // Client-side shape of a market feedback, matching app/api/feedback/route.ts
 // and app/api/ai/5/route.ts.

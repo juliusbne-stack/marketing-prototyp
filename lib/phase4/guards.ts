@@ -3,6 +3,7 @@ import type {
   StrategyDimension,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { isActiveAdopted } from "@/lib/statementFilters";
 import { PHASE4_REPAIR_PROMPT } from "@/lib/prompts/phase4Repair";
 import type { SignalCategoryValue, TestSubjectValue } from "@/lib/schemas/metric";
 import {
@@ -13,9 +14,22 @@ import {
 import type { Phase4Mode } from "@/lib/phase4/types";
 import { statementCategoryToStrategyDimension } from "./strategyDimension";
 import {
-  deriveAllowedDecisiveTestSubjects,
-  serializeAllowedTestSubjects,
-} from "./testSubjectDerivation";
+  formatConsistencyRepairHints,
+  applyPlanningToSteps,
+  collectConsistencyIssuesForResult,
+  type Phase4PlanningBundle,
+} from "./pipeline";
+import {
+  isDirectDecisiveMetric,
+  isReachProxyDecisiveMetric,
+} from "./metricHelpers";
+import { deriveAllowedDecisiveTestSubjects } from "./testSubjectDerivation";
+import {
+  buildForeignPlatformMethodWarning,
+  findForeignPlatformsInChannel,
+  findForeignPlatformsInStepContent,
+  type PlatformKey,
+} from "./availableChannels";
 
 export type WhitelistCandidate = {
   id: string;
@@ -35,11 +49,26 @@ export type GuardContext = {
   whitelist: WhitelistCandidate[];
   validatedChannels: string[];
   whitelistDimensionState: WhitelistDimensionState;
+  availablePlatformKeys?: readonly PlatformKey[];
+  availableChannelLabels?: readonly string[];
+  availableSalesChannels?: readonly string[];
 };
 
 export type StepViolation = {
   stepIndex: number;
-  rule: "V1" | "V2" | "V3" | "V3b" | "V4" | "V5" | "V6" | "V7" | "V7s" | "V8";
+  rule:
+    | "V1"
+    | "V2"
+    | "V3"
+    | "V3b"
+    | "V4"
+    | "V5"
+    | "V6"
+    | "V7"
+    | "V7s"
+    | "V8"
+    | "V9"
+    | "C1";
   message: string;
 };
 
@@ -76,13 +105,11 @@ function attachAllowedTestSubjects(
     "content" | "justification" | "uncertainty"
   >
 ): TestSubjectValue[] {
-  return serializeAllowedTestSubjects(
-    deriveAllowedDecisiveTestSubjects({
-      content: statement.content,
-      justification: statement.justification,
-      uncertainty: statement.uncertainty,
-    })
-  );
+  return deriveAllowedDecisiveTestSubjects({
+    content: statement.content,
+    justification: statement.justification,
+    uncertainty: statement.uncertainty,
+  });
 }
 
 export async function buildCandidateWhitelist(
@@ -102,6 +129,7 @@ export async function buildCandidateWhitelist(
               uncertainty: true,
               evidenceStatus: true,
               adopted: true,
+              supersededByStatementId: true,
               category: true,
             },
           },
@@ -117,7 +145,7 @@ export async function buildCandidateWhitelist(
       .map((link) => link.statement)
       .filter(
         (statement) =>
-          statement.adopted &&
+          isActiveAdopted(statement) &&
           (statement.evidenceStatus === "ASSUMPTION" ||
             statement.evidenceStatus === "OPEN_QUESTION")
       )
@@ -161,7 +189,7 @@ export async function buildCandidateWhitelist(
     .map((link) => link.statement)
     .filter(
       (statement) =>
-        statement.adopted &&
+        isActiveAdopted(statement) &&
         statement.evidenceStatus === "FACT" &&
         scalingIds.has(statement.id)
     );
@@ -231,35 +259,6 @@ export function getAllowedDecisiveTestSubjects(
   return candidate?.allowedDecisiveTestSubjects ?? [];
 }
 
-/**
- * Reach-Proxy detection for V7 reachabilityVeto (thesis Kap. 5.3).
- *
- * Vocabulary-based only: fixed regex on metric.name + successCriterion (case-insensitive):
- * klick | ctr | klickrate | reichweite | impression | cpc | cpm | reach;
- * plus unconditional match when signalCategory === ATTENTION.
- *
- * Known gap: reach-adjacent DECISIVE metrics outside this vocabulary (e.g. "Sichtbarkeitsquote")
- * are NOT classified as reach proxies. If their signalCategory still fits an allowed testSubject,
- * the step gets V7s (warn/relabel), not V7 (hard reject).
- *
- * Accepted trade-off: deterministic guard, no semantic inference. Escalation to an LLM
- * classifier (B-llm-on-miss) only if this gap appears in real usage.
- *
- * Error asymmetry: a missed reach proxy preserves status quo ante (no regression); the guard
- * never tightens beyond the pre-guard behavior.
- */
-function isReachProxyDecisiveMetric(metric: {
-  name: string;
-  successCriterion: string;
-  signalCategory: SignalCategoryValue;
-}): boolean {
-  if (metric.signalCategory === "ATTENTION") return true;
-  const blob = `${metric.name} ${metric.successCriterion}`.toLowerCase();
-  return /\b(klick|ctr|klickrate|reichweite|impression|cpc|cpm|reach)\b/.test(
-    blob
-  );
-}
-
 /** V8: DECISIVE metrics must carry proxyStrength + signalRationale (repairOnce, not Zod 502). */
 export function validateMetricEffectLogic(
   result: Phase4LlmResponse
@@ -291,11 +290,71 @@ export function validateMetricEffectLogic(
   return violations;
 }
 
+function collectConsistencyViolations(
+  result: Phase4LlmResponse,
+  planningBundle: Phase4PlanningBundle | undefined
+): StepViolation[] {
+  if (!planningBundle) return [];
+
+  const collected = collectConsistencyIssuesForResult(
+    result.steps,
+    planningBundle
+  );
+  const violations: StepViolation[] = [];
+
+  for (const entry of collected) {
+    for (const issue of entry.issues) {
+      if (issue.severity !== "ERROR") continue;
+      violations.push({
+        stepIndex: entry.stepIndex,
+        rule: "C1",
+        message: `[${issue.code}] Schritt ${entry.stepIndex + 1}: ${issue.message}`,
+      });
+    }
+  }
+
+  return violations;
+}
+
 function collectStepViolations(
   result: Phase4LlmResponse,
-  ctx: GuardContext
+  ctx: GuardContext,
+  planningBundle?: Phase4PlanningBundle
 ): StepViolation[] {
-  return [...validateSteps(result, ctx), ...validateMetricEffectLogic(result)];
+  return [
+    ...validateSteps(result, ctx),
+    ...validateMetricEffectLogic(result),
+    ...collectConsistencyViolations(result, planningBundle),
+  ];
+}
+
+/** Silently downgrades LLM-assigned DIRECT when isDirectDecisiveMetric disagrees. */
+export function applyProxyStrengthCorrections(
+  result: Phase4LlmResponse
+): Phase4LlmResponse {
+  return {
+    ...result,
+    steps: result.steps.map((step, stepIndex) => ({
+      ...step,
+      metrics: step.metrics.map((metric) => {
+        if (
+          metric.metricRole !== "DECISIVE" ||
+          metric.proxyStrength !== "DIRECT"
+        ) {
+          return metric;
+        }
+
+        if (isDirectDecisiveMetric(metric, step.testSubject)) {
+          return metric;
+        }
+
+        console.log(
+          `[phase4/guards] proxyStrength DIRECT→PROXY: Schritt ${stepIndex + 1}, Metrik '${metric.name}' (testSubject=${step.testSubject}) — isDirectDecisiveMetric=false`
+        );
+        return { ...metric, proxyStrength: "PROXY" as const };
+      }),
+    })),
+  };
 }
 
 function applyDerivedStrategyDimensions(
@@ -504,9 +563,72 @@ export function validateSteps(
         });
       }
     }
+
+    const allowedPlatforms = ctx.availablePlatformKeys ?? [];
+    if (allowedPlatforms.length > 0 && step.channel?.trim()) {
+      const foreignPlatforms = findForeignPlatformsInChannel(
+        step.channel,
+        allowedPlatforms
+      );
+      if (foreignPlatforms.length > 0) {
+        violations.push({
+          stepIndex: index,
+          rule: "V9",
+          message: `Schritt ${stepNum} verletzt V9: Kanal '${step.channel}' nennt Plattform(en) [${foreignPlatforms.join(", ")}], die nicht in verfuegbareKanaele enthalten sind. Ersetze den betroffenen Schritt vollständig (validationQuestion, testDesign, title, description, marketingActivities, channel, metrics) mit einem Kanal aus Profil, Fragebogen oder Strategieoption — keine stille Feldkorrektur.`,
+        });
+      }
+    }
   });
 
   return violations;
+}
+
+function logV9RepairOutcome(
+  result: Phase4LlmResponse,
+  ctx: GuardContext,
+  beforeRepair: Map<number, string[]>,
+  remainingV9: StepViolation[]
+): void {
+  const allowed = ctx.availablePlatformKeys ?? [];
+  if (allowed.length === 0 || beforeRepair.size === 0) return;
+
+  const remainingIndices = new Set(
+    remainingV9.filter((v) => v.rule === "V9").map((v) => v.stepIndex)
+  );
+
+  for (const [stepIndex, foreignBefore] of beforeRepair) {
+    const step = result.steps[stepIndex];
+    if (!step) continue;
+
+    const foreignInChannel = findForeignPlatformsInChannel(step.channel, allowed);
+    const foreignInContent = findForeignPlatformsInStepContent(step, allowed);
+
+    if (foreignInChannel.length === 0) {
+      console.log(
+        `[phase4/guards] V9 Repair erfolgreich: Schritt ${stepIndex + 1} — fremde Plattform(en) [${foreignBefore.join(", ")}] im channel entfernt; neuer channel='${step.channel ?? ""}'`
+      );
+      if (foreignInContent.length > 0) {
+        console.log(
+          `[phase4/guards] V9 Repair-Inkonsistenz: Schritt ${stepIndex + 1} — Plattform(en) [${foreignInContent.join(", ")}] noch in Testdesign/Aktivitäten/Text`
+        );
+      } else {
+        console.log(
+          `[phase4/guards] V9 Repair konsistent: Schritt ${stepIndex + 1} — keine fremde Plattform mehr im Schrittinhalt`
+        );
+      }
+      continue;
+    }
+
+    if (remainingIndices.has(stepIndex)) {
+      console.log(
+        `[phase4/guards] V9 Fail-open: Schritt ${stepIndex + 1} — nach Repair weiterhin [${foreignInChannel.join(", ")}] im channel → Soft-Warnung, Schritt bleibt übernehmbar`
+      );
+    }
+  }
+}
+
+function stripV9Violations(violations: StepViolation[]): StepViolation[] {
+  return violations.filter((violation) => violation.rule !== "V9");
 }
 
 function methodWarningForViolation(violation: StepViolation): string | null {
@@ -528,7 +650,7 @@ function applyPostValidation(
   result: Phase4LlmResponse,
   violations: StepViolation[]
 ): ProcessedStep[] {
-  const structuralRules = new Set(["V1", "V2", "V3", "V3b", "V7", "V8"]);
+  const structuralRules = new Set(["V1", "V2", "V3", "V3b", "V7", "V8", "C1"]);
   const warnableRules = new Set(["V4", "V5", "V6", "V7s"]);
 
   if (violations.some((violation) => violation.rule === "V3")) {
@@ -583,10 +705,49 @@ function applyPostValidation(
   return processed;
 }
 
+function applyChannelPlatformWarnings(
+  steps: ProcessedStep[],
+  ctx: GuardContext
+): ProcessedStep[] {
+  const allowed = ctx.availablePlatformKeys ?? [];
+  if (allowed.length === 0) return steps;
+
+  const allowedSet = new Set(allowed);
+
+  return steps.map((step, index) => {
+    const foreignPlatforms = findForeignPlatformsInChannel(
+      step.channel,
+      allowedSet
+    );
+    if (foreignPlatforms.length === 0) return step;
+
+    const warning = buildForeignPlatformMethodWarning(foreignPlatforms);
+    console.log(
+      `[phase4/guards] Kanal-Soft-Warnung Schritt ${index + 1}: ${foreignPlatforms.join(", ")} nicht in verfuegbareKanaele`
+    );
+
+    return {
+      ...step,
+      methodWarning: step.methodWarning
+        ? `${step.methodWarning} ${warning}`
+        : warning,
+    };
+  });
+}
+
+function c1ViolationStepIndices(violations: StepViolation[]): Set<number> {
+  return new Set(
+    violations
+      .filter((violation) => violation.rule === "C1")
+      .map((violation) => violation.stepIndex)
+  );
+}
+
 export async function repairOnce(
   original: Phase4LlmResponse,
   violations: StepViolation[],
-  ctx: GuardContext
+  ctx: GuardContext,
+  planningBundle?: Phase4PlanningBundle
 ): Promise<Phase4LlmResponse> {
   const { callLLM } = await import("@/lib/openai");
   const violationList = violations
@@ -617,8 +778,34 @@ export async function repairOnce(
     ),
   ];
 
+  const v9StepIndices = [
+    ...new Set(
+      violations
+        .filter((violation) => violation.rule === "V9")
+        .map((violation) => violation.stepIndex)
+    ),
+  ];
+
+  const consistencyHints =
+    planningBundle && violations.some((v) => v.rule === "C1")
+      ? formatConsistencyRepairHints(
+          collectConsistencyIssuesForResult(original.steps, planningBundle)
+        )
+      : null;
+
   const repairContext = {
     modus: ctx.mode,
+    nutzerbedingungen: planningBundle?.constraintsSummary ?? null,
+    annahmenPlanung: planningBundle
+      ? [...planningBundle.perAssumption.values()].map((p) => ({
+          assumptionId: p.assumptionId,
+          validationCore: p.validationCore,
+          evidenceContract: p.evidenceContract,
+          primaryTestSubject: p.primaryTestSubject,
+          ausgewaehlterTestansatz: p.selectedCandidate,
+        }))
+      : null,
+    consistencyRepairHints: consistencyHints,
     whitelist: ctx.whitelist.map((candidate) => ({
       id: candidate.id,
       text: candidate.content,
@@ -648,6 +835,25 @@ export async function repairOnce(
           "Jede DECISIVE-Metrik braucht proxyStrength und signalRationale. Anmeldung/Registrierung/Klick = PROXY für Nutzung, nicht DIRECT.",
       };
     }),
+    v9RepairHints: v9StepIndices.map((stepIndex) => {
+      const step = original.steps[stepIndex];
+      const foreignPlatforms = findForeignPlatformsInChannel(
+        step?.channel,
+        ctx.availablePlatformKeys ?? []
+      );
+      return {
+        stepIndex: stepIndex + 1,
+        assumptionId: step?.assumptionId ?? null,
+        foreignPlatforms,
+        verfuegbareKanaele: {
+          kanaele: ctx.availableChannelLabels ?? [],
+          vertriebskanaele: ctx.availableSalesChannels ?? [],
+          platformKeys: ctx.availablePlatformKeys ?? [],
+        },
+        instruction:
+          "Ersetze den betroffenen Schritt vollständig (validationQuestion, testDesign, title, description, marketingActivities, channel, metrics). Wähle einen Kanal aus verfuegbareKanaele. Keine fremde Plattform. Keine stille Korrektur nur im channel-Feld — Testdesign und Aktivitäten müssen zum neuen Kanal passen.",
+      };
+    }),
   };
 
   return callLLM(
@@ -660,14 +866,42 @@ export async function repairOnce(
 
 export async function processLlmResult(
   initial: Phase4LlmResponse,
-  ctx: GuardContext
+  ctx: GuardContext,
+  planningBundle?: Phase4PlanningBundle
 ): Promise<GuardProcessResult> {
   const log: string[] = [];
   let repairTriggered = false;
   let repairSucceeded = false;
 
+  if (planningBundle && planningBundle.compoundClaimErrors.length > 0) {
+    log.push(
+      `Planungsfehler: ${planningBundle.compoundClaimErrors.map((e) => e.code).join(", ")}`
+    );
+    console.warn(
+      "[phase4/guards] Zusammengesetzte Annahmen:",
+      planningBundle.compoundClaimErrors
+    );
+  }
+
   let result = applyDerivedStrategyDimensions(initial, ctx);
-  let violations = collectStepViolations(result, ctx);
+  if (planningBundle) {
+    result = applyPlanningToSteps(result, planningBundle);
+  }
+  result = applyProxyStrengthCorrections(result);
+  let violations = collectStepViolations(result, ctx, planningBundle);
+
+  const c1BeforeFirstRepair = c1ViolationStepIndices(violations);
+
+  const v9BeforeRepair = new Map<number, string[]>();
+  for (const violation of violations) {
+    if (violation.rule !== "V9") continue;
+    const step = result.steps[violation.stepIndex];
+    if (!step) continue;
+    v9BeforeRepair.set(
+      violation.stepIndex,
+      findForeignPlatformsInChannel(step.channel, ctx.availablePlatformKeys ?? [])
+    );
+  }
 
   if (violations.length > 0) {
     log.push(
@@ -678,9 +912,13 @@ export async function processLlmResult(
     repairTriggered = true;
     try {
       result = applyDerivedStrategyDimensions(
-        await repairOnce(result, violations, ctx),
+        await repairOnce(result, violations, ctx, planningBundle),
         ctx
       );
+      if (planningBundle) {
+        result = applyPlanningToSteps(result, planningBundle);
+      }
+      result = applyProxyStrengthCorrections(result);
       repairSucceeded = true;
       log.push("Repair-Call ausgelöst und erfolgreich geparst.");
       console.log("[phase4/guards] Repair-Call erfolgreich.");
@@ -689,7 +927,18 @@ export async function processLlmResult(
       console.error("[phase4/guards] Repair-Call fehlgeschlagen:", error);
     }
 
-    violations = collectStepViolations(result, ctx);
+    violations = collectStepViolations(result, ctx, planningBundle);
+    const remainingV9 = violations.filter((violation) => violation.rule === "V9");
+    if (v9BeforeRepair.size > 0) {
+      logV9RepairOutcome(result, ctx, v9BeforeRepair, remainingV9);
+      if (remainingV9.length > 0) {
+        log.push(
+          `V9 Fail-open: ${remainingV9.length} Schritt(e) nach Repair weiterhin mit fremder Plattform → Soft-Warnung`
+        );
+      } else {
+        log.push("V9 Repair: alle fremden Plattformen im channel korrigiert.");
+      }
+    }
     if (violations.length > 0) {
       log.push(
         `Nach Repair: ${violations.length} verbleibender Verstoß/Verstöße — ${violations.map((violation) => violation.rule).join(", ")}`
@@ -698,11 +947,86 @@ export async function processLlmResult(
     } else {
       log.push("Nach Repair: alle Regeln erfüllt.");
     }
+
+    const c1AfterFirstRepair = c1ViolationStepIndices(violations);
+    const c1NewlyAfterV9Repair = [...c1AfterFirstRepair].filter(
+      (stepIndex) =>
+        v9BeforeRepair.has(stepIndex) || !c1BeforeFirstRepair.has(stepIndex)
+    );
+
+    if (
+      repairSucceeded &&
+      v9BeforeRepair.size > 0 &&
+      c1AfterFirstRepair.size > 0
+    ) {
+      log.push(
+        `C1 nach V9-Repair: ${c1AfterFirstRepair.size} Schritt(e) mit C1 — ${c1NewlyAfterV9Repair.length} neu betroffen (Indizes: ${[...c1AfterFirstRepair].map((i) => i + 1).join(", ")})`
+      );
+      console.log(
+        "[phase4/guards] C1 nach V9-Repair neu aufgetreten:",
+        {
+          c1StepIndices: [...c1AfterFirstRepair],
+          newlyAffected: c1NewlyAfterV9Repair,
+        }
+      );
+
+      try {
+        result = applyDerivedStrategyDimensions(
+          await repairOnce(result, violations, ctx, planningBundle),
+          ctx
+        );
+        if (planningBundle) {
+          result = applyPlanningToSteps(result, planningBundle);
+        }
+        result = applyProxyStrengthCorrections(result);
+        violations = collectStepViolations(result, ctx, planningBundle);
+        log.push("C1-Repair-Call (nach V9) ausgelöst und erfolgreich geparst.");
+        console.log("[phase4/guards] C1-Repair-Call (nach V9) erfolgreich.");
+
+        const c1AfterSecondRepair = c1ViolationStepIndices(violations);
+        if (c1AfterSecondRepair.size === 0) {
+          log.push("C1-Repair nach V9 erfolgreich — alle C1-Verstöße behoben.");
+          console.log(
+            "[phase4/guards] C1-Repair nach V9 erfolgreich — alle C1-Verstöße behoben."
+          );
+        } else {
+          log.push(
+            `C1-Repair nach V9: ${c1AfterSecondRepair.size} Verstoß/Verstöße verbleiben — strukturelles Verwerfen.`
+          );
+          console.log(
+            "[phase4/guards] C1-Repair nach V9: Verstöße verbleiben — strukturelles Verwerfen:",
+            [...c1AfterSecondRepair]
+          );
+        }
+
+        if (violations.length > 0) {
+          log.push(
+            `Nach C1-Repair: ${violations.length} verbleibender Verstoß/Verstöße — ${violations.map((violation) => violation.rule).join(", ")}`
+          );
+          console.log("[phase4/guards] Nach C1-Repair:", violations);
+        } else {
+          log.push("Nach C1-Repair: alle Regeln erfüllt.");
+        }
+      } catch (error) {
+        log.push(
+          "C1-Repair-Call (nach V9) fehlgeschlagen — Verstöße bleiben, strukturelles Verwerfen."
+        );
+        console.error(
+          "[phase4/guards] C1-Repair-Call (nach V9) fehlgeschlagen:",
+          error
+        );
+      }
+    }
   } else {
     log.push("Erstvalidierung: alle Regeln erfüllt.");
   }
 
-  const steps = applyPostValidation(result, violations);
+  const violationsForPost = stripV9Violations(violations);
+
+  const steps = applyChannelPlatformWarnings(
+    applyPostValidation(result, violationsForPost),
+    ctx
+  );
 
   const processedAssumptionIds = new Set(steps.map((step) => step.assumptionId));
   for (const assumptionId of result.criticalAssumptions) {

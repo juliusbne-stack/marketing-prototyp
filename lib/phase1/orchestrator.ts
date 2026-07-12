@@ -95,12 +95,28 @@ export async function runPhase1Analysis(request: Phase1Request) {
     throw error;
   }
 
-  if (!phase1Config.modularGeneration) {
-    return runMonolithicPhase1(context, request.signal, emit);
-  }
-
   let anchorStatus: "ok" | "failed" | "missing" = "missing";
   let synthesisStatus: "ok" | "failed" | "missing" | "not_started" = "not_started";
+  let monolithicFallbackAttempted = false;
+
+  if (!phase1Config.modularGeneration) {
+    try {
+      const result = await runMonolithicPhase1(context, request.signal, emit);
+      finalizePhase1RunMetrics(metrics);
+      return result;
+    } catch (error) {
+      if (isAbortError(error)) {
+        await markRunAborted(context.runId);
+        finalizePhase1RunMetrics(metrics, { errorType: "AbortError" });
+      } else {
+        await markRunFailed(context.runId);
+        finalizePhase1RunMetrics(metrics, {
+          errorType: error instanceof Error ? error.name : "unknown",
+        });
+      }
+      throw error;
+    }
+  }
 
   try {
     const moduleHashes = createPhase1ModuleHashes(context);
@@ -413,6 +429,7 @@ export async function runPhase1Analysis(request: Phase1Request) {
           attemptedRepairs: repairResults,
           timestamp: new Date().toISOString(),
         });
+        monolithicFallbackAttempted = true;
         await markRunFallback(context.runId);
         emit({
           type: "warning",
@@ -480,7 +497,11 @@ export async function runPhase1Analysis(request: Phase1Request) {
         error instanceof Error && error.message.includes("structured"),
     });
 
-    if (phase1Config.monolithicFallback && fallbackDecision.useFallback) {
+    if (
+      phase1Config.monolithicFallback &&
+      fallbackDecision.useFallback &&
+      !monolithicFallbackAttempted
+    ) {
       logFallbackDecision({
         runId: context.runId,
         projectId: context.projectId,
@@ -489,15 +510,38 @@ export async function runPhase1Analysis(request: Phase1Request) {
         attemptedRepairs: repairResults,
         timestamp: new Date().toISOString(),
       });
+      monolithicFallbackAttempted = true;
       await markRunFallback(context.runId);
       emit({
         type: "warning",
         message: "Modulare Analyse fehlgeschlagen — monolithischer Fallback wird verwendet.",
       });
       metrics.fallbackUsed = true;
-      const fallback = await runMonolithicPhase1(context, request.signal, emit);
-      finalizePhase1RunMetrics(metrics, { fallbackUsed: true });
-      return fallback;
+      try {
+        const fallback = await runMonolithicPhase1(
+          context,
+          request.signal,
+          emit
+        );
+        finalizePhase1RunMetrics(metrics, { fallbackUsed: true });
+        return fallback;
+      } catch (fallbackError) {
+        if (isAbortError(fallbackError)) {
+          await markRunAborted(context.runId);
+          finalizePhase1RunMetrics(metrics, {
+            fallbackUsed: true,
+            errorType: "AbortError",
+          });
+        } else {
+          await markRunFailed(context.runId);
+          finalizePhase1RunMetrics(metrics, {
+            fallbackUsed: true,
+            errorType:
+              fallbackError instanceof Error ? fallbackError.name : "unknown",
+          });
+        }
+        throw fallbackError;
+      }
     }
 
     await markRunFailed(context.runId);

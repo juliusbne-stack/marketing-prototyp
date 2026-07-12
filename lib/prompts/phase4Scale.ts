@@ -9,7 +9,7 @@ import {
   VALIDATION_STEP_OUTPUT_FIELDS,
 } from "./validationCoreRules";
 
-export const PHASE4_SCALE_PROMPT = `AUFGABE: Die Anpassungsentscheidung lautet FORTFÜHREN — leite 2–4 begrenzte
+export const PHASE4_SCALE_PROMPT = `AUFGABE: Die Anpassungsentscheidung lautet FORTFÜHREN — leite 1–4 begrenzte
 Skalierungsschritte ab, die gestützte Fakten aus der Whitelist im größeren Maßstab
 weiter beobachten.
 

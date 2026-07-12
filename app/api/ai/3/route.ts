@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE, isActiveAdopted } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { PHASE3_PROMPT } from "@/lib/prompts/phase3";
 import { phase3ResponseSchema } from "@/lib/schemas/phase3";
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
               justification: true,
               uncertainty: true,
               adopted: true,
+              supersededByStatementId: true,
             },
           },
         },
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
 
   // Context rule: profile + ONLY adopted statements (phase 1 analysis + option dimensions).
   const adoptedAnalysis = await prisma.statement.findMany({
-    where: { projectId: project.id, phase: 1, adopted: true },
+    where: { projectId: project.id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: {
       category: true,
@@ -107,7 +109,7 @@ export async function POST(request: Request) {
       summary: option.summary,
       dimensions: option.statements
         .map((link) => link.statement)
-        .filter((statement) => statement.adopted)
+        .filter((statement) => isActiveAdopted(statement))
         .map((statement) => ({
           category: statement.category,
           content: statement.content,

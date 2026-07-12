@@ -80,9 +80,9 @@ export function AddStatementForm({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+        className="inline-flex w-fit items-center gap-1 text-xs font-medium text-accent hover:underline"
       >
-        <Plus className="h-3.5 w-3.5" aria-hidden />
+        <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden />
         Aussage hinzufügen
       </button>
     );
@@ -114,7 +114,7 @@ export function AddStatementForm({
               setCategory(event.target.value as StatementCategory)
             }
             aria-label="Bereich"
-            className="rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-text"
+            className="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-text sm:flex-none"
             disabled={isSubmitting}
           >
             {categories.map((option) => (
@@ -130,7 +130,7 @@ export function AddStatementForm({
             setEvidenceStatus(event.target.value as EvidenceStatus)
           }
           aria-label="Evidenzstatus"
-          className="rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-text"
+          className="min-w-0 flex-1 rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-text sm:flex-none"
           disabled={isSubmitting}
         >
           {EVIDENCE_OPTIONS.map((option) => (
@@ -142,7 +142,7 @@ export function AddStatementForm({
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          className="inline-flex min-h-8 items-center rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
         >
           {isSubmitting ? "Wird angelegt …" : "Hinzufügen"}
         </button>
@@ -154,7 +154,7 @@ export function AddStatementForm({
             setError(null);
           }}
           disabled={isSubmitting}
-          className="rounded-md border border-border px-3 py-1.5 text-xs text-text transition-colors hover:bg-background"
+          className="inline-flex min-h-8 items-center rounded-md border border-border px-3 py-1.5 text-xs text-text transition-colors hover:bg-background"
         >
           Abbrechen
         </button>

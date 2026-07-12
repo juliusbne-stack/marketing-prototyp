@@ -64,11 +64,11 @@ export function EvidenceBadge({
 
   const pill = (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${config.className}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${config.className}`}
       title={status === "FACT" && factTooltip ? factTooltip : undefined}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${config.dotClassName}`}
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${config.dotClassName}`}
         aria-hidden
       />
       {config.label}
@@ -89,7 +89,7 @@ export function EvidenceBadge({
         aria-expanded={open}
         aria-label={`Evidenzstatus ändern, aktuell: ${config.label}`}
         title={status === "FACT" && factTooltip ? factTooltip : undefined}
-        className="cursor-pointer rounded-full"
+        className="inline-flex cursor-pointer rounded-full"
       >
         {pill}
       </button>

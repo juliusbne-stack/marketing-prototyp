@@ -45,8 +45,12 @@ export const PHASE4_QUESTIONS: PhaseInputQuestion[] = [
   },
   {
     key: "p4_assets",
-    label: "Vorhandene Mittel",
-    question: "Was ist bereits vorhanden, das du nutzen könntest?",
+    label: "Eingesetzte Mittel",
+    question:
+      "Welche vorhandenen Mittel willst du für die Validierung einsetzen?",
+    hint:
+      "Wähle die Mittel, die du für die Tests tatsächlich nutzen willst — nicht alles, was existiert.",
+    promptLabel: "Für die Validierung eingesetzte Mittel",
     skippable: true,
     inputType: "multiCheckbox",
     options: P4_ASSET_OPTIONS,

@@ -28,8 +28,8 @@ export default async function ProjectLayout({
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex w-full max-w-[1240px] items-center gap-4 px-6 py-4">
+      <header className="sticky top-0 z-40 bg-background/85 px-6 py-3 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[1240px] items-center gap-4 rounded-2xl border border-border/70 bg-surface px-5 py-3 shadow-[0_14px_36px_rgba(31,36,33,0.08)]">
           <Link
             href="/"
             aria-label="Zur Projektübersicht"
@@ -37,7 +37,7 @@ export default async function ProjectLayout({
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />
           </Link>
-          <h1 className="flex-1 font-heading text-lg font-semibold text-text">
+          <h1 className="flex-1 font-heading text-lg font-bold text-text">
             {project.name}
           </h1>
           <PhaseIndicator />

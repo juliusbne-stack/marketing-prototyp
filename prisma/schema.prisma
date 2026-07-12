@@ -169,9 +169,12 @@ model Statement {
   segmentLabel     String? // Zielgruppensegment-Name (nur TARGET_SEGMENT)
   segmentAspect    String? // Segmentdimension: DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
   competitorLabel  String? // Wettbewerber-/Alternativen-Name (nur COMPETITOR-Profile)
-  competitorAspect String? // Profildimension: ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  competitorAspect         String? // Profildimension: ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE
+  supersededByStatementId  String?
+  supersededBy               Statement?  @relation("StatementSupersession", fields: [supersededByStatementId], references: [id])
+  supersedes                 Statement[] @relation("StatementSupersession")
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime    @updatedAt
 
   optionLinks        OptionStatement[]
   validationSteps    ValidationStep[]  @relation("StepAssumption")

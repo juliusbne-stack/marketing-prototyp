@@ -18,6 +18,7 @@ import { prisma } from "@/lib/prisma";
 import { taskSelect } from "@/lib/tasks";
 import { reassessDataPoints } from "@/lib/kpiAssessment";
 import { buildImplementationStatements } from "@/lib/implementationStatements";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { taskElaborationResponseSchema } from "@/lib/schemas/taskElaboration";
 import { activeValidationStepWhere } from "@/lib/validationStep";
 
@@ -54,6 +55,7 @@ export default async function CockpitPage({
             category: true,
             content: true,
             adopted: true,
+            supersededByStatementId: true,
             evidenceStatus: true,
           },
         },
@@ -115,7 +117,7 @@ export default async function CockpitPage({
 
   const adoptedAnalysis = option
     ? await prisma.statement.findMany({
-        where: { projectId: id, phase: 1, adopted: true },
+        where: { projectId: id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
         orderBy: { createdAt: "asc" },
         select: {
           id: true,

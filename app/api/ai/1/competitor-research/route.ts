@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
 import { COMPETITOR_RESEARCH_PROMPT } from "@/lib/prompts/competitorResearch";
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
   }
 
   const adoptedAnalysis = await prisma.statement.findMany({
-    where: { projectId: project.id, phase: 1, adopted: true },
+    where: { projectId: project.id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: adoptedContextSelect,
   });

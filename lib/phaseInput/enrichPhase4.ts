@@ -1,4 +1,9 @@
 import type { ProcessedStep } from "@/lib/phase4/guards";
+import { normalizePhase4Constraints } from "@/lib/phase4/constraints";
+import {
+  hasExternalDistributionPath as stepHasExternalPath,
+  mentionsSocialInStep,
+} from "@/lib/phase4/consistencyCheck";
 import type {
   AssetsValue,
   BudgetZeitValue,
@@ -26,23 +31,9 @@ const METHOD_LABELS: Record<string, string> = {
   vor_ort: "Vor-Ort-Test im Studio",
 };
 
-const METHOD_ALTERNATIVE_ACTIVITIES: Record<string, string[]> = {
-  umfrage: [
-    "Kurze Online-Umfrage mit 5–8 Fragen erstellen",
-    "Zielgruppe über vorhandene Kanäle zur Umfrage einladen",
-    "Antworten auswerten und gegen Erfolgskriterium prüfen",
-  ],
-  landingpage: [
-    "Einfache Landingpage mit klarem Nutzenversprechen aufsetzen",
-    "Warteliste oder Voranmeldung als Commitment-Signal nutzen",
-    "Klicks und Anmeldungen gegen Kriterium auswerten",
-  ],
-  social: [
-    "Test-Post mit klarer Frage/Hypothese formulieren",
-    "Reichweite und Reaktionen dokumentieren",
-    "Qualitative Rückmeldungen strukturiert festhalten",
-  ],
-};
+export function stepTextForTests(step: ProcessedStep): string {
+  return stepText(step);
+}
 
 function stepText(step: ProcessedStep): string {
   return [
@@ -64,48 +55,9 @@ function stepMentionsExcludedMethod(
   return keywords.some((keyword) => text.includes(keyword));
 }
 
-function pickAlternativeMethod(
-  prefs: Record<string, string>
-): { id: string; label: string } {
-  const preferred = ["umfrage", "landingpage", "social", "anzeigen", "vor_ort", "mvp"];
-  for (const id of preferred) {
-    if (prefs[id] === "ja") {
-      return { id, label: METHOD_LABELS[id] ?? id };
-    }
-  }
-  for (const id of preferred) {
-    if (prefs[id] === "egal") {
-      return { id, label: METHOD_LABELS[id] ?? id };
-    }
-  }
-  return { id: "umfrage", label: "Online-Umfrage" };
-}
-
-function rewriteExcludedMethodStep(
-  step: ProcessedStep,
-  excludedLabel: string,
-  excludedKeywords: string[],
-  alternative: { id: string; label: string }
-): ProcessedStep {
-  const note = `${excludedLabel} wurden ausgeschlossen (deine Angabe) → ${alternative.label} vorgeschlagen.`;
-  const activities =
-    METHOD_ALTERNATIVE_ACTIVITIES[alternative.id] ??
-    METHOD_ALTERNATIVE_ACTIVITIES.umfrage!;
-
-  const strip = (text: string) => {
-    let result = text;
-    for (const keyword of excludedKeywords) {
-      result = result.replace(new RegExp(keyword, "gi"), alternative.label);
-    }
-    return result.replace(/\s{2,}/g, " ").trim();
-  };
-
+function appendWarning(step: ProcessedStep, note: string): ProcessedStep {
   return {
     ...step,
-    title: strip(step.title),
-    description: strip(step.description),
-    testDesign: `${alternative.label}: dieselbe Annahme prüfen — die zuvor naheliegende Methode wurde durch deine Angabe ersetzt.`,
-    marketingActivities: activities,
     methodWarning: step.methodWarning ? `${step.methodWarning} ${note}` : note,
   };
 }
@@ -120,12 +72,10 @@ function applyExcludedMethods(
       if (pref !== "nein") continue;
       const keywords = METHOD_KEYWORDS[methodId] ?? [];
       if (!stepMentionsExcludedMethod(updated, keywords)) continue;
-      const alternative = pickAlternativeMethod(prefs);
-      updated = rewriteExcludedMethodStep(
+      const label = METHOD_LABELS[methodId] ?? methodId;
+      updated = appendWarning(
         updated,
-        METHOD_LABELS[methodId] ?? methodId,
-        keywords,
-        alternative
+        `${label} sind ausgeschlossen (deine Angabe) — der Entwurf verwendet diese Methode noch und muss angepasst werden.`
       );
     }
     return updated;
@@ -141,41 +91,44 @@ function applyBudgetConstraints(
   const note =
     "Budget nicht angegeben (deine Angabe) — Schritte konservativ dimensioniert.";
 
-  return steps.map((step) => ({
-    ...step,
-    budgetFrame:
-      "Budget offen (deine Angabe) — konservativ dimensioniert, minimaler Aufwand",
-    methodWarning: step.methodWarning ? `${step.methodWarning} ${note}` : note,
-  }));
+  return steps.map((step) => appendWarning(step, note));
 }
 
 function applyAssetConstraints(
   steps: ProcessedStep[],
-  assets: AssetsValue
+  state: PhaseInputState
 ): ProcessedStep[] {
-  const available = new Set(assets.selected.map((a) => a.toLowerCase()));
+  const constraints = normalizePhase4Constraints(state);
+  const assetsAnswer = state.answers.p4_assets;
+  const assets =
+    assetsAnswer && !assetsAnswer.skipped && assetsAnswer.value
+      ? ((assetsAnswer.value as AssetsValue).selected ?? [])
+      : [];
+  const available = new Set(assets.map((a) => a.toLowerCase()));
   const hasWebsite = available.has("website");
-  const hasSocial = available.has("social-media-reichweite");
 
   return steps.map((step) => {
     const text = stepText(step);
     const warnings: string[] = [];
+
     if (!hasWebsite && /landingpage|website|webseite/i.test(text)) {
       warnings.push(
         "Website/Landingpage nicht als vorhanden angegeben — Schritt nutzt nur verfügbare Kanäle."
       );
     }
-    if (!hasSocial && /social|instagram|facebook/i.test(text)) {
+
+    if (
+      constraints.ownedSocialReach === "LIMITED" &&
+      mentionsSocialInStep(step) &&
+      !stepHasExternalPath(step)
+    ) {
       warnings.push(
-        "Social-Media-Reichweite nicht als vorhanden angegeben — alternativer Kanal nötig."
+        "Keine eigene Social-Media-Reichweite vorhanden. Ein Beitrag über den eigenen Account allein wäre nicht aussagekräftig. Lege einen konkreten externen Verbreitungsweg fest, zum Beispiel eine Gründer-Community, gezielte Ansprache, Multiplikatoren oder eine bezahlte Ausspielung."
       );
     }
+
     if (warnings.length === 0) return step;
-    const note = warnings.join(" ");
-    return {
-      ...step,
-      methodWarning: step.methodWarning ? `${step.methodWarning} ${note}` : note,
-    };
+    return appendWarning(step, warnings.join(" "));
   });
 }
 
@@ -201,16 +154,12 @@ function applyKapazitaetConstraints(
       );
     }
     if (warnings.length === 0) return step;
-    const note = warnings.join(" ");
-    return {
-      ...step,
-      methodWarning: step.methodWarning ? `${step.methodWarning} ${note}` : note,
-    };
+    return appendWarning(step, warnings.join(" "));
   });
 }
 
 function stepAddressesAccessBuildup(step: ProcessedStep): boolean {
-  return /zugang|reichweite|kontakt aufbau|reichweiten|zielgruppe erreichen|anzeigen|ads|werbung/i.test(
+  return /zugang|reichweite|kontakt aufbau|reichweiten|zielgruppe erreichen|anzeigen|ads|werbung|community|direktansprache/i.test(
     stepText(step)
   );
 }
@@ -242,7 +191,7 @@ function applyZugangConstraints(
         : step.description,
       marketingActivities: needsAccessPrefix
         ? [
-            "Kleinen Reichweiten- oder Kontaktaufbau-Schritt planen",
+            "Passenden Zielgruppenzugang identifizieren (Community, Direktansprache oder Partner)",
             ...step.marketingActivities,
           ].slice(0, 6)
         : step.marketingActivities,
@@ -255,12 +204,7 @@ function applyZugangConstraints(
       return updated;
     }
 
-    return {
-      ...updated,
-      methodWarning: updated.methodWarning
-        ? `${updated.methodWarning} ${ZUGANG_AUFBAU_NOTE}`
-        : ZUGANG_AUFBAU_NOTE,
-    };
+    return appendWarning(updated, ZUGANG_AUFBAU_NOTE);
   });
 }
 
@@ -289,10 +233,7 @@ export function enrichStepsWithPhaseInputContext(
     );
   }
 
-  const assets = state.answers.p4_assets;
-  if (assets && !assets.skipped && assets.value) {
-    result = applyAssetConstraints(result, assets.value as AssetsValue);
-  }
+  result = applyAssetConstraints(result, state);
 
   const kapazitaet = state.answers.p4_kapazitaet;
   if (kapazitaet && !kapazitaet.skipped && kapazitaet.value) {
@@ -312,8 +253,4 @@ export function enrichStepsWithPhaseInputContext(
   }
 
   return result;
-}
-
-export function stepTextForTests(step: ProcessedStep): string {
-  return stepText(step);
 }

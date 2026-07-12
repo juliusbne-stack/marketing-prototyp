@@ -74,12 +74,13 @@ export async function persistPhase4Steps({
       data: { isCritical: true },
     });
 
-    const adoptedAssumptionIds = new Set(
-      remainingSteps.map((step) => step.assumptionId)
-    );
+    const blockedAssumptionIds =
+      stepType === "VALIDATION"
+        ? new Set(remainingSteps.map((step) => step.assumptionId))
+        : new Set<string>();
 
     for (const step of processedSteps) {
-      if (adoptedAssumptionIds.has(step.assumptionId)) continue;
+      if (blockedAssumptionIds.has(step.assumptionId)) continue;
       await tx.validationStep.create({
         data: {
           projectId,

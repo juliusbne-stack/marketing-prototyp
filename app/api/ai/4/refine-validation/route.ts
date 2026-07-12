@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_ADOPTED_WHERE, isActiveAdopted } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError, mapLlmCallError } from "@/lib/openai";
 import { PHASE4_REFINE_VALIDATION_PROMPT } from "@/lib/prompts/phase4RefineValidation";
 import { phase4RefineValidationResponseSchema } from "@/lib/schemas/phase4RefineValidation";
+import { buildPhase4Planning, planningToLlmContext } from "@/lib/phase4/pipeline";
+import { checkValidationStepConsistency } from "@/lib/phase4/consistencyCheck";
+import { loadPhaseInputsForPage } from "@/lib/phaseInput/context";
+import { statementCategoryToStrategyDimension } from "@/lib/phase4/strategyDimension";
 import { validationStepHasDependents } from "@/lib/validationStep";
 
 const requestSchema = z.object({
@@ -52,6 +57,7 @@ export async function POST(request: Request) {
                   justification: true,
                   uncertainty: true,
                   adopted: true,
+                  supersededByStatementId: true,
                 },
               },
             },
@@ -99,7 +105,7 @@ export async function POST(request: Request) {
   }
 
   const adoptedAnalysis = await prisma.statement.findMany({
-    where: { projectId: step.projectId, adopted: true },
+    where: { projectId: step.projectId, ...ACTIVE_ADOPTED_WHERE },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
@@ -114,10 +120,31 @@ export async function POST(request: Request) {
 
   const adoptedDimensions = step.option.statements
     .map((link) => link.statement)
-    .filter((statement) => statement.adopted);
+    .filter((statement) => isActiveAdopted(statement));
+
+  const phaseInputState = await loadPhaseInputsForPage(step.projectId, 4);
+  const planningBundle = buildPhase4Planning(
+    [
+      {
+        id: step.assumption.id,
+        content: step.assumption.content,
+        justification: step.assumption.justification,
+        uncertainty: step.assumption.uncertainty,
+        evidenceStatus: step.assumption.evidenceStatus,
+        strategyDimension: statementCategoryToStrategyDimension(
+          step.assumption.category
+        ),
+        category: step.assumption.category,
+        allowedDecisiveTestSubjects: [],
+      },
+    ],
+    phaseInputState
+  );
+  const planningContext = planningToLlmContext(planningBundle);
 
   const project = step.project;
   const context = {
+    ...planningContext,
     startupProfile: {
       businessIdea: project.businessIdea,
       productStatus: project.productStatus,
@@ -192,6 +219,34 @@ export async function POST(request: Request) {
     metrics: metricsWithDataPoints,
   });
 
+  const planning = planningBundle.perAssumption.get(step.assumption.id);
+  const consistencyIssues =
+    planning && result.revisedValidationStep
+      ? checkValidationStepConsistency(
+          {
+            assumptionId: step.assumption.id,
+            strategyDimension: step.strategyDimension ?? "TARGET_GROUP",
+            testSubject: planning.primaryTestSubject,
+            validationQuestion:
+              result.revisedValidationStep.validationQuestion,
+            testDesign: result.revisedValidationStep.testDesign,
+            title: result.revisedValidationStep.title,
+            description: result.revisedValidationStep.description,
+            marketingActivities:
+              result.revisedValidationStep.marketingActivities,
+            channel: result.revisedValidationStep.channel,
+            timeframe: result.revisedValidationStep.timeframe,
+            budgetFrame: result.revisedValidationStep.budgetFrame,
+            metrics: result.revisedMetrics.map((metric) => ({
+              ...metric,
+              signalCategory: metric.signalCategory ?? "BEHAVIOR",
+            })),
+          },
+          planning,
+          planningBundle.constraints
+        ).filter((issue) => issue.severity === "ERROR")
+      : [];
+
   // Preview only — nothing is persisted until the user adopts the proposal.
   return NextResponse.json(
     {
@@ -200,6 +255,7 @@ export async function POST(request: Request) {
         stepAdopted: step.adopted,
         hasDependents,
         requiresReplacement: step.adopted && hasDependents,
+        consistencyIssues,
       },
     },
     { status: 200 }

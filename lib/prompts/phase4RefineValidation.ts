@@ -32,8 +32,14 @@ REGELN:
 - ${CRITERION_THRESHOLD_RULES}
 - evaluationMode je Metrik (PFLICHT): PER_POINT oder CUMULATIVE.
 - Halte Budget, Teamgröße, Zeit und Skills aus dem Profil ein.
+- Bei sprachlicher Kürzung: ValidationCore, primaryTestSubject, EvidenceContract und
+  ausgewaehlterTestansatz aus dem Kontext UNVERÄNDERT lassen.
+- Entferne keinen externen Verbreitungsweg, wenn keine eigene Reichweite vorhanden ist.
+- Schwäche den Test nicht zu reinen Proxy-Signalen (Likes, Shares, Reichweite).
 - Entwickle keine völlig neue Strategie.
-- previousRefinementRounds: frühere Nutzeranweisungen respektieren.
+- Sprachliche Kürzung darf den fachlichen Kern NICHT schwächen: primaryTestSubject,
+  direkte DECISIVE-Metrik, externer Verbreitungsweg und ausgeschlossene Methoden bleiben bindend.
+- Keine interne Prozesssprache. Kein Entfernen des externen Verbreitungswegs bei fehlender eigener Reichweite.
 - rationale: 1–2 Sätze, warum die neue Version besser validierbar ist.
 - strategyAdjustmentHint: nur bei strategischer Neuausrichtung; sonst null.
 

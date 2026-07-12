@@ -79,8 +79,8 @@ export const phase4ScaleResponseSchema = phase4LlmResponseSchema
     "1–4 gestützte Kernannahmen erforderlich."
   )
   .refine(
-    (data) => data.steps.length >= 2 && data.steps.length <= 4,
-    "2–4 Skalierungsschritte erforderlich."
+    (data) => data.steps.length >= 1 && data.steps.length <= 4,
+    "1–4 Skalierungsschritte erforderlich."
   );
 
 export type Phase4ScaleResponse = z.infer<typeof phase4ScaleResponseSchema>;

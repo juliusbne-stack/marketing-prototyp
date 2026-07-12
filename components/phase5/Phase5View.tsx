@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles, Star } from "lucide-react";
 import { ProgressButton } from "@/components/ui/ProgressButton";
-import type { PrioritizedOptionData, StepWithAssumption } from "@/components/phase4/types";
+import type { PrioritizedOptionData } from "@/components/phase4/types";
 import type { StatementData } from "@/components/statements/types";
 import { StatementCard } from "@/components/statements/StatementCard";
 import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
@@ -21,6 +22,8 @@ import type {
   AdaptationProposal,
   EvidenceBalance,
   FeedbackData,
+  Phase5AssumptionData,
+  Phase5StepWithAssumption,
 } from "./types";
 
 export function Phase5View({
@@ -35,7 +38,7 @@ export function Phase5View({
 }: {
   projectId: string;
   option: PrioritizedOptionData | null;
-  initialSteps: StepWithAssumption[];
+  initialSteps: Phase5StepWithAssumption[];
   initialFeedbacks: FeedbackData[];
   initialLearnings: StatementData[];
   initialDecision: AdaptationData | null;
@@ -45,6 +48,7 @@ export function Phase5View({
   // LLM-free summaries of the cockpit KPI data per step (only steps with data).
   kpiSummaries?: Record<string, string>;
 }) {
+  const router = useRouter();
   const [steps, setSteps] = useState(initialSteps);
   const [feedbacks, setFeedbacks] = useState(initialFeedbacks);
   const [learnings, setLearnings] = useState(initialLearnings);
@@ -123,10 +127,28 @@ export function Phase5View({
     setSteps((current) =>
       current.map((step) =>
         step.assumptionId === statement.id
-          ? { ...step, assumption: statement }
+          ? {
+              ...step,
+              assumption: {
+                ...statement,
+                supersededByStatementId: step.assumption.supersededByStatementId,
+                supersededBy: step.assumption.supersededBy,
+              },
+            }
           : step
       )
     );
+  }
+
+  function handleSuperseded(superseded: Phase5AssumptionData) {
+    setSteps((current) =>
+      current.map((step) =>
+        step.assumption.id === superseded.id
+          ? { ...step, assumption: superseded }
+          : step
+      )
+    );
+    router.refresh();
   }
 
   function handleLearningChanged(updated: StatementData) {
@@ -153,7 +175,7 @@ export function Phase5View({
   }
 
   const assumptionsById = new Map(
-    steps.map((step) => [step.assumption.id, step.assumption])
+    steps.map((step) => [step.assumption.id, step.assumption] as const)
   );
 
   return (
@@ -272,6 +294,7 @@ export function Phase5View({
           steps={steps}
           previousRunStepIds={previousRunStepIds}
           onApplied={handleStatusApplied}
+          onSuperseded={handleSuperseded}
         />
       )}
 

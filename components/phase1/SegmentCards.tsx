@@ -326,7 +326,10 @@ export function SegmentCards({
   const useHorizontalLayout = segmentCardCount === 1;
 
   return (
-    <section id="zielgruppen" className="scroll-mt-6">
+    <section
+      id="zielgruppen"
+      className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
+    >
       <h3 className="font-heading text-base font-medium text-text">
         Zielgruppen & Kundenprobleme
       </h3>

@@ -2,13 +2,34 @@
 
 import { useState } from "react";
 import { ArrowRight, Check, ChevronDown } from "lucide-react";
+import type { EvidenceStatus } from "@prisma/client";
 import type { StatementData } from "@/components/statements/types";
 import { EvidenceBadge } from "@/components/statements/EvidenceBadge";
 import { CATEGORY_LABELS } from "@/components/statements/categoryLabels";
 import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
-import { RESULT_CONFIG, type FeedbackData } from "./types";
-import type { StepWithAssumption } from "@/components/phase4/types";
+import {
+  RESULT_CONFIG,
+  type FeedbackData,
+  type Phase5AssumptionData,
+  type Phase5StepWithAssumption,
+} from "./types";
 import { wasProxyDamped } from "@/lib/phase5/guards";
+
+const MIN_SUPERSEDE_CONTENT_LENGTH = 20;
+const SUPERSEDE_REFERENCE_MAX_LENGTH = 80;
+
+const NEUTRAL_BADGE_CLASS =
+  "inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-text-muted";
+
+function formatSupersedeReference(content: string): string {
+  if (content.length <= SUPERSEDE_REFERENCE_MAX_LENGTH) return content;
+  return `${content.slice(0, SUPERSEDE_REFERENCE_MAX_LENGTH).trimEnd()} …`;
+}
+
+const SUPERSEDE_EVIDENCE_OPTIONS: { value: EvidenceStatus; label: string }[] = [
+  { value: "FACT", label: "Fakt" },
+  { value: "ASSUMPTION", label: "Annahme" },
+];
 
 // Evidence updates grouped per tested assumption (UI_KONZEPT §4, phase 5):
 // ONE row per statement bundling all assessed, not-yet-processed feedbacks.
@@ -17,7 +38,7 @@ import { wasProxyDamped } from "@/lib/phase5/guards";
 // always the CURRENT evidenceStatus of the statement — never a snapshot.
 // Applying the proposal marks ALL bundled feedbacks as processed.
 type UpdateGroup = {
-  statement: StatementData;
+  statement: Phase5AssumptionData;
   // Chronological (oldest step first); the last entry is the newest.
   feedbacks: FeedbackData[];
 };
@@ -28,12 +49,14 @@ export function EvidenceUpdateList({
   steps,
   previousRunStepIds,
   onApplied,
+  onSuperseded,
 }: {
   feedbacks: FeedbackData[];
-  assumptionsById: Map<string, StatementData>;
-  steps: StepWithAssumption[];
+  assumptionsById: Map<string, Phase5AssumptionData>;
+  steps: Phase5StepWithAssumption[];
   previousRunStepIds: string[];
   onApplied: (feedbacks: FeedbackData[], statement: StatementData) => void;
+  onSuperseded: (superseded: Phase5AssumptionData) => void;
 }) {
   const assessed = feedbacks.filter(
     (feedback) => feedback.interpretation !== null
@@ -107,6 +130,7 @@ export function EvidenceUpdateList({
             stepsById={stepsById}
             compact={false}
             onApplied={onApplied}
+            onSuperseded={onSuperseded}
           />
         ))
       ) : (
@@ -130,6 +154,7 @@ export function EvidenceUpdateList({
                 stepsById={stepsById}
                 compact
                 onApplied={onApplied}
+                onSuperseded={onSuperseded}
               />
             ))}
           </div>
@@ -144,16 +169,29 @@ function EvidenceUpdateGroupRow({
   stepsById,
   compact,
   onApplied,
+  onSuperseded,
 }: {
   group: UpdateGroup;
-  stepsById: Map<string, StepWithAssumption>;
+  stepsById: Map<string, Phase5StepWithAssumption>;
   compact: boolean;
   onApplied: (feedbacks: FeedbackData[], statement: StatementData) => void;
+  onSuperseded: (superseded: Phase5AssumptionData) => void;
 }) {
   const [isBusy, setIsBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const [showRefineForm, setShowRefineForm] = useState(false);
+  const [draftContent, setDraftContent] = useState("");
+  const [draftEvidenceStatus, setDraftEvidenceStatus] =
+    useState<"FACT" | "ASSUMPTION">("FACT");
+  const [isSuperseding, setIsSuperseding] = useState(false);
+  const [supersedeError, setSupersedeError] = useState<string | null>(null);
 
   const { statement } = group;
+  const canRefine = !statement.supersededByStatementId;
+  const trimmedDraft = draftContent.trim();
+  const canSubmitSupersede =
+    trimmedDraft.length >= MIN_SUPERSEDE_CONTENT_LENGTH && !isSuperseding;
+
   // Consolidated proposal: the newest assessment already factors in the full
   // validation history of the statement (see lib/prompts/phase5.ts).
   const newest = group.feedbacks[group.feedbacks.length - 1];
@@ -167,7 +205,7 @@ function EvidenceUpdateGroupRow({
 
   async function handleApply() {
     setIsBusy(true);
-    setError(null);
+    setApplyError(null);
     try {
       const response = await fetch("/api/feedback", {
         method: "PATCH",
@@ -189,7 +227,7 @@ function EvidenceUpdateGroupRow({
       }
       onApplied(body.feedbacks, body.statement);
     } catch (err) {
-      setError(
+      setApplyError(
         err instanceof Error
           ? err.message
           : "Die Statusänderung konnte nicht gespeichert werden. Erneut versuchen."
@@ -199,16 +237,116 @@ function EvidenceUpdateGroupRow({
     }
   }
 
-  return (
-    <div
-      className={
-        compact
-          ? "rounded-[10px] border border-border/80 bg-background px-4 py-3"
-          : "rounded-[10px] border border-border bg-surface p-4"
+  async function handleSupersede() {
+    if (!canSubmitSupersede) return;
+    setIsSuperseding(true);
+    setSupersedeError(null);
+    try {
+      const response = await fetch(
+        `/api/statements/${encodeURIComponent(statement.id)}/supersede`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: trimmedDraft,
+            evidenceStatus: draftEvidenceStatus,
+          }),
+        }
+      );
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          body?.error ??
+            "Die Präzisierung konnte nicht gespeichert werden. Erneut versuchen."
+        );
       }
-    >
+      const superseded: Phase5AssumptionData = {
+        ...body.superseded,
+        supersededByStatementId: body.replacement.id,
+        supersededBy: {
+          id: body.replacement.id,
+          content: body.replacement.content,
+        },
+      };
+      onSuperseded(superseded);
+      setShowRefineForm(false);
+      setDraftContent("");
+      setDraftEvidenceStatus("FACT");
+    } catch (err) {
+      setSupersedeError(
+        err instanceof Error
+          ? err.message
+          : "Die Präzisierung konnte nicht gespeichert werden. Erneut versuchen."
+      );
+    } finally {
+      setIsSuperseding(false);
+    }
+  }
+
+  function handleCancelRefine() {
+    setShowRefineForm(false);
+    setDraftContent("");
+    setDraftEvidenceStatus("FACT");
+    setSupersedeError(null);
+  }
+
+  const isSuperseded = statement.supersededByStatementId !== null;
+  const cardBaseClass = compact
+    ? "rounded-[10px] border border-border/80 bg-background px-4 py-3"
+    : "rounded-[10px] border border-border bg-surface p-4";
+
+  if (isSuperseded) {
+    const successorContent = statement.supersededBy?.content ?? null;
+
+    return (
+      <div className={`${cardBaseClass} opacity-60`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={NEUTRAL_BADGE_CLASS}>
+            {CATEGORY_LABELS[statement.category]}
+          </span>
+          <span className={NEUTRAL_BADGE_CLASS}>Abgelöst</span>
+          <EvidenceBadge status={statement.evidenceStatus} />
+          {showProxyBadge && (
+            <span className={NEUTRAL_BADGE_CLASS}>
+              indirekter Beleg / Proxy
+            </span>
+          )}
+        </div>
+
+        <p className="mt-2 text-sm leading-relaxed text-text">
+          {statement.content}
+        </p>
+
+        {successorContent && (
+          <p className="mt-2 text-xs text-text-muted">
+            Präzisiert durch: „{formatSupersedeReference(successorContent)}“
+          </p>
+        )}
+
+        <ul className="mt-3 flex flex-col gap-1.5">
+          {group.feedbacks.map((feedback) => (
+            <FeedbackAssessmentItem
+              key={feedback.id}
+              feedback={feedback}
+              stepTitle={
+                feedback.stepId
+                  ? (stepsById.get(feedback.stepId)?.title ?? null)
+                  : null
+              }
+              showProxyBadge={
+                feedback.proxyDamped || wasProxyDamped(feedback.interpretation)
+              }
+            />
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cardBaseClass}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-text-muted">
+        <span className={NEUTRAL_BADGE_CLASS}>
           {CATEGORY_LABELS[statement.category]}
         </span>
         {!compact &&
@@ -226,7 +364,7 @@ function EvidenceUpdateGroupRow({
           ))}
         {compact && <EvidenceBadge status={statement.evidenceStatus} />}
         {showProxyBadge && (
-          <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-text-muted">
+          <span className={NEUTRAL_BADGE_CLASS}>
             indirekter Beleg / Proxy
           </span>
         )}
@@ -235,6 +373,79 @@ function EvidenceUpdateGroupRow({
       <p className="mt-2 text-sm leading-relaxed text-text">
         {statement.content}
       </p>
+
+      {canRefine && !showRefineForm && (
+        <button
+          type="button"
+          onClick={() => {
+            setShowRefineForm(true);
+            setSupersedeError(null);
+          }}
+          className="mt-2 text-xs font-medium text-accent hover:underline"
+        >
+          Erkenntnis präzisieren
+        </button>
+      )}
+
+      {canRefine && showRefineForm && (
+        <div className="mt-3 rounded-md border border-border/80 bg-background/60 p-3">
+          <label className="block text-xs font-medium text-text">
+            Präzisierte Aussage
+            <textarea
+              value={draftContent}
+              onChange={(event) => setDraftContent(event.target.value)}
+              rows={3}
+              placeholder="Der monatliche Preis ist auf 29 € festgelegt."
+              aria-label="Präzisierte Aussage"
+              className="mt-1 w-full rounded-md border border-border bg-surface p-2 text-sm text-text"
+              disabled={isSuperseding}
+            />
+          </label>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <label className="text-xs font-medium text-text">
+              Evidenzstatus
+              <select
+                value={draftEvidenceStatus}
+                onChange={(event) =>
+                  setDraftEvidenceStatus(
+                    event.target.value as "FACT" | "ASSUMPTION"
+                  )
+                }
+                aria-label="Evidenzstatus der präzisierten Aussage"
+                className="ml-2 rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-text"
+                disabled={isSuperseding}
+              >
+                {SUPERSEDE_EVIDENCE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={handleSupersede}
+              disabled={!canSubmitSupersede}
+              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+            >
+              Übernehmen
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelRefine}
+              disabled={isSuperseding}
+              className="rounded-md border border-border px-3 py-1.5 text-xs text-text transition-colors hover:bg-background disabled:opacity-50"
+            >
+              Abbrechen
+            </button>
+          </div>
+          {supersedeError && (
+            <p className="mt-2 text-xs text-danger-text">{supersedeError}</p>
+          )}
+        </div>
+      )}
 
       <ul className="mt-3 flex flex-col gap-1.5">
         {group.feedbacks.map((feedback) => (
@@ -272,7 +483,7 @@ function EvidenceUpdateGroupRow({
         </p>
       )}
 
-      {error && <p className="mt-2 text-xs text-danger-text">{error}</p>}
+      {applyError && <p className="mt-2 text-xs text-danger-text">{applyError}</p>}
     </div>
   );
 }

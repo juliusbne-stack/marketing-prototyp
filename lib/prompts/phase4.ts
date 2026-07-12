@@ -1,6 +1,7 @@
 // Phase 4 prompt — critical assumptions and validation steps (docs/PROMPTS.md).
 import {
   ASSUMPTION_TYPE_VALIDATION_MAP,
+  CHANNEL_SELECTION_RULES,
   CRITERION_THRESHOLD_RULES,
   METRIC_EFFECT_LOGIC_RULES,
   METRIC_ROLE_RULES,
@@ -15,10 +16,13 @@ aus der übergebenen Whitelist und übersetze jede in einen begrenzten, ressourc
 Validierungsschritt mit Testdesign, Durchführungsaktivitäten und Messpunkten.
 
 Der Projektkontext enthält ggf. phasenEingaben (Rahmenbedingungen des Nutzers,
-KEINE Aussagen) und phasenEingabenRegeln. Wende diese Regeln strikt an.
-Wenn eine Rahmenbedingung eine Methodenwahl beeinflusst hat, erwähne das in
-testDesign oder description (z. B. "Interviews ausgeschlossen (deine Angabe)
-→ Online-Umfrage vorgeschlagen").
+KEINE Aussagen), phasenEingabenRegeln, nutzerbedingungen, verfuegbareKanaele und annahmenPlanung.
+Die annahmenPlanung enthält pro Annahme validationCore, evidenceContract, primaryTestSubject
+und den serverseitig ausgewählten Testansatz (ausgewaehlterTestansatz).
+Erzeuge jeden Schritt AUS diesem Testansatz — nicht unabhängig davon.
+Wende phasenEingabenRegeln strikt an.
+
+${CHANNEL_SELECTION_RULES}
 
 ${VALIDATION_CORE_THINKING}
 

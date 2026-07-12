@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { isActiveAdopted } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { dampenProxyResults, wasProxyDamped } from "@/lib/phase5/guards";
 import { PHASE5_PROMPT } from "@/lib/prompts/phase5";
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
               justification: true,
               uncertainty: true,
               adopted: true,
+              supersededByStatementId: true,
             },
           },
         },
@@ -145,7 +147,7 @@ export async function POST(request: Request) {
   // the AI's adaptation proposal (CONTINUE vs. ADAPT) and is shown in the UI.
   const dimensions = option.statements
     .map((link) => link.statement)
-    .filter((statement) => statement.adopted);
+    .filter((statement) => isActiveAdopted(statement));
   const assessedFeedbacks = feedbacks.filter(
     (feedback) => feedback.interpretation !== null
   );
@@ -223,7 +225,7 @@ export async function POST(request: Request) {
       prioritizationRationale: option.prioritizationRationale,
       dimensions: option.statements
         .map((link) => link.statement)
-        .filter((statement) => statement.adopted)
+        .filter((statement) => isActiveAdopted(statement))
         .map((statement) => ({
           category: statement.category,
           content: statement.content,

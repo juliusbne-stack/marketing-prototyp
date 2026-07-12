@@ -77,7 +77,7 @@ export async function runMonolithicPhase1(
     ventureAnchors: context.ventureAnchors,
     adoptedAnchorsForPestel: context.adoptedAnchorsForPestel,
     startupProfile: context.startupProfile,
-    ...(context.isIncremental
+    ...(context.adoptedAnalysis.length > 0
       ? { adoptedAnalysisStatements: context.adoptedAnalysis }
       : {}),
   };
