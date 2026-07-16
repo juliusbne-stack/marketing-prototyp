@@ -54,6 +54,7 @@ export async function POST(
                       evidenceStatus: true,
                       adopted: true,
                       supersededByStatementId: true,
+                      segmentLabel: true,
                     },
                   },
                 },
@@ -119,6 +120,8 @@ export async function POST(
       category: true,
       content: true,
       evidenceStatus: true,
+      segmentLabel: true,
+      segmentAspect: true,
     },
   });
 

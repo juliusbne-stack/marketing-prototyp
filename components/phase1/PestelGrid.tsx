@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
+import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
 import { AddStatementForm } from "./AddStatementForm";
 import type { StatementData } from "@/components/statements/types";
 import type { PestelCategory, PestelRelevance } from "@/lib/schemas/phase1";
@@ -54,6 +55,132 @@ function RelevanceNote({
   );
 }
 
+function RelevantPestelCell({
+  projectId,
+  label,
+  category,
+  entry,
+  statements,
+  defaultOpen = false,
+  onChanged,
+  onDeleted,
+  onAdded,
+}: {
+  projectId: string;
+  label: string;
+  category: PestelCategory;
+  entry: PestelRelevance | undefined;
+  statements: StatementData[];
+  defaultOpen?: boolean;
+  onChanged: (statement: StatementData) => void;
+  onDeleted: (id: string) => void;
+  onAdded: (statement: StatementData) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="overflow-hidden rounded-[10px] border border-border bg-background/60">
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        aria-expanded={isOpen}
+        className="group flex w-full items-center justify-between gap-3 px-3.5 py-3 text-left transition-colors duration-200 hover:bg-accent-soft/35 sm:px-4"
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h4 className="min-w-0 text-xs font-semibold uppercase tracking-wide text-text transition-colors group-hover:text-accent">
+            {label}
+          </h4>
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-evidence-fact-bg px-2 py-0.5 text-[10px] font-medium text-evidence-fact-text">
+            Relevant
+          </span>
+          {!isOpen && (
+            <span className="shrink-0 text-[11px] text-text-muted">
+              {statements.length === 0
+                ? "Keine Aussagen"
+                : `${statements.length} Aussage${statements.length === 1 ? "" : "n"}`}
+            </span>
+          )}
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-text-muted transition-[transform,color] duration-200 group-hover:text-accent motion-reduce:transition-none ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          aria-hidden
+        />
+      </button>
+
+      {isOpen && (
+        <div className="flex flex-col gap-2.5 border-t border-border/60 px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4">
+          {entry && <RelevanceNote entry={entry} />}
+
+          {statements.length === 0 && (
+            <p className="text-xs text-text-muted">Keine Aussagen.</p>
+          )}
+          {statements.map((statement) => (
+            <StatementCard
+              key={statement.id}
+              statement={statement}
+              onChanged={onChanged}
+              onDeleted={onDeleted}
+            />
+          ))}
+          <AddStatementForm
+            projectId={projectId}
+            categories={[{ value: category, label }]}
+            onAdded={onAdded}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DeprioritizedPestelCell({
+  label,
+  entry,
+}: {
+  label: string;
+  entry: PestelRelevance | undefined;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="rounded-[10px] border border-dashed border-border/80 bg-background/30">
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        aria-expanded={isOpen}
+        className="flex w-full items-center justify-between gap-3 px-3.5 py-3 text-left sm:px-4"
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h4 className="min-w-0 text-xs font-semibold uppercase tracking-wide text-text-muted">
+            {label}
+          </h4>
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-background px-2 py-0.5 text-[10px] font-medium text-text-muted">
+            Aktuell nachrangig
+          </span>
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-text-muted transition-transform motion-reduce:transition-none ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          aria-hidden
+        />
+      </button>
+
+      {isOpen && (
+        <div className="flex flex-col gap-2.5 border-t border-border/60 px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4">
+          {entry && <RelevanceNote entry={entry} defaultOpen />}
+          <p className="text-xs leading-relaxed text-text-muted">
+            Bewusst keine Aussage — die KI hat diese Dimension als strategisch
+            nachrangig eingestuft.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PestelGrid({
   projectId,
   statements,
@@ -73,85 +200,59 @@ export function PestelGrid({
     pestelRelevance.map((entry) => [entry.category, entry])
   );
 
+  const relevantFields = PESTEL_FIELDS.filter((field) => {
+    const entry = relevanceByCategory.get(field.category);
+    return entry?.relevant ?? true;
+  });
+
+  const deprioritizedFields = PESTEL_FIELDS.filter((field) => {
+    const entry = relevanceByCategory.get(field.category);
+    return entry != null && !entry.relevant;
+  });
+
   return (
-    <section
+    <CollapsibleSection
       id="pestel"
+      title="PESTEL-Umfeld"
+      defaultOpen
       className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
+      intro="Die KI bewertet zuerst, welche Umfelddimensionen für dein Geschäftsmodell strategisch relevant sind — nicht alle sechs müssen Aussagen erhalten."
     >
-      <h3 className="font-heading text-base font-medium text-text">
-        PESTEL-Umfeld
-      </h3>
-      <p className="mt-1 text-xs text-text-muted">
-        Die KI bewertet zuerst, welche Umfelddimensionen für dein Geschäftsmodell
-        strategisch relevant sind — nicht alle sechs müssen Aussagen erhalten.
-      </p>
-      <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(min(100%,19rem),1fr))] gap-4 xl:gap-5">
-        {PESTEL_FIELDS.map((field) => {
+      <div className="flex flex-col gap-3">
+        {relevantFields.map((field, index) => {
           const entry = relevanceByCategory.get(field.category);
-          const isRelevant = entry?.relevant ?? true;
           const cellStatements = statements.filter(
             (statement) => statement.category === field.category
           );
 
           return (
-            <div
+            <RelevantPestelCell
               key={field.category}
-              className={`flex min-w-0 flex-col gap-2.5 rounded-[10px] border p-3.5 sm:p-4 ${
-                isRelevant
-                  ? "border-border bg-background/60"
-                  : "border-dashed border-border/80 bg-background/30"
-              }`}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
-                <h4
-                  className={`min-w-0 text-xs font-semibold uppercase tracking-wide ${
-                    isRelevant ? "text-text" : "text-text-muted"
-                  }`}
-                >
-                  {field.label}
-                </h4>
-                <span
-                  className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    isRelevant
-                      ? "bg-evidence-fact-bg text-evidence-fact-text"
-                      : "bg-background text-text-muted"
-                  }`}
-                >
-                  {isRelevant ? "Relevant" : "Aktuell nachrangig"}
-                </span>
-              </div>
-
-              {entry && <RelevanceNote entry={entry} defaultOpen={!isRelevant} />}
-
-              {isRelevant ? (
-                <>
-                  {cellStatements.length === 0 && (
-                    <p className="text-xs text-text-muted">Keine Aussagen.</p>
-                  )}
-                  {cellStatements.map((statement) => (
-                    <StatementCard
-                      key={statement.id}
-                      statement={statement}
-                      onChanged={onChanged}
-                      onDeleted={onDeleted}
-                    />
-                  ))}
-                  <AddStatementForm
-                    projectId={projectId}
-                    categories={[{ value: field.category, label: field.label }]}
-                    onAdded={onAdded}
-                  />
-                </>
-              ) : (
-                <p className="text-xs leading-relaxed text-text-muted">
-                  Bewusst keine Aussage — die KI hat diese Dimension als
-                  strategisch nachrangig eingestuft.
-                </p>
-              )}
-            </div>
+              projectId={projectId}
+              label={field.label}
+              category={field.category}
+              entry={entry}
+              statements={cellStatements}
+              defaultOpen={index === 0}
+              onChanged={onChanged}
+              onDeleted={onDeleted}
+              onAdded={onAdded}
+            />
           );
         })}
       </div>
-    </section>
+
+      {deprioritizedFields.length > 0 && (
+        <div className="mt-4 flex flex-col gap-2">
+          {deprioritizedFields.map((field) => (
+            <DeprioritizedPestelCell
+              key={field.category}
+              label={field.label}
+              entry={relevanceByCategory.get(field.category)}
+            />
+          ))}
+        </div>
+      )}
+    </CollapsibleSection>
   );
 }

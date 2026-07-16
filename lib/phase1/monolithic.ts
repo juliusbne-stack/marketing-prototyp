@@ -22,6 +22,11 @@ function buildPhase1RetryPreamble(targetCompetitorCount: number) {
     `- GENAU ${targetCompetitorCount} verschiedene competitorLabels`,
     `- Je Label GENAU 6 COMPETITOR-Statements`,
     `- ZUSÄTZLICH 1–3 COMPETITOR-Landschafts-Aussagen OHNE competitorLabel`,
+    ``,
+    `PFLICHT-CHECK ZIELGRUPPE:`,
+    `- JEDE Aussage mit category="TARGET_SEGMENT" MUSS BEIDE Felder segmentLabel UND segmentAspect gesetzt haben (nicht null, nicht leer).`,
+    `- segmentLabel = Name des Segments (bei allen Aussagen desselben Segments identisch); segmentAspect = einer von WHO_CORE, WHO_DISTINGUISHERS, WHO_BOUNDARY_ROLE, PROBLEM_NEED, BEHAVIOR_CONTEXT, WILLINGNESS_TO_PAY, REACHABILITY.`,
+    `- segmentLabel/segmentAspect NUR bei TARGET_SEGMENT setzen — bei allen anderen Kategorien null.`,
   ].join("\n");
 }
 

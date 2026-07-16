@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { KPI_SIMULATION_PROMPT } from "@/lib/prompts/kpiSimulation";
 import { reassessDataPoints } from "@/lib/kpiAssessment";
 import { adjustSimulationForScenario } from "@/lib/kpiSimulationAdjust";
+import { validateMetricDataPoint } from "@/lib/metrics/aggregateMetric";
 import {
   kpiScenarioSchema,
   kpiSimulationResponseSchema,
@@ -20,6 +22,8 @@ const dataPointSelect = {
   metricId: true,
   periodLabel: true,
   value: true,
+  numerator: true,
+  denominator: true,
   assessment: true,
 } as const;
 
@@ -98,12 +102,19 @@ export async function POST(request: Request) {
       id: metric.id,
       name: metric.name,
       evaluationMode: metric.evaluationMode,
+      valueType: metric.valueType,
+      aggregationStrategy: metric.aggregationStrategy,
+      evaluationConfig: metric.evaluationConfig,
+      numeratorLabel: metric.numeratorLabel,
+      denominatorLabel: metric.denominatorLabel,
       successCriterion: metric.successCriterion,
       failureCriterion: metric.failureCriterion,
     })),
-    // Existing history so the simulation continues the period numbering.
-    existingPeriodLabels: step.metrics[0].dataPoints.map(
-      (point) => point.periodLabel
+    existingPeriodLabelsByMetric: Object.fromEntries(
+      step.metrics.map((metric) => [
+        metric.id,
+        metric.dataPoints.map((point) => point.periodLabel),
+      ])
     ),
   };
 
@@ -155,22 +166,47 @@ export async function POST(request: Request) {
 
   const metricById = new Map(step.metrics.map((metric) => [metric.id, metric]));
 
-  const pointsToCreate = result.series.flatMap((series) => {
+  const pointsToCreate: Prisma.KpiDataPointCreateManyInput[] = [];
+  for (const series of result.series) {
     const metric = metricById.get(series.metricId);
-    if (!metric) return [];
+    if (!metric) continue;
     const adjusted = adjustSimulationForScenario(
       metric,
       series.points,
       parsed.data.scenario
     );
-    const reassessed = reassessDataPoints(metric, adjusted);
-    return reassessed.map((point) => ({
-      metricId: series.metricId,
+    const canonicalPoints = adjusted.map((point) => ({
       periodLabel: point.periodLabel,
-      value: point.value,
+      value: point.value === undefined ? null : String(point.value),
+      numerator: point.numerator ?? null,
+      denominator: point.denominator ?? null,
       assessment: point.assessment,
     }));
-  });
+    const validationErrors = canonicalPoints.flatMap((point) =>
+      validateMetricDataPoint(metric, point)
+    );
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Die simulierten Werte passen nicht zur Wertart der Messgröße.",
+          details: validationErrors,
+        },
+        { status: 502 }
+      );
+    }
+    const reassessed = reassessDataPoints(metric, canonicalPoints);
+    pointsToCreate.push(
+      ...reassessed.map((point) => ({
+        metricId: series.metricId,
+        periodLabel: point.periodLabel,
+        value: point.value,
+        numerator: point.numerator,
+        denominator: point.denominator,
+        assessment: point.assessment,
+      }))
+    );
+  }
 
   await prisma.kpiDataPoint.createMany({
     data: pointsToCreate,

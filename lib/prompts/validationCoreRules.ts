@@ -83,7 +83,20 @@ export const METRIC_ROLE_RULES = `MESSLOGIK (PFLICHT):
 - Jeder Schritt braucht mindestens EINE entscheidende Metrik (metricRole: DECISIVE),
   die die geprüfte Annahme direkt adressiert und die Signal-Passungsregeln erfüllt.
 - 0–2 unterstützende Metriken (metricRole: SUPPORTING) sind optional.
-- Wenn nur ATTENTION als entscheidendes Signal möglich wäre, wähle ein anderes Testdesign.`;
+- Wenn nur ATTENTION als entscheidendes Signal möglich wäre, wähle ein anderes Testdesign.
+- Jede Metrik benötigt valueType (SCALAR | COUNT | COUNT_OF_TOTAL | PERCENTAGE |
+  CURRENCY | DURATION | SCORE) und aggregationStrategy (SUM | LATEST | AVERAGE |
+  RATE_FROM_SUMS | NONE). evaluationMode beschreibt nur PER_POINT oder CUMULATIVE
+  und ersetzt diese Angaben nicht.
+- COUNT_OF_TOTAL und Conversion-Raten verwenden RATE_FROM_SUMS. Sie benötigen je
+  Erhebungswelle getrennte Treffer und Beobachtungen; Prozentwerte werden nie addiert.
+- Jede technisch bewertbare Metrik benötigt evaluationConfig mit kind,
+  success/failure ({ operator: GTE | GT | LTE | LT | EQ und genau einem von
+  value, numerator, ratio, percentage }) sowie bei Stichproben
+  requiredDenominator. Die Kriteriumstexte bleiben für Menschen verständlich,
+  werden aber nicht maschinell geparst.
+- Für COUNT_OF_TOTAL außerdem numeratorLabel, denominatorLabel und eine neutrale
+  observationUnit für die Anzeige angeben.`;
 
 export const METRIC_EFFECT_LOGIC_RULES = `WIRKUNGSLOGIK JE METRIK (PFLICHT für DECISIVE):
 - Jede entscheidende Metrik (metricRole: DECISIVE) braucht proxyStrength und signalRationale.

@@ -237,8 +237,16 @@ export function buildSignalMetricsPatchBody(
     metrics: step.metrics.map((metric) => ({
       name: metric.name,
       evaluationMode: metric.evaluationMode,
+      valueType: metric.valueType,
+      aggregationStrategy: metric.aggregationStrategy,
+      evaluationConfig: metric.evaluationConfig,
+      numeratorLabel: metric.numeratorLabel,
+      denominatorLabel: metric.denominatorLabel,
+      observationUnit: metric.observationUnit,
       metricRole: metric.metricRole,
       signalCategory: metric.signalCategory ?? undefined,
+      proxyStrength: metric.proxyStrength,
+      signalRationale: metric.signalRationale,
       successCriterion:
         metric.id === metricId && feld === "stuetzend"
           ? nachher

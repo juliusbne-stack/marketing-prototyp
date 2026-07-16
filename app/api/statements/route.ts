@@ -22,6 +22,7 @@ const statementSelect = {
   segmentAspect: true,
   competitorLabel: true,
   competitorAspect: true,
+  supersededByStatementId: true,
 } satisfies Prisma.StatementSelect;
 
 const createStatementSchema = z.object({

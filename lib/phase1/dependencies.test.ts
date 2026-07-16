@@ -69,6 +69,8 @@ describe("createPhase1ModuleHashes", () => {
   });
 
   it("includes cache version in hash composition", () => {
-    expect(PHASE1_CACHE_VERSIONS.schemaVersion).toBe("compact-v2");
+    expect(PHASE1_CACHE_VERSIONS.schemaVersion).toBe(
+      "compact-v3-segment-profile"
+    );
   });
 });

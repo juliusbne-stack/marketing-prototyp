@@ -1,0 +1,50 @@
+.validation-step-detail-page {
+  font-size: 14px;
+}
+
+.validation-step-detail-section,
+.validation-step-detail-assumption,
+.validation-step-detail-metrics,
+.validation-step-detail-header,
+.validation-step-detail-warning {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.validation-step-detail-table th,
+.validation-step-detail-table td {
+  vertical-align: top;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body > div[role="note"] {
+    display: none !important;
+  }
+
+  .validation-step-detail-toolbar {
+    display: none !important;
+  }
+
+  .validation-step-detail-page {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .validation-step-detail-shell {
+    background: #ffffff !important;
+  }
+
+  .validation-step-detail-section,
+  .validation-step-detail-assumption,
+  .validation-step-detail-metrics,
+  .validation-step-detail-header,
+  .validation-step-detail-warning {
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+}

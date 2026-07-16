@@ -167,7 +167,7 @@ model Statement {
   isCritical       Boolean           @default(false) // kritische Annahme (Phase 4)
   adopted          Boolean           @default(false) // Übernahme-Prinzip (F10/NF3/NF5)
   segmentLabel     String? // Zielgruppensegment-Name (nur TARGET_SEGMENT)
-  segmentAspect    String? // Segmentdimension: DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
+  segmentAspect    String? // Segmentdimension: WHO_CORE | WHO_DISTINGUISHERS | WHO_BOUNDARY_ROLE | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY
   competitorLabel  String? // Wettbewerber-/Alternativen-Name (nur COMPETITOR-Profile)
   competitorAspect         String? // Profildimension: ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE
   supersededByStatementId  String?
@@ -334,6 +334,24 @@ enum EvaluationMode {
   CUMULATIVE // Zähler über die Prüfperiode — Bewertung über kumulierte Summe
 }
 
+enum MetricValueType {
+  SCALAR
+  COUNT
+  COUNT_OF_TOTAL
+  PERCENTAGE
+  CURRENCY
+  DURATION
+  SCORE
+}
+
+enum AggregationStrategy {
+  SUM
+  LATEST
+  AVERAGE
+  RATE_FROM_SUMS
+  NONE
+}
+
 enum MetricRole {
   DECISIVE // adressiert die Annahme direkt — zählt für Evidenz in Phase 5
   SUPPORTING // Nebensignal (Traffic, Reichweite) — nicht allein entscheidend
@@ -345,17 +363,23 @@ enum ProxyStrength {
 }
 
 model Metric {
-  id               String          @id @default(cuid())
-  stepId           String
-  step             ValidationStep  @relation(fields: [stepId], references: [id], onDelete: Cascade)
-  name             String // z.B. "Registrierungen in 2 Wochen"
-  evaluationMode   EvaluationMode  @default(PER_POINT)
-  metricRole       MetricRole      @default(DECISIVE)
-  signalCategory   SignalCategory?
-  proxyStrength    ProxyStrength?
-  signalRationale  String?
-  successCriterion String // gilt als stützend, wenn ...
-  failureCriterion String // gilt als widerlegend, wenn ...
+  id                    String               @id @default(cuid())
+  stepId                String
+  step                  ValidationStep       @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  name                  String // z.B. "Registrierungen in 2 Wochen"
+  evaluationMode        EvaluationMode       @default(PER_POINT)
+  valueType             MetricValueType?
+  aggregationStrategy   AggregationStrategy?
+  evaluationConfig      Json?
+  numeratorLabel        String?
+  denominatorLabel      String?
+  observationUnit       String?
+  metricRole            MetricRole           @default(DECISIVE)
+  signalCategory        SignalCategory?
+  proxyStrength         ProxyStrength?
+  signalRationale       String?
+  successCriterion      String // gilt als stützend, wenn ...
+  failureCriterion      String // gilt als widerlegend, wenn ...
 
   dataPoints KpiDataPoint[]
 }
@@ -388,6 +412,7 @@ enum KpiAssessment {
   SUPPORTING // Wert stützt das Erfolgskriterium
   NEUTRAL // Wert ist uneindeutig
   CONTRADICTING // Wert reißt das Misserfolgskriterium
+  PENDING // erforderliche Stichprobe noch nicht erreicht oder Legacy-Wert unklar
 }
 
 model KpiDataPoint {
@@ -395,7 +420,9 @@ model KpiDataPoint {
   metricId    String
   metric      Metric        @relation(fields: [metricId], references: [id], onDelete: Cascade)
   periodLabel String // z.B. "Woche 1"
-  value       String // fiktiver Perioden-Wert (Text, z.B. "12 Registrierungen")
+  value       String? // kanonischer numerischer Einzelwert; Freitext nur für Legacy-Daten
+  numerator   Float?
+  denominator Float?
   assessment  KpiAssessment
   createdAt   DateTime      @default(now())
 }

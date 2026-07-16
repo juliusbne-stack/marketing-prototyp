@@ -202,11 +202,14 @@ export function EvaluationMatrix({
             {CRITERION_ORDER.map(({ criterion, label }, rowIndex) => (
               <tr
                 key={criterion}
-                className={
+                className={[
+                  rowIndex % 2 === 0 ? "bg-[#F2F7F3]" : "bg-[#F3F3F0]",
                   rowIndex < CRITERION_ORDER.length - 1
                     ? "border-b border-border/70"
-                    : ""
-                }
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 <th
                   scope="row"

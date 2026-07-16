@@ -1,194 +1,122 @@
 import type { KpiScenario } from "@/lib/schemas/kpiSimulation";
+import type { KpiDataPointInput } from "@/lib/schemas/kpiSimulation";
 import {
-  assessValue,
-  computeCumulativeTotal,
-  derivePeriodAssessment,
-  parseMaxThreshold,
-  parseMinThreshold,
-  parseNumericValue,
-  reassessDataPoints,
-  resolveEvaluationMode,
-  type KpiPoint,
-  type MetricForAssessment,
-} from "@/lib/kpiAssessment";
+  metricEvaluationConfigSchema,
+  type MetricEvaluationConfig,
+} from "@/lib/schemas/metric";
+import type { MetricAggregationInput } from "@/lib/metrics/aggregateMetric";
 
-function extractValueSuffix(value: string): string {
-  return value.replace(/^(\d+(?:[.,]\d+)?)\s*%?\s*/, "").trim();
+function ruleTarget(
+  rule: MetricEvaluationConfig["success"],
+  denominator?: number
+): number | null {
+  let target =
+    rule.numerator ??
+    rule.value ??
+    (rule.percentage !== undefined && denominator !== undefined
+      ? (rule.percentage / 100) * denominator
+      : rule.ratio !== undefined && denominator !== undefined
+        ? rule.ratio * denominator
+        : null);
+  if (target === null) return null;
+  if (rule.operator === "GT") target += 1;
+  if (rule.operator === "LT") target -= 1;
+  return target;
 }
 
-function formatIncrement(value: number, suffix: string, asPercent: boolean): string {
-  const formatted = asPercent
-    ? `${value.toFixed(1).replace(".", ",")} %`
-    : String(Math.round(value));
-  return suffix ? `${formatted} ${suffix}` : formatted;
+function scenarioTarget(
+  config: MetricEvaluationConfig,
+  scenario: KpiScenario,
+  denominator?: number
+): number | null {
+  const success = ruleTarget(config.success, denominator);
+  const failure = ruleTarget(config.failure, denominator);
+  if (scenario === "SUPPORTING") return success;
+  if (scenario === "CONTRADICTING") return failure;
+  return success !== null && failure !== null
+    ? (success + failure) / 2
+    : null;
 }
 
-function adjustCumulativeSeries<T extends KpiPoint>(
-  metric: MetricForAssessment,
-  points: T[],
+function adjustRatioSeries(
+  points: KpiDataPointInput[],
+  config: MetricEvaluationConfig,
   scenario: KpiScenario
-): T[] {
+): KpiDataPointInput[] {
   if (points.length === 0) return points;
-
-  const successMin = parseMinThreshold(metric.successCriterion);
-  const failureMax = parseMaxThreshold(metric.failureCriterion);
-  const suffix =
-    points.map((point) => extractValueSuffix(point.value)).find(Boolean) ?? "";
-  const asPercent = metric.successCriterion.includes("%");
-
-  let targetTotal: number | null = null;
-  switch (scenario) {
-    case "SUPPORTING":
-      targetTotal = successMin ?? computeCumulativeTotal(points);
-      break;
-    case "CONTRADICTING":
-      targetTotal =
-        failureMax !== null ? Math.max(0, failureMax - 1) : computeCumulativeTotal(points);
-      break;
-    case "MIXED":
-      if (successMin !== null && failureMax !== null && failureMax < successMin) {
-        targetTotal = Math.floor((failureMax + successMin) / 2);
-      }
-      break;
-  }
-
-  if (targetTotal === null) return points;
-
-  const currentTotal = computeCumulativeTotal(points);
-  const delta = targetTotal - currentTotal;
-  if (delta === 0) return points;
-
-  const adjusted = [...points];
+  const adjusted = points.map((point) => ({ ...point }));
   const lastIndex = adjusted.length - 1;
-  const lastPoint = adjusted[lastIndex]!;
-  const lastValue = parseNumericValue(lastPoint.value) ?? 0;
-  const newLastValue = Math.max(0, lastValue + delta);
-
+  const previous = adjusted.slice(0, lastIndex);
+  const previousDenominator = previous.reduce(
+    (sum, point) => sum + (point.denominator ?? 0),
+    0
+  );
+  const previousNumerator = previous.reduce(
+    (sum, point) => sum + (point.numerator ?? 0),
+    0
+  );
+  const currentLast = adjusted[lastIndex]!;
+  const requiredDenominator = config.requiredDenominator ?? 0;
+  const lastDenominator = Math.max(
+    currentLast.denominator ?? 1,
+    requiredDenominator - previousDenominator,
+    1
+  );
+  const totalDenominator = previousDenominator + lastDenominator;
+  const target = scenarioTarget(config, scenario, totalDenominator);
+  if (target === null) return adjusted;
+  const lastNumerator = Math.min(
+    lastDenominator,
+    Math.max(0, Math.round(target - previousNumerator))
+  );
   adjusted[lastIndex] = {
-    ...lastPoint,
-    value: formatIncrement(newLastValue, suffix, asPercent),
+    periodLabel: currentLast.periodLabel,
+    numerator: lastNumerator,
+    denominator: lastDenominator,
     assessment: "NEUTRAL",
   };
-
   return adjusted;
 }
 
-function adjustPerPointSeries<T extends KpiPoint>(
-  metric: MetricForAssessment,
-  points: T[],
+function adjustScalarSeries(
+  metric: MetricAggregationInput,
+  points: KpiDataPointInput[],
+  config: MetricEvaluationConfig,
   scenario: KpiScenario
-): T[] {
-  const reassessed = reassessDataPoints(metric, points);
-  const count = reassessed.length;
-  if (count === 0) return points;
-
-  const supporting = reassessed.filter(
-    (point) => point.assessment === "SUPPORTING"
-  ).length;
-  const contradicting = reassessed.filter(
-    (point) => point.assessment === "CONTRADICTING"
-  ).length;
-  const majority = Math.floor(count / 2) + 1;
-
-  const needsMoreSupporting =
-    scenario === "SUPPORTING" && supporting < majority;
-  const needsMoreContradicting =
-    scenario === "CONTRADICTING" && contradicting < majority;
-  const needsMixed =
-    scenario === "MIXED" &&
-    (supporting >= majority || contradicting >= majority);
-
-  if (!needsMoreSupporting && !needsMoreContradicting && !needsMixed) {
-    return reassessed;
+): KpiDataPointInput[] {
+  if (points.length === 0) return points;
+  const adjusted = points.map((point) => ({ ...point }));
+  const target = scenarioTarget(config, scenario);
+  if (target === null) return adjusted;
+  const lastIndex = adjusted.length - 1;
+  const previous = adjusted.slice(0, lastIndex);
+  const previousSum = previous.reduce(
+    (sum, point) => sum + (point.value ?? 0),
+    0
+  );
+  let lastValue = target;
+  if (metric.aggregationStrategy === "SUM") {
+    lastValue = target - previousSum;
+  } else if (metric.aggregationStrategy === "AVERAGE") {
+    lastValue = target * adjusted.length - previousSum;
   }
-
-  const successMin = parseMinThreshold(metric.successCriterion);
-  const failureMax = parseMaxThreshold(metric.failureCriterion);
-  const suffix =
-    points.map((point) => extractValueSuffix(point.value)).find(Boolean) ?? "";
-  const asPercent = metric.successCriterion.includes("%");
-
-  const adjusted = [...reassessed];
-
-  for (let i = 0; i < adjusted.length; i++) {
-    const point = adjusted[i]!;
-    let targetAssessment: "SUPPORTING" | "NEUTRAL" | "CONTRADICTING" | null =
-      null;
-
-    if (needsMoreSupporting && point.assessment !== "SUPPORTING") {
-      targetAssessment = "SUPPORTING";
-    } else if (needsMoreContradicting && point.assessment !== "CONTRADICTING") {
-      targetAssessment = "CONTRADICTING";
-    } else if (needsMixed && point.assessment !== "NEUTRAL") {
-      targetAssessment = i % 3 === 0 ? "SUPPORTING" : i % 3 === 1 ? "CONTRADICTING" : "NEUTRAL";
-    }
-
-    if (!targetAssessment) continue;
-
-    let newValue: number;
-    if (targetAssessment === "SUPPORTING") {
-      newValue = successMin ?? (parseNumericValue(point.value) ?? 1) + 1;
-    } else if (targetAssessment === "CONTRADICTING") {
-      newValue =
-        failureMax !== null
-          ? Math.max(0, failureMax - 1)
-          : Math.max(0, (parseNumericValue(point.value) ?? 1) - 1);
-    } else {
-      const mid =
-        successMin !== null && failureMax !== null
-          ? (successMin + failureMax) / 2
-          : parseNumericValue(point.value) ?? 1;
-      newValue = mid;
-    }
-
-    adjusted[i] = {
-      ...point,
-      value: formatIncrement(newValue, suffix, asPercent),
-      assessment: assessValue(
-        newValue,
-        metric.successCriterion,
-        metric.failureCriterion
-      ),
-    };
-
-    const newSupporting = adjusted.filter(
-      (p) => p.assessment === "SUPPORTING"
-    ).length;
-    const newContradicting = adjusted.filter(
-      (p) => p.assessment === "CONTRADICTING"
-    ).length;
-
-    if (needsMoreSupporting && newSupporting >= majority) break;
-    if (needsMoreContradicting && newContradicting >= majority) break;
-    if (
-      needsMixed &&
-      newSupporting < majority &&
-      newContradicting < majority
-    ) {
-      if (i === adjusted.length - 1) break;
-    }
-  }
-
-  return reassessDataPoints(metric, adjusted);
+  adjusted[lastIndex] = {
+    periodLabel: adjusted[lastIndex]!.periodLabel,
+    value: Math.max(0, lastValue),
+    assessment: "NEUTRAL",
+  };
+  return adjusted;
 }
 
-/** Align simulated KPI series with the chosen scenario at the evaluation level. */
-export function adjustSimulationForScenario<T extends KpiPoint>(
-  metric: MetricForAssessment,
-  points: T[],
+/** Align generated values with structured rules. Free-text criteria are never parsed. */
+export function adjustSimulationForScenario(
+  metric: MetricAggregationInput,
+  points: KpiDataPointInput[],
   scenario: KpiScenario
-): T[] {
-  const mode = resolveEvaluationMode(metric);
-
-  if (mode === "CUMULATIVE") {
-    const adjusted = adjustCumulativeSeries(metric, points, scenario);
-    const periodAssessment = derivePeriodAssessment(metric, adjusted);
-    return adjusted.map((point, index) => ({
-      ...point,
-      assessment:
-        index === adjusted.length - 1 ? periodAssessment : "NEUTRAL",
-    }));
-  }
-
-  return adjustPerPointSeries(metric, points, scenario);
+): KpiDataPointInput[] {
+  const parsed = metricEvaluationConfigSchema.safeParse(metric.evaluationConfig);
+  if (!parsed.success) return points;
+  return metric.aggregationStrategy === "RATE_FROM_SUMS"
+    ? adjustRatioSeries(points, parsed.data, scenario)
+    : adjustScalarSeries(metric, points, parsed.data, scenario);
 }

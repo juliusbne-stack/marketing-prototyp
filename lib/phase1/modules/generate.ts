@@ -15,7 +15,7 @@ import { buildCompetitorsBatchPrompt } from "@/lib/prompts/phase1/competitors";
 import { PHASE1_SYNTHESIS_PROMPT } from "@/lib/prompts/phase1/synthesis";
 import { buildModuleUserPrompt } from "@/lib/prompts/phase1/shared";
 import { phase1Config } from "../config";
-import { withAbortTimeout, throwIfAborted } from "../concurrency";
+import { withAbortTimeout, throwIfAborted, isAbortError } from "../concurrency";
 import {
   normalizeCompetitorProfile,
   normalizeSegmentProfile,
@@ -48,6 +48,7 @@ import type {
   Phase1ModuleKey,
 } from "../types";
 import type { Phase1Statement, PestelRelevance } from "@/lib/schemas/phase1";
+import { REQUIRED_GENERATED_SEGMENT_ASPECTS } from "@/lib/segmentAspects";
 import type { Phase1StreamEvent } from "../events";
 import { createPreviewId } from "../hashing";
 import { z } from "zod";
@@ -112,7 +113,9 @@ async function repairAndValidateSegments(
 ): Promise<{ data: SegmentsModuleData; repairCount: number }> {
   const validSegments = data.segments.filter((segment) => {
     const aspects = new Set(segment.statements.map((s) => s.segmentAspect));
-    return aspects.size === 5;
+    return REQUIRED_GENERATED_SEGMENT_ASPECTS.every((aspect) =>
+      aspects.has(aspect)
+    );
   });
 
   const repaired = await runModuleRepair<SegmentsModuleData>({
@@ -298,7 +301,11 @@ export async function generateSegmentsModule(
   let moduleData = result.data as SegmentsModuleData;
   let repairCount = 0;
   let { segmentStatements, customerProblems } = normalizeSegmentsData(moduleData);
-  let validated = validateSegmentsData(moduleData, segmentStatements, customerProblems);
+  const validated = validateSegmentsData(
+    moduleData,
+    segmentStatements,
+    customerProblems
+  );
 
   if (!validated.success) {
     const repaired = await repairAndValidateSegments(
@@ -569,7 +576,7 @@ export async function generateCompetitorsBatch(
       statements: profile.statements,
     })
   );
-  let landscapeStatements = moduleData.landscapeStatements.map((statement) =>
+  const landscapeStatements = moduleData.landscapeStatements.map((statement) =>
     normalizeCompactStatement({ ...statement, category: "COMPETITOR" })
   );
 
@@ -699,6 +706,25 @@ export async function generateCompetitorsBatch(
   };
 }
 
+/**
+ * Structured Outputs sichern die Synthese-Form (min. 8 SWOT-Aussagen), aber nicht
+ * die Geschäftsregel „≥2 je Quadrant" aus validateSynthesisModule. Ein gezielter
+ * Korrektur-Retry mit den konkreten Lücken heilt Verteilungsfehler deutlich
+ * zuverlässiger als der generische runModuleRepair.
+ */
+function buildSynthesisCorrectiveHint(
+  issues: import("../types").Phase1ModuleValidationIssue[]
+): string {
+  return [
+    "Deine vorherige Synthese war unvollständig und wurde verworfen. Konkrete Mängel:",
+    ...issues.map((i) => `- ${i.message}`),
+    "PFLICHT bei der Neuausgabe: je SWOT-Quadrant (SWOT_STRENGTH, SWOT_WEAKNESS, " +
+      "SWOT_OPPORTUNITY, SWOT_THREAT) GENAU 2–3 Aussagen mit korrekt gesetztem " +
+      "category-Feld, plus mindestens 2 MARKET_PATH-Aussagen. Zähle die Aussagen " +
+      "je category VOR der Ausgabe.",
+  ].join("\n");
+}
+
 export async function generateSynthesis(
   context: Phase1Context,
   anchor: Phase1AnalysisAnchor,
@@ -749,6 +775,48 @@ export async function generateSynthesis(
   let validated = validateSynthesisModule({ swotStatements, marketPathStatements });
 
   if (!validated.success) {
+    // Gezielter Korrektur-Retry zuerst — heilt Verteilungsfehler (≥2 je Quadrant)
+    // zuverlässiger als der generische Repair, der bei Zählfehlern oft null liefert.
+    try {
+      const retry = await withAbortTimeout(
+        callLLMStructured({
+          model: phase1Config.models.synthesis,
+          systemPrompt: PHASE1_SYNTHESIS_PROMPT,
+          userPrompt: `${userPrompt}\n\n${buildSynthesisCorrectiveHint(validated.issues)}`,
+          schema: synthesisModuleSchema,
+          schemaName: "phase1_synthesis",
+          signal,
+          serviceTier: phase1Config.serviceTier,
+          module: "synthesis",
+        }),
+        phase1Config.synthesisTimeoutMs,
+        signal
+      );
+      const retryData = retry.data as SynthesisModuleData;
+      const retrySwot = retryData.swotStatements.map((statement) =>
+        normalizeSwotStatement(statement)
+      );
+      const retryPaths = retryData.marketPathStatements.map((statement) =>
+        normalizeCompactStatement({ ...statement, category: "MARKET_PATH" })
+      );
+      const retryValidated = validateSynthesisModule({
+        swotStatements: retrySwot,
+        marketPathStatements: retryPaths,
+      });
+      if (retryValidated.success) {
+        moduleData = retryData;
+        swotStatements = retrySwot;
+        marketPathStatements = retryPaths;
+        repairCount += 1;
+        validated = retryValidated;
+      }
+    } catch (error) {
+      if (isAbortError(error)) throw error;
+      // sonst: unten den generischen Repair versuchen
+    }
+  }
+
+  if (!validated.success) {
     const structurallyBroken = validated.issues.length >= 4;
     const validSwot = swotStatements.filter((s) => s.content.trim());
     const validPaths = marketPathStatements.filter((s) => s.content.trim());
@@ -781,7 +849,13 @@ export async function generateSynthesis(
     );
     validated = validateSynthesisModule({ swotStatements, marketPathStatements });
     if (!validated.success) {
-      throw new Phase1ModuleError("synthesis", "Synthese-Reparatur unvollständig.", true);
+      throw new Phase1ModuleError(
+        "synthesis",
+        `Synthese-Reparatur unvollständig: ${validated.issues
+          .map((i) => i.message)
+          .join("; ")}`,
+        true
+      );
     }
   }
 

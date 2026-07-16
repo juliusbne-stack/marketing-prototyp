@@ -92,6 +92,7 @@ export async function POST(request: Request) {
                   evidenceStatus: true,
                   adopted: true,
                   supersededByStatementId: true,
+                  segmentLabel: true,
                 },
               },
             },
@@ -192,6 +193,8 @@ export async function POST(request: Request) {
       category: true,
       content: true,
       evidenceStatus: true,
+      segmentLabel: true,
+      segmentAspect: true,
     },
   });
 

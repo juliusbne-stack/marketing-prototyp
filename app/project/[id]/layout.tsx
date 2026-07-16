@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PhaseStepper } from "@/components/wizard/PhaseStepper";
 import { PhaseIndicator } from "@/components/wizard/PhaseIndicator";
+
+function isValidationStepDetailPath(pathname: string): boolean {
+  return /\/project\/[^/]+\/phase\/4\/step\/[^/]+$/.test(pathname);
+}
 
 export default async function ProjectLayout({
   children,
@@ -13,18 +18,25 @@ export default async function ProjectLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [project, adoptedStepCount] = await Promise.all([
-    prisma.project.findUnique({
-      where: { id },
-      select: { id: true, name: true, currentPhase: true },
-    }),
-    // The implementation cockpit unlocks with the first adopted step.
-    prisma.validationStep.count({ where: { projectId: id, adopted: true } }),
-  ]);
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const stepDetailView = isValidationStepDetailPath(pathname);
+
+  const project = await prisma.project.findUnique({
+    where: { id },
+    select: { id: true, name: true, currentPhase: true },
+  });
 
   if (!project) {
     notFound();
   }
+
+  if (stepDetailView) {
+    return <div className="validation-step-detail-shell flex flex-1 flex-col">{children}</div>;
+  }
+
+  const adoptedStepCount = await prisma.validationStep.count({
+    where: { projectId: id, adopted: true },
+  });
 
   return (
     <div className="flex flex-1 flex-col">

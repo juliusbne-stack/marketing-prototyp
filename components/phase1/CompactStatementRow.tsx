@@ -14,6 +14,7 @@ export function CompactStatementRow({
   aspectLabel,
   showOriginInline = false,
   showAdoptInline = false,
+  allowAdopt = true,
   validationHistory,
   onChanged,
   onDeleted,
@@ -26,6 +27,8 @@ export function CompactStatementRow({
   showOriginInline?: boolean;
   /** Draft label + adopt button visible while collapsed (e.g. Kundenprobleme list). */
   showAdoptInline?: boolean;
+  /** Phase 2 adopts whole options — hide per-statement adopt there. */
+  allowAdopt?: boolean;
   validationHistory?: ValidationHistoryCounts | null;
   onChanged?: (statement: StatementData) => void;
   onDeleted?: (id: string) => void;
@@ -43,7 +46,9 @@ export function CompactStatementRow({
 
   const labelClasses =
     "text-xs font-semibold uppercase tracking-wide text-text-muted";
-  const rowPadding = layout === "column" ? "py-2" : "py-3";
+  // Column layout is usually nested in padded aspect tiles — keep vertical
+  // padding minimal so the tile background reads cleanly.
+  const rowPadding = layout === "column" ? "py-0" : "py-3";
   const useAspectGrid = layout === "row" && !!aspectLabel;
 
   const aspectLabelCell = aspectLabel ? (
@@ -177,7 +182,7 @@ export function CompactStatementRow({
   }
 
   const inlineAdoptAction =
-    showAdoptInline && !row.adopted && !expanded ? (
+    allowAdopt && showAdoptInline && !row.adopted && !expanded ? (
       <>
         <span className="text-xs font-medium uppercase tracking-wide text-accent">
           Entwurf
@@ -195,11 +200,11 @@ export function CompactStatementRow({
     ) : null;
 
   const contentRow = (
-    <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-      <p className="min-w-0 break-words text-sm leading-relaxed text-text">
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <p className="break-words text-sm leading-relaxed text-text">
         {row.content}
       </p>
-      <span className="inline-flex shrink-0 flex-wrap items-center gap-1.5">
+      <span className="inline-flex flex-wrap items-center gap-1.5">
         {showOriginInline && <OriginTag origin={row.origin} />}
         <EvidenceBadge
           status={row.evidenceStatus}
@@ -295,7 +300,7 @@ export function CompactStatementRow({
             )}
           </div>
 
-          {!row.adopted && (
+          {allowAdopt && !row.adopted && (
             <button
               type="button"
               onClick={() => patch({ adopted: true })}
@@ -319,7 +324,7 @@ export function CompactStatementRow({
       onClick={() => setExpanded((value) => !value)}
       aria-expanded={expanded}
       aria-label={expanded ? "Zeile einklappen" : "Zeile aufklappen"}
-      className="mt-0.5 shrink-0 rounded p-0.5 text-text-muted transition-colors hover:text-accent"
+      className="shrink-0 rounded p-0.5 text-text-muted transition-colors hover:text-accent"
     >
       <ChevronRight
         className={`h-4 w-4 transition-transform ${expanded ? "rotate-90" : ""}`}
@@ -333,7 +338,7 @@ export function CompactStatementRow({
       <div
         className={`col-span-3 grid grid-cols-subgrid items-start gap-x-3 min-w-0 ${rowPadding} ${isBusy ? "opacity-60" : ""}`}
       >
-        {chevronButton}
+        <div className="mt-0.5">{chevronButton}</div>
         {aspectLabelCell}
         <div className="min-w-0">
           {contentRow}
@@ -346,20 +351,38 @@ export function CompactStatementRow({
     );
   }
 
+  if (layout === "column") {
+    return (
+      <div className={`min-w-0 ${rowPadding} ${isBusy ? "opacity-60" : ""}`}>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-2">
+            {aspectLabel ? (
+              <span className={labelClasses}>{aspectLabel}</span>
+            ) : (
+              <span />
+            )}
+            {chevronButton}
+          </div>
+
+          {contentRow}
+
+          {error && !expanded && (
+            <p className="mt-1.5 text-xs text-danger-text">{error}</p>
+          )}
+
+          {expandedPanel}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-w-0 ${rowPadding} ${isBusy ? "opacity-60" : ""}`}>
       <div className="flex min-w-0 items-start gap-1.5">
-        {chevronButton}
+        <div className="mt-0.5">{chevronButton}</div>
 
         <div className="min-w-0 flex-1">
-          {layout === "column" ? (
-            <div className="flex min-w-0 flex-col gap-1.5">
-              {aspectLabel && <span className={labelClasses}>{aspectLabel}</span>}
-              {contentRow}
-            </div>
-          ) : (
-            contentRow
-          )}
+          {contentRow}
 
           {error && !expanded && (
             <p className="mt-1.5 text-xs text-danger-text">{error}</p>

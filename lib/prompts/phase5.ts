@@ -7,6 +7,10 @@ REGELN:
 - Je Rückmeldung: Bewerte gegen die geprüfte Annahme UND die vorab definierten
   Messpunkte. Bezugspunkt ist die ANNAHME — nicht die Marketingmaßnahme an sich.
   result: SUPPORTED | PARTIALLY_SUPPORTED | REFUTED | AMBIGUOUS.
+- Bei Zielgruppenannahmen gilt: Aktualisiere nur die tatsächlich geprüfte
+  Teilannahme (testedAssumption.id und ggf. segmentAspect), nicht pauschal das
+  gesamte Segment. Ein gescheiterter Erreichbarkeitstest widerlegt nicht
+  automatisch Segmentkern, Problemrelevanz, Präferenz oder Zahlungsbereitschaft.
 - METRIK-ROLLEN (metricRole im Kontext je Metrik):
   - Für result SUPPORTED oder REFUTED zählen primär entscheidende Metriken
     (DECISIVE). Sie müssen die Annahme direkt adressieren.

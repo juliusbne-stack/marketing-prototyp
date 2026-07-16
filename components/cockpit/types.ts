@@ -1,9 +1,11 @@
 import type {
+  AggregationStrategy,
   EvaluationMode,
   EvidenceStatus,
   FeedbackResult,
   KpiAssessment,
   Laufmodus,
+  MetricValueType,
   TaskHerkunft,
 } from "@prisma/client";
 import type { TaskElaborationResponse } from "@/lib/schemas/taskElaboration";
@@ -44,7 +46,9 @@ export type KpiDataPointData = {
   id: string;
   metricId: string;
   periodLabel: string;
-  value: string;
+  value: string | null;
+  numerator: number | null;
+  denominator: number | null;
   assessment: KpiAssessment;
 };
 
@@ -52,6 +56,12 @@ export type CockpitMetricData = {
   id: string;
   name: string;
   evaluationMode: EvaluationMode;
+  valueType: MetricValueType | null;
+  aggregationStrategy: AggregationStrategy | null;
+  evaluationConfig: unknown;
+  numeratorLabel: string | null;
+  denominatorLabel: string | null;
+  observationUnit: string | null;
   successCriterion: string;
   failureCriterion: string;
   dataPoints: KpiDataPointData[];
@@ -80,6 +90,7 @@ export type CockpitStepData = {
 const KPI_INDICATOR_SEVERITY: Record<KpiAssessment, number> = {
   SUPPORTING: 0,
   NEUTRAL: 1,
+  PENDING: 1,
   CONTRADICTING: 2,
 };
 
@@ -112,6 +123,11 @@ export const KPI_ASSESSMENT_CONFIG: Record<
   },
   NEUTRAL: {
     label: "neutral",
+    chipClassName: "border border-border bg-background text-text-muted",
+    dotClassName: "bg-text-muted/50",
+  },
+  PENDING: {
+    label: "noch nicht abschließend bewertbar",
     chipClassName: "border border-border bg-background text-text-muted",
     dotClassName: "bg-text-muted/50",
   },

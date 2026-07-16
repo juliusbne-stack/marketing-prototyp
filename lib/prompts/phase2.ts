@@ -34,8 +34,14 @@ REGELN:
   das Feld null.
 - Nutze die Profilaspekte des adressierten Segments gezielt: REACHABILITY
   informiert OPT_MARKET_ACCESS, WILLINGNESS_TO_PAY informiert
-  OPT_REVENUE_GROWTH, PROBLEM_NEED informiert OPT_CUSTOMER_PROBLEM. Verweise
-  in den justifications auf die konkreten Profilaussagen.
+  OPT_REVENUE_GROWTH, PROBLEM_NEED informiert OPT_CUSTOMER_PROBLEM,
+  WHO_CORE/WHO_DISTINGUISHERS/WHO_BOUNDARY_ROLE informieren nur die strategische
+  Zielgruppenfokussierung. Verweise in den justifications auf die konkreten
+  Profilaussagen und behandle unsichere Segmentmerkmale nicht wie Fakten.
+- OPT_TARGET_GROUP ist eine eigenständige strategische Zuspitzung des gewählten
+  Analyse-Segments. Sie darf ein Segment fokussieren, aber nicht unmarkiert eine
+  neue Zielgruppe erfinden. Die segmentLabel-Referenz bleibt die Verbindung zur
+  Phase-1-Analyse; Detailprofil nicht in den OPT_TARGET_GROUP-Satz kopieren.
 - OPT_MARKET_ACCESS ist eine strategische Festlegung mit Begründung (welcher
   Kanal prioritär, warum dieser zuerst, was das für den Ressourceneinsatz
   bedeutet) — keine Paraphrase der REACHABILITY-Profilaussage und keine

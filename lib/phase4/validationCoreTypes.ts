@@ -9,7 +9,10 @@ export type ValidationClaimType =
   | "PROBLEM_RELEVANCE"
   | "NEED"
   | "SEGMENT_FIT"
+  | "SEGMENT_MEMBERSHIP"
+  | "PURCHASE_ROLE"
   | "VALUE_PERCEPTION"
+  | "PREFERENCE"
   | "WILLINGNESS_TO_PAY"
   | "REACHABILITY"
   | "CHANNEL_FIT"
@@ -140,9 +143,12 @@ export function claimTypeToTestSubject(
     case "NEED":
       return "PROBLEM_RELEVANCE";
     case "VALUE_PERCEPTION":
+    case "PREFERENCE":
+    case "PURCHASE_ROLE":
     case "ADOPTION_INTENT":
     case "USAGE_BEHAVIOR":
     case "SEGMENT_FIT":
+    case "SEGMENT_MEMBERSHIP":
       return "VALUE_UNDERSTANDING";
     case "RETENTION":
     case "TRUST":

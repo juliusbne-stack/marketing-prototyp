@@ -78,6 +78,27 @@ body {
   font-size: 14px;
 }
 
+/*
+  Button rendering on Windows/Chrome: Preflight uses `appearance: button`, and
+  rounded fills can show 1px lighter vertical seams (parent bg bleeding through).
+  Hover filters often hide them via compositor re-rasterization. Strip native
+  chrome and clip the fill to the rounded box instead.
+*/
+@layer base {
+  button,
+  input:where([type="button"], [type="reset"], [type="submit"]),
+  ::file-selector-button {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: none;
+    background-clip: padding-box;
+    overflow: hidden;
+    isolation: isolate;
+    /* Same compositing path as hover filters that previously hid the seams */
+    filter: brightness(1);
+  }
+}
+
 /* Visible keyboard focus: petrol ring (UI_KONZEPT §6) */
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -101,11 +122,35 @@ body {
   animation: loading-dot-bounce 1.2s ease-in-out infinite;
 }
 
+/* Soft cue for analysis sections that still need to be opened once */
+@keyframes analysis-section-pulse {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--evidence-fact-border) 45%, var(--border));
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    border-color: var(--evidence-fact-border);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--evidence-fact-border) 16%, transparent);
+  }
+}
+
+.analysis-section-pulse {
+  animation: analysis-section-pulse 2.8s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .analysis-section-pulse {
+    animation: none;
+    border-color: var(--evidence-fact-border);
+    box-shadow: none;
   }
 }

@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { phase1EvidenceStatus, phase1Origin } from "@/lib/schemas/evidenceStatus";
 import { PESTEL_CATEGORIES } from "@/lib/schemas/phase1";
-import { SEGMENT_ASPECTS } from "@/lib/segmentAspects";
+import {
+  OPTIONAL_GENERATED_SEGMENT_ASPECTS,
+  REQUIRED_GENERATED_SEGMENT_ASPECTS,
+  SEGMENT_ASPECTS,
+} from "@/lib/segmentAspects";
 import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
 
 /** Compact LLM output — adopted/phase/isCritical set server-side. */
@@ -107,7 +111,11 @@ export const segmentProfileSchema = z.object({
         segmentAspect: z.enum(SEGMENT_ASPECTS),
       })
     )
-    .length(5),
+    .min(REQUIRED_GENERATED_SEGMENT_ASPECTS.length)
+    .max(
+      REQUIRED_GENERATED_SEGMENT_ASPECTS.length +
+        OPTIONAL_GENERATED_SEGMENT_ASPECTS.length
+    ),
 });
 
 export const segmentsModuleSchema = z.object({
@@ -144,7 +152,7 @@ export const competitorProfileSchema = z.object({
         }),
       })
     )
-    .optional(),
+    .nullish(),
 });
 
 export const competitorsBatchSchema = z.object({
@@ -156,7 +164,7 @@ export const synthesisModuleSchema = z.object({
   swotStatements: z
     .array(
       compactStatementSchema.extend({
-        derivedFrom: z.array(z.string().trim().min(1)).min(1).optional(),
+        derivedFrom: z.array(z.string().trim().min(1)).min(1).nullish(),
       })
     )
     .min(8),
@@ -169,10 +177,10 @@ export const consistencyResponseSchema = z.object({
     z.object({
       severity: z.enum(["ERROR", "WARNING"]),
       module: z.string().trim().min(1),
-      objectId: z.string().trim().optional(),
+      objectId: z.string().trim().nullish(),
       issueType: z.string().trim().min(1),
       explanation: z.string().trim().min(1),
-      repairInstruction: z.string().trim().optional(),
+      repairInstruction: z.string().trim().nullish(),
     })
   ),
 });

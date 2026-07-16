@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Info, Pencil } from "lucide-react";
-import { StatementCard } from "@/components/statements/StatementCard";
+import { Check, Info, Layers, Pencil } from "lucide-react";
+import { CompactStatementRow } from "@/components/phase1/CompactStatementRow";
 import type { StatementData } from "@/components/statements/types";
 import { RevisionProposalCard } from "./RevisionProposalCard";
 import { SegmentProfileDisclosure } from "./SegmentProfileDisclosure";
@@ -12,8 +12,19 @@ import {
   type UnchangedDimension,
 } from "./types";
 
+/** Soft washes — same family as Phase-1 profile cards; not evidence colors. */
+const OPTION_CARD_TINTS = [
+  "bg-[#F2F7F3]",
+  "bg-[#F1F6F8]",
+  "bg-[#F8F4F0]",
+] as const;
+
+const DIMENSION_TILE =
+  "min-w-0 rounded-[8px] border border-border/55 bg-surface/95 px-3 py-2.5 shadow-[0_1px_0_rgba(31,36,33,0.03)]";
+
 export function OptionCard({
   option,
+  toneIndex = 0,
   onChanged,
   revisions = [],
   unchangedDimensions = [],
@@ -21,6 +32,8 @@ export function OptionCard({
   onRevisionDiscarded,
 }: {
   option: OptionData;
+  /** Differentiates side-by-side options with a soft wash. */
+  toneIndex?: number;
   onChanged: (option: OptionData) => void;
   /** Revision mode: pending AI revision proposals for this option's dimensions. */
   revisions?: StatementData[];
@@ -36,6 +49,9 @@ export function OptionCard({
   const [error, setError] = useState<string | null>(null);
 
   const isDraft = option.status === "DRAFT";
+  const tint =
+    OPTION_CARD_TINTS[toneIndex % OPTION_CARD_TINTS.length] ??
+    OPTION_CARD_TINTS[0];
 
   async function patch(data: Record<string, unknown>) {
     setIsBusy(true);
@@ -96,20 +112,19 @@ export function OptionCard({
     (statement) => statement.evidenceStatus === "OPEN_QUESTION"
   ).length;
 
-  // Draft options: dashed frame like statement drafts; adopted: solid frame.
   const frameClasses = isDraft
-    ? "border border-dashed border-accent/50 bg-accent-soft/30"
-    : "border border-border bg-surface";
+    ? `border border-dashed border-accent/50 ${tint}`
+    : `border border-border/80 ${tint}`;
 
   return (
     <article
-      className={`flex flex-col rounded-[10px] p-4 ${frameClasses} ${
+      className={`flex flex-col overflow-hidden rounded-[10px] ${frameClasses} ${
         isBusy ? "opacity-60" : ""
       }`}
     >
-      <header className="flex items-start justify-between gap-2">
+      <header className="border-b border-border/60 bg-surface/85 px-4 py-3">
         {isEditing ? (
-          <div className="flex-1">
+          <div>
             <input
               value={draftTitle}
               onChange={(event) => setDraftTitle(event.target.value)}
@@ -147,14 +162,31 @@ export function OptionCard({
             </div>
           </div>
         ) : (
-          <>
-            <div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-background px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted ring-1 ring-border">
+                  <Layers className="h-3.5 w-3.5" aria-hidden />
+                  Option {toneIndex + 1}
+                </span>
+                {isDraft && (
+                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
+                    Entwurf
+                  </span>
+                )}
+              </div>
               <h4 className="font-heading text-base font-medium text-text">
                 {option.title}
               </h4>
               {option.summary && (
-                <p className="mt-1 text-sm text-text-muted">{option.summary}</p>
+                <p className="mt-1 text-sm leading-relaxed text-text-muted">
+                  {option.summary}
+                </p>
               )}
+              <p className="mt-2 text-xs text-text-muted">
+                {factCount} Fakten · {assumptionCount} Annahmen · {questionCount}{" "}
+                offen
+              </p>
             </div>
             <button
               type="button"
@@ -165,15 +197,15 @@ export function OptionCard({
               }}
               disabled={isBusy}
               aria-label="Titel und Kurzbeschreibung bearbeiten"
-              className="rounded p-1 text-text-muted transition-colors hover:text-accent disabled:opacity-50"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors hover:border-border hover:bg-background hover:text-accent disabled:opacity-50"
             >
               <Pencil className="h-3.5 w-3.5" aria-hidden />
             </button>
-          </>
+          </div>
         )}
       </header>
 
-      <dl className="mt-4 flex flex-1 flex-col gap-3">
+      <div className="flex flex-1 flex-col gap-2 p-3">
         {DIMENSION_ORDER.map(({ category, label }) => {
           const statement = option.statements.find(
             (candidate) => candidate.category === category
@@ -186,24 +218,25 @@ export function OptionCard({
             (candidate) => candidate.dimensionCategory === category
           );
           return (
-            <div key={category}>
-              <dt className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                {label}
-              </dt>
-              <dd>
-                <StatementCard
-                  statement={statement}
-                  onChanged={handleStatementChanged}
-                  showAdoptAction={false}
-                  compact
-                />
-                {category === "OPT_TARGET_GROUP" && statement.segmentLabel && (
+            <div key={category} className={DIMENSION_TILE}>
+              <CompactStatementRow
+                statement={statement}
+                aspectLabel={label}
+                layout="column"
+                showOriginInline
+                allowAdopt={false}
+                onChanged={handleStatementChanged}
+              />
+              {category === "OPT_TARGET_GROUP" && statement.segmentLabel && (
+                <div className="mt-2 border-t border-border/50 pt-2">
                   <SegmentProfileDisclosure
                     projectId={statement.projectId}
                     segmentLabel={statement.segmentLabel}
                   />
-                )}
-                {revision && onRevisionAdopted && onRevisionDiscarded && (
+                </div>
+              )}
+              {revision && onRevisionAdopted && onRevisionDiscarded && (
+                <div className="mt-2">
                   <RevisionProposalCard
                     revision={revision}
                     optionId={option.id}
@@ -211,30 +244,25 @@ export function OptionCard({
                     onAdopted={onRevisionAdopted}
                     onDiscarded={onRevisionDiscarded}
                   />
-                )}
-                {!revision && unchanged && (
-                  <span
-                    title={unchanged.reason}
-                    className="mt-1.5 inline-flex cursor-help items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-text-muted"
-                  >
-                    <Info className="h-3 w-3" aria-hidden />
-                    Laut Auswertung nicht betroffen
-                  </span>
-                )}
-              </dd>
+                </div>
+              )}
+              {!revision && unchanged && (
+                <span
+                  title={unchanged.reason}
+                  className="mt-2 inline-flex cursor-help items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-text-muted"
+                >
+                  <Info className="h-3 w-3" aria-hidden />
+                  Laut Auswertung nicht betroffen
+                </span>
+              )}
             </div>
           );
         })}
-      </dl>
+      </div>
 
-      <footer className="mt-4 border-t border-border/70 pt-3">
-        <p className="text-xs text-text-muted">
-          {factCount} Fakt-gestützt · {assumptionCount} Annahmen ·{" "}
-          {questionCount} offen
-        </p>
-
-        {isDraft && (
-          <div className="mt-2.5 flex items-center justify-between gap-2">
+      {isDraft && (
+        <footer className="border-t border-border/60 bg-surface/70 px-4 py-3">
+          <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-medium uppercase tracking-wide text-accent">
               Entwurf
             </span>
@@ -248,10 +276,13 @@ export function OptionCard({
               In Projektstand übernehmen
             </button>
           </div>
-        )}
+          {error && <p className="mt-2 text-xs text-danger-text">{error}</p>}
+        </footer>
+      )}
 
-        {error && <p className="mt-2 text-xs text-danger-text">{error}</p>}
-      </footer>
+      {!isDraft && error && (
+        <p className="px-4 pb-3 text-xs text-danger-text">{error}</p>
+      )}
     </article>
   );
 }

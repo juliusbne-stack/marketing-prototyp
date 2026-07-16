@@ -502,6 +502,10 @@ export async function runPhase1Analysis(request: Phase1Request) {
       fallbackDecision.useFallback &&
       !monolithicFallbackAttempted
     ) {
+      console.error(
+        `[phase1-fallback] Ursprünglicher modularer Fehler (runId=${context.runId}):`,
+        error instanceof Error ? (error.stack ?? error.message) : error
+      );
       logFallbackDecision({
         runId: context.runId,
         projectId: context.projectId,

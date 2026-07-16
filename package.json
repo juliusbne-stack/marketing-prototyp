@@ -10,7 +10,14 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "benchmark:phase1": "tsx scripts/benchmark-phase1.ts"
+    "benchmark:phase1": "tsx scripts/benchmark-phase1.ts",
+    "demo:seed": "tsx scripts/seed-demo-project.ts",
+    "demo:reset": "tsx scripts/seed-demo-project.ts",
+    "demo:seed:phase4": "tsx scripts/seed-demo-project.ts --phase4-screenshot",
+    "demo:seed:phase5": "tsx scripts/seed-demo-project.ts --phase5-entry",
+    "demo:validate": "tsx scripts/validate-demo-project.ts",
+    "demo:validate:phase5": "tsx scripts/validate-demo-project.ts --phase5-entry",
+    "kpi:audit": "tsx scripts/audit-kpi-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

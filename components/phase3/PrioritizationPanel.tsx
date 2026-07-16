@@ -1,9 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Check, Star } from "lucide-react";
 import type { OptionData } from "@/components/phase2/types";
 import type { EvaluatedOption, RecommendationData } from "./types";
+
+function PriorityCallout({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-[12px] border border-accent bg-accent-soft/55 p-5 sm:p-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+        <div
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-white ring-[3px] ring-white/80 sm:h-16 sm:w-16"
+          aria-hidden
+        >
+          <Star className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={1.75} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+            {eyebrow}
+          </p>
+          <h4 className="mt-1.5 font-heading text-xl font-semibold text-text sm:text-2xl">
+            {title}
+          </h4>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PrioritizationPanel({
   projectId,
@@ -74,7 +107,7 @@ export function PrioritizationPanel({
   }
 
   const overrideForm = (
-    <div className="mt-3 rounded-md border border-border bg-background p-3">
+    <div className="mt-4 rounded-md border border-accent/25 bg-surface/90 p-3">
       <label className="block text-xs font-medium text-text">
         Option auswählen
         <select
@@ -125,16 +158,12 @@ export function PrioritizationPanel({
   if (prioritized) {
     return (
       <section aria-label="Priorisierung">
-        <div className="rounded-[10px] border-2 border-accent bg-surface p-4">
-          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
-            <Star className="h-3.5 w-3.5" aria-hidden />
-            Priorisierte Option
-          </p>
-          <h4 className="mt-2 font-heading text-base font-medium text-text">
-            {prioritized.title}
-          </h4>
+        <PriorityCallout
+          eyebrow="Priorisierte Option"
+          title={prioritized.title}
+        >
           {prioritized.prioritizationRationale && (
-            <p className="mt-2 whitespace-pre-line text-sm text-text-muted">
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-text/80">
               {prioritized.prioritizationRationale}
             </p>
           )}
@@ -143,14 +172,14 @@ export function PrioritizationPanel({
               type="button"
               onClick={() => setOverrideOpen(true)}
               disabled={isBusy}
-              className="mt-3 rounded-md border border-border px-3 py-1.5 text-xs text-text transition-colors hover:bg-background"
+              className="mt-4 rounded-md border border-accent bg-surface/70 px-3.5 py-2 text-xs font-medium text-accent transition-colors hover:bg-surface disabled:opacity-50"
             >
               Andere Option priorisieren
             </button>
           )}
           {overrideOpen && overrideForm}
           {error && <p className="mt-2 text-xs text-danger-text">{error}</p>}
-        </div>
+        </PriorityCallout>
 
         {deferred.length > 0 && (
           <div className="mt-4 flex flex-col gap-2">
@@ -177,14 +206,11 @@ export function PrioritizationPanel({
   return (
     <section aria-label="Priorisierung">
       {recommendation && recommended ? (
-        <div className="rounded-[10px] border-2 border-accent bg-surface p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-            Priorisierungsvorschlag der KI
-          </p>
-          <h4 className="mt-2 font-heading text-base font-medium text-text">
-            {recommended.title}
-          </h4>
-          <p className="mt-2 text-sm leading-relaxed text-text">
+        <PriorityCallout
+          eyebrow="Priorisierungsvorschlag der KI"
+          title={recommended.title}
+        >
+          <p className="mt-3 text-sm leading-relaxed text-text/80">
             {recommendation.rationale}
           </p>
           <div className="mt-3 rounded-md bg-evidence-question-bg p-3">
@@ -199,7 +225,7 @@ export function PrioritizationPanel({
             Das ist ein Vorschlag — die Entscheidung triffst du.
           </p>
           {!overrideOpen && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={handleAdoptProposal}
@@ -213,7 +239,7 @@ export function PrioritizationPanel({
                 type="button"
                 onClick={() => setOverrideOpen(true)}
                 disabled={isBusy}
-                className="rounded-md border border-border px-4 py-2 text-sm text-text transition-colors hover:bg-background"
+                className="rounded-md border border-accent bg-surface/70 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-surface disabled:opacity-50"
               >
                 Andere Option priorisieren
               </button>
@@ -221,9 +247,9 @@ export function PrioritizationPanel({
           )}
           {overrideOpen && overrideForm}
           {error && <p className="mt-2 text-xs text-danger-text">{error}</p>}
-        </div>
+        </PriorityCallout>
       ) : (
-        <div className="rounded-[10px] border border-border bg-surface p-4">
+        <div className="rounded-[12px] border border-border bg-surface p-5">
           <p className="text-sm text-text-muted">
             Es liegt noch kein aktueller Priorisierungsvorschlag vor. Starte die
             Bewertung (erneut) oder priorisiere direkt eine Option mit eigener

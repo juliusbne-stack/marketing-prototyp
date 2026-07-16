@@ -19,6 +19,8 @@ export type ImplementationStatement = {
   category: StatementCategory;
   content: string;
   evidenceStatus: string;
+  segmentLabel?: string | null;
+  segmentAspect?: string | null;
   displayNumber: number;
 };
 
@@ -38,6 +40,7 @@ export function buildImplementationStatements(
       evidenceStatus: string;
       adopted: boolean;
       supersededByStatementId: string | null;
+      segmentLabel?: string | null;
     };
   }[],
   adoptedAnalysis: {
@@ -45,6 +48,8 @@ export function buildImplementationStatements(
     category: StatementCategory;
     content: string;
     evidenceStatus: string;
+    segmentLabel?: string | null;
+    segmentAspect?: string | null;
   }[]
 ): ImplementationStatement[] {
   const fromOption = optionStatements
@@ -55,9 +60,24 @@ export function buildImplementationStatements(
         isImplementationRelevantCategory(statement.category)
     );
 
-  const fromAnalysis = adoptedAnalysis.filter((statement) =>
-    isImplementationRelevantCategory(statement.category)
+  const addressedSegmentLabels = new Set(
+    fromOption
+      .filter(
+        (statement) =>
+          statement.category === "OPT_TARGET_GROUP" && statement.segmentLabel
+      )
+      .map((statement) => statement.segmentLabel as string)
   );
+
+  const fromAnalysis = adoptedAnalysis.filter((statement) => {
+    if (!isImplementationRelevantCategory(statement.category)) return false;
+    if (statement.category !== "TARGET_SEGMENT") return true;
+    if (addressedSegmentLabels.size === 0) return false;
+    return (
+      statement.segmentLabel != null &&
+      addressedSegmentLabels.has(statement.segmentLabel)
+    );
+  });
 
   const merged = [...fromOption, ...fromAnalysis];
   const seen = new Set<string>();
@@ -72,6 +92,8 @@ export function buildImplementationStatements(
     category: statement.category,
     content: statement.content,
     evidenceStatus: statement.evidenceStatus,
+    segmentLabel: "segmentLabel" in statement ? statement.segmentLabel : null,
+    segmentAspect: "segmentAspect" in statement ? statement.segmentAspect : null,
     displayNumber: index + 1,
   }));
 }

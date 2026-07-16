@@ -151,6 +151,12 @@ export async function PATCH(request: Request) {
                 create: metrics.map((metric) => ({
                   name: metric.name,
                   evaluationMode: metric.evaluationMode,
+                  valueType: metric.valueType ?? null,
+                  aggregationStrategy: metric.aggregationStrategy ?? null,
+                  evaluationConfig: metric.evaluationConfig ?? undefined,
+                  numeratorLabel: metric.numeratorLabel ?? null,
+                  denominatorLabel: metric.denominatorLabel ?? null,
+                  observationUnit: metric.observationUnit ?? null,
                   metricRole: metric.metricRole,
                   signalCategory: metric.signalCategory ?? null,
                   proxyStrength: metric.proxyStrength ?? null,

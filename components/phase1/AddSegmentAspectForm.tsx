@@ -43,7 +43,7 @@ export function AddSegmentAspectForm({
   const setIsOpen = onOpenChange ?? setInternalOpen;
   const [content, setContent] = useState("");
   const [segmentAspect, setSegmentAspect] = useState<SegmentAspect>(
-    availableAspects[0] ?? "DESCRIPTION"
+    availableAspects[0] ?? "WHO_CORE"
   );
   const selectedAspect = availableAspects.includes(segmentAspect)
     ? segmentAspect

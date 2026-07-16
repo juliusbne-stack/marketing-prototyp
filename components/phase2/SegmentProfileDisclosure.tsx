@@ -44,7 +44,8 @@ export function SegmentProfileDisclosure({
           (statement) =>
             statement.category === "TARGET_SEGMENT" &&
             statement.segmentLabel === segmentLabel &&
-            statement.adopted
+            statement.adopted &&
+            statement.supersededByStatementId == null
         )
       );
     } catch (err) {

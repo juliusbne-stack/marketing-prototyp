@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
+import { REQUIRED_GENERATED_SEGMENT_ASPECTS } from "@/lib/segmentAspects";
 import { createPhase1ResponseSchema, PESTEL_CATEGORIES } from "./phase1";
 
 function statement(category: string, content: string, extra = {}) {
@@ -27,6 +28,19 @@ function competitorStatements() {
       )
     )
   ).flat();
+}
+
+function segmentStatements(label: string) {
+  return REQUIRED_GENERATED_SEGMENT_ASPECTS.map((aspect, index) =>
+    statement(
+      "TARGET_SEGMENT",
+      `${label} weist im Aspekt ${aspect} ein prüfbares Merkmal ${index + 1} auf.`,
+      {
+        segmentLabel: label,
+        segmentAspect: aspect,
+      }
+    )
+  );
 }
 
 const pestelRelevance = PESTEL_CATEGORIES.map((category) => ({
@@ -62,6 +76,8 @@ describe("createPhase1ResponseSchema", () => {
       pestelRelevance,
       statements: [
         ...competitorStatements(),
+        ...segmentStatements("B2C Testsegment"),
+        ...segmentStatements("B2B Testsegment"),
         statement("COMPETITOR", "Der Wettbewerbsraum ist hinreichend breit."),
         statement("RESOURCE", "Das Team kann wöchentlich fokussierte Tests durchführen."),
         statement("RESOURCE", "Das verfügbare Budget reicht für kleine Experimente."),
@@ -78,6 +94,9 @@ describe("createPhase1ResponseSchema", () => {
       ],
     });
 
-    expect(result.success).toBe(true);
+    expect(
+      result.success,
+      result.error?.issues.map((issue) => issue.message).join("\n")
+    ).toBe(true);
   });
 });

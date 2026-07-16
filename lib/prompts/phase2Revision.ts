@@ -35,8 +35,13 @@ REGELN:
   es ebenfalls null.
 - Nutze die Profilaspekte des adressierten Segments gezielt: REACHABILITY
   informiert OPT_MARKET_ACCESS, WILLINGNESS_TO_PAY informiert
-  OPT_REVENUE_GROWTH, PROBLEM_NEED informiert OPT_CUSTOMER_PROBLEM. Verweise
-  in den justifications auf die konkreten Profilaussagen.
+  OPT_REVENUE_GROWTH, PROBLEM_NEED informiert OPT_CUSTOMER_PROBLEM,
+  WHO_CORE/WHO_DISTINGUISHERS/WHO_BOUNDARY_ROLE informieren nur die strategische
+  Zielgruppenfokussierung. Verweise in den justifications auf die konkreten
+  Profilaussagen und behandle unsichere Segmentmerkmale nicht wie Fakten.
+- OPT_TARGET_GROUP bleibt eine eigenständige strategische Zuspitzung des
+  gewählten Analyse-Segments; kopiere das Segmentprofil nicht unkontrolliert in
+  die Option und erfinde keine neue Zielgruppe ohne Kennzeichnung.
 - Jede der 6 Dimensionen (OPT_TARGET_GROUP, OPT_CUSTOMER_PROBLEM,
   OPT_VALUE_PROPOSITION, OPT_POSITIONING, OPT_MARKET_ACCESS,
   OPT_REVENUE_GROWTH) erscheint GENAU EINMAL — entweder in revisions oder in

@@ -124,7 +124,9 @@ describe("Phase1 scenario matrix", () => {
   });
 
   it("33: schema version constant set", () => {
-    expect(PHASE1_CACHE_VERSIONS.schemaVersion).toBe("compact-v2");
+    expect(PHASE1_CACHE_VERSIONS.schemaVersion).toBe(
+      "compact-v3-segment-profile"
+    );
   });
 
   it("35: core module change invalidates synthesis", () => {

@@ -1,6 +1,9 @@
 import { PESTEL_CATEGORIES } from "@/lib/schemas/phase1";
 import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
-import { SEGMENT_ASPECTS } from "@/lib/segmentAspects";
+import {
+  OPTIONAL_GENERATED_SEGMENT_ASPECTS,
+  REQUIRED_GENERATED_SEGMENT_ASPECTS,
+} from "@/lib/segmentAspects";
 import type { Phase1Statement } from "@/lib/schemas/phase1";
 import type {
   Phase1ModuleValidationIssue,
@@ -79,12 +82,26 @@ export function validateSegmentsModule(data: {
     const aspects = new Set(
       segment.statements.map((s) => s.segmentAspect).filter(Boolean)
     );
-    if (aspects.size !== SEGMENT_ASPECTS.length) {
+    const allowedGeneratedAspects = new Set<string>([
+      ...REQUIRED_GENERATED_SEGMENT_ASPECTS,
+      ...OPTIONAL_GENERATED_SEGMENT_ASPECTS,
+    ]);
+    const missingRequired = REQUIRED_GENERATED_SEGMENT_ASPECTS.filter(
+      (aspect) => !aspects.has(aspect)
+    );
+    const duplicateAspects = segment.statements
+      .map((s) => s.segmentAspect)
+      .filter(Boolean).length !== aspects.size;
+    const invalidGeneratedAspect = [...aspects].some(
+      (aspect) => !allowedGeneratedAspects.has(String(aspect))
+    );
+
+    if (missingRequired.length > 0 || duplicateAspects || invalidGeneratedAspect) {
       issues.push(
         issue(
           `segments.${segment.segmentLabel}`,
           "ASPECTS",
-          `Segment ${segment.segmentLabel} hat nicht alle 5 Aspekte.`
+          `Segment ${segment.segmentLabel} braucht Segmentkern, abgrenzende Merkmale sowie Problem, Verhalten, Zahlungsbereitschaft und Erreichbarkeit; Abgrenzung/Rolle ist optional.`
         )
       );
     }
@@ -213,6 +230,71 @@ export function validateCombinedPhase1(data: {
         `Wettbewerberzahl ${data.competitorLabels.size} weicht von Ziel ${data.targetCompetitorCount} ab.`
       )
     );
+  }
+
+  const segments = new Map<string, Phase1Statement[]>();
+  for (const statement of data.statements) {
+    if (statement.category !== "TARGET_SEGMENT" || !statement.segmentLabel) {
+      continue;
+    }
+    segments.set(statement.segmentLabel, [
+      ...(segments.get(statement.segmentLabel) ?? []),
+      statement,
+    ]);
+  }
+
+  for (const [label, group] of segments) {
+    const aspects = new Set(group.map((statement) => statement.segmentAspect));
+    const hasNewWho =
+      aspects.has("WHO_CORE") || aspects.has("WHO_DISTINGUISHERS");
+    if (hasNewWho) {
+      const missing = REQUIRED_GENERATED_SEGMENT_ASPECTS.filter(
+        (aspect) => !aspects.has(aspect)
+      );
+      if (missing.length > 0) {
+        issues.push(
+          issue(
+            `segments.${label}`,
+            "SEGMENT_PROFILE_INCOMPLETE",
+            `Segment ${label} fehlt neue Pflichtaspekte: ${missing.join(", ")}.`
+          )
+        );
+      }
+    }
+
+    const whoTexts = group
+      .filter((statement) =>
+        ["WHO_CORE", "WHO_DISTINGUISHERS", "WHO_BOUNDARY_ROLE"].includes(
+          statement.segmentAspect ?? ""
+        )
+      )
+      .map((statement) => statement.content.toLowerCase());
+    if (
+      whoTexts.some((text) =>
+        /\b(kaufen|preis|zahlen|instagram|linkedin|tiktok|kanal|erreichbar|problem|bedarf)\b/i.test(
+          text
+        )
+      )
+    ) {
+      issues.push(
+        issue(
+          `segments.${label}`,
+          "SEGMENT_PROFILE_ASPECT_MIX",
+          `Segment ${label} vermischt im Wer-Profil wahrscheinlich Preis-, Problem- oder Kanalannahmen mit dem Segmentkern.`
+        )
+      );
+    }
+
+    const core = group.find((statement) => statement.segmentAspect === "WHO_CORE");
+    if (core && /\b(alle|jeder|menschen die unser|nutzer unserer|kunden unseres)\b/i.test(core.content)) {
+      issues.push(
+        issue(
+          `segments.${label}.WHO_CORE`,
+          "SEGMENT_CORE_TOO_GENERIC",
+          `Segmentkern von ${label} ist zu breit oder produktdefiniert.`
+        )
+      );
+    }
   }
 
   return issues;

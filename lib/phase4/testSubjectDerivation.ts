@@ -39,6 +39,10 @@ const REVENUE_SIGNAL = /\b(erlös|umsatz|monetarisierung|abonnementmodell|pricin
 
 const VALUE_SIGNAL =
   /\b(nutzen|hilfreich|wahrgenommen|verständnis|nutzenversprechen|wert)\b/i;
+const PURCHASE_ROLE_SIGNAL =
+  /\b(kaufrolle|entscheider|entscheidet|budgetentscheidung|käufer|kaeufer|nutzer.*entscheid|nutzen.*entscheiden|geschäftsführung|geschaeftsfuehrung|inhaber.*entscheid)\b/i;
+const SEGMENT_MEMBERSHIP_SIGNAL =
+  /\b(gehören zum segment|gehoeren zum segment|bilden ein relevantes segment|bilden das relevanteste segment|segmentkern|kundensegment|zielkundensegment|lebensphase|berufseinsteiger|studierende|start-ups ohne|kleine .*betriebe)\b/i;
 
 function hasNegatedReach(text: string): boolean {
   return /\b(nicht|keine|ohne)\s+[\wäöüß]*\s*(erreichbar|reichweite|kanal)\b/i.test(
@@ -117,6 +121,13 @@ export function deriveAllowedDecisiveTestSubjects(
       allowed.add("VALUE_UNDERSTANDING");
       allowed.add("DIFFERENTIATION");
     }
+    if (
+      core.claimType === "PREFERENCE" ||
+      core.claimType === "PURCHASE_ROLE" ||
+      core.claimType === "SEGMENT_MEMBERSHIP"
+    ) {
+      allowed.add("VALUE_UNDERSTANDING");
+    }
   }
 
   if (layerMatches(USAGE_SIGNAL, uncertainty, justification, content)) {
@@ -143,6 +154,13 @@ export function deriveAllowedDecisiveTestSubjects(
   }
 
   if (layerMatches(VALUE_SIGNAL, uncertainty, justification, content)) {
+    allowed.add("VALUE_UNDERSTANDING");
+  }
+
+  if (
+    layerMatches(PURCHASE_ROLE_SIGNAL, uncertainty, justification, content) ||
+    layerMatches(SEGMENT_MEMBERSHIP_SIGNAL, uncertainty, justification, content)
+  ) {
     allowed.add("VALUE_UNDERSTANDING");
   }
 

@@ -1,5 +1,7 @@
 import type {
+  AggregationStrategy,
   EvaluationMode,
+  MetricValueType,
   MetricRole,
   ProxyStrength,
   SignalCategory,
@@ -21,6 +23,12 @@ export type MetricData = {
   id: string;
   name: string;
   evaluationMode: EvaluationMode;
+  valueType: MetricValueType | null;
+  aggregationStrategy: AggregationStrategy | null;
+  evaluationConfig: unknown;
+  numeratorLabel: string | null;
+  denominatorLabel: string | null;
+  observationUnit: string | null;
   metricRole: MetricRole;
   signalCategory: SignalCategory | null;
   proxyStrength: ProxyStrength | null;

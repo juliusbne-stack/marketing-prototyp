@@ -74,7 +74,7 @@ export function normalizeCompetitorProfile(profile: {
 }
 
 export function normalizeSwotStatement(
-  statement: CompactStatement & { derivedFrom?: string[] }
+  statement: CompactStatement & { derivedFrom?: string[] | null }
 ): Phase1Statement {
   return normalizeCompactStatement(statement);
 }

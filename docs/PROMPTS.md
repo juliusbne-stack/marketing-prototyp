@@ -46,9 +46,11 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   Yogaschulen haben Bedarf an einem kostengünstigen Buchungstool und sind
   bereit, dafür zu zahlen." Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
   Jede Aussage gehört zu einem Segmentprofil (gemeinsames segmentLabel) und einer
-  von fünf Dimensionen (segmentAspect). Der content muss die jeweilige Dimension
+  fachlichen Dimension (segmentAspect). Der content muss die jeweilige Dimension
   als eigenständig prüfbare Behauptung formulieren — nicht nur den Segmentnamen
-  wiederholen. Bei Wettbewerberprofilen (COMPETITOR mit competitorLabel) gilt analog:
+  wiederholen. Segmentprofil/Wer wird in getrennte Teilbehauptungen aufgeteilt:
+  WHO_CORE, WHO_DISTINGUISHERS und optional WHO_BOUNDARY_ROLE; Problem, Verhalten,
+  Zahlungsbereitschaft und Erreichbarkeit bleiben eigene Aspekte. Bei Wettbewerberprofilen (COMPETITOR mit competitorLabel) gilt analog:
   Jede Aussage gehört zu einem Profil (gemeinsames competitorLabel) und einer von
   sechs Dimensionen (competitorAspect). Der content muss die jeweilige Dimension
   als eigenständig prüfbare Behauptung formulieren — nicht nur den Akteursnamen
@@ -92,15 +94,14 @@ Erzeuge Aussagen in diesen Bereichen:
    - Sei ehrlich zurückhaltend: Markiere eine Kategorie nur dann als relevant,
      wenn sich daraus tatsächlich eine prägende Aussage ableiten lässt. Lieber
      wenige relevante Dimensionen als sechs erzwungene.
-2. TARGET_SEGMENT: Entwickle 2–3 Zielgruppensegmente. Erzeuge je Segment GENAU 5
+2. TARGET_SEGMENT: Entwickle 2–3 Zielgruppensegmente. Erzeuge je Segment 6 bis 7
    Aussagen (category TARGET_SEGMENT), alle mit demselben segmentLabel und je einem
-   segmentAspect: DESCRIPTION (wer genau: Abgrenzung, relevante Merkmale wie Alter,
-   Situation, Einstellung), PROBLEM_NEED (welches Problem/welcher Bedarf, wie
-   relevant/dringlich), BEHAVIOR_CONTEXT (Kauf-/Nutzungsverhalten, in welchem Kontext
-   das Angebot genutzt würde), WILLINGNESS_TO_PAY (Zahlungsbereitschaft, ggf.
-   plausible fiktive Preisspanne), REACHABILITY (über welche Kanäle erreichbar).
+   segmentAspect: WHO_CORE (Segmentkern), WHO_DISTINGUISHERS (abgrenzende Merkmale),
+   optional WHO_BOUNDARY_ROLE (Abgrenzung/Kaufrolle), PROBLEM_NEED,
+   BEHAVIOR_CONTEXT, WILLINGNESS_TO_PAY, REACHABILITY.
    Jede Aussage bleibt ein eigenständig prüfbarer Aussagesatz mit EIGENEM, ehrlich
-   differenziertem Evidenzstatus — typischerweise ist DESCRIPTION besser gestützt als
+   differenziertem Evidenzstatus — Segmentprofil/Wer darf Problem, Preislogik,
+   Verhalten und Erreichbarkeit nicht unnötig doppeln; typischerweise ist
    WILLINGNESS_TO_PAY (oft OPEN_QUESTION). Wenn der Nutzer keine Zielgruppe angegeben
    hat, leite die Segmente aus Geschäftsidee, Problem und Nutzenversprechen ab.
 3. CUSTOMER_PROBLEM: 2–4 Aussagen zu Kundenproblemen und deren Relevanz.
@@ -196,7 +197,7 @@ Konsistenzregeln:
       "sourceRef": "string | null  (Pflicht bei SIMULATED_RESEARCH, endet mit '(fiktiv)')",
       "uncertainty": "string | null",
       "segmentLabel": "string | null  (Pflicht bei TARGET_SEGMENT: Name des Segments, z. B. Studierende mit begrenztem Budget)",
-      "segmentAspect": "DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)",
+      "segmentAspect": "WHO_CORE | WHO_DISTINGUISHERS | WHO_BOUNDARY_ROLE | DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT; DESCRIPTION nur Altbestand)",
       "competitorLabel": "string | null  (Pflicht bei COMPETITOR-Profilen: fiktiver Akteursname, z. B. SocialFlow Pro (fiktiv))",
       "competitorAspect": "ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE | null  (Pflicht bei COMPETITOR-Profilen)"
     }

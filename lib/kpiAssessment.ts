@@ -1,176 +1,69 @@
-import type { EvaluationMode, KpiAssessment } from "@prisma/client";
+import type {
+  AggregationStrategy,
+  EvaluationMode,
+  KpiAssessment,
+  MetricValueType,
+} from "@prisma/client";
+import {
+  aggregateMetric,
+  type MetricAggregationInput,
+  type MetricPointInput,
+} from "@/lib/metrics/aggregateMetric";
 
-export type KpiPoint = {
-  periodLabel: string;
-  value: string;
+export type KpiPoint = MetricPointInput & {
   assessment: KpiAssessment;
 };
 
-export type MetricForAssessment = {
+export type MetricForAssessment = MetricAggregationInput & {
   evaluationMode?: EvaluationMode | null;
-  name: string;
-  successCriterion: string;
-  failureCriterion: string;
+  valueType?: MetricValueType | null;
+  aggregationStrategy?: AggregationStrategy | null;
+  successCriterion?: string;
+  failureCriterion?: string;
 };
 
 const ASSESSMENT_LABELS: Record<KpiAssessment, string> = {
   SUPPORTING: "stützend",
   NEUTRAL: "neutral",
   CONTRADICTING: "widersprechend",
+  PENDING: "noch nicht abschließend bewertbar",
 };
 
 export function assessmentLabel(assessment: KpiAssessment): string {
   return ASSESSMENT_LABELS[assessment];
 }
 
-/** Cumulative period-end NEUTRAL is displayed as „teilweise gestützt". */
 export function periodAssessmentLabel(
   assessment: KpiAssessment,
   evaluationMode: EvaluationMode
 ): string {
-  if (evaluationMode === "CUMULATIVE" && assessment === "NEUTRAL") {
-    return "teilweise gestützt";
+  if (evaluationMode === "CUMULATIVE" && assessment === "PENDING") {
+    return "noch nicht abschließend bewertbar";
   }
   return assessmentLabel(assessment);
 }
 
-/** Fallback when evaluationMode is missing on legacy rows. */
-export function inferEvaluationMode(
-  name: string,
-  successCriterion: string,
-  failureCriterion: string
-): EvaluationMode {
-  const combined =
-    `${name} ${successCriterion} ${failureCriterion}`.toLowerCase();
-  const perPointPatterns =
-    /%|rate|quote|anteil|interaktion|conversion|ctr|klickrate|öffnungsrate/;
-  if (perPointPatterns.test(combined)) return "PER_POINT";
-  const cumulativePatterns =
-    /innerhalb von|gesamt|summe|anzahl|registrierung|anfrage|buchung|verkauf|interview|kontakt|teilnehmer|kunden|leads|insgesamt über/;
-  if (cumulativePatterns.test(combined)) return "CUMULATIVE";
-  return "PER_POINT";
-}
-
+/** Legacy rows have an explicit evaluation mode; no mode is inferred from prose. */
 export function resolveEvaluationMode(metric: MetricForAssessment): EvaluationMode {
-  return (
-    metric.evaluationMode ??
-    inferEvaluationMode(
-      metric.name,
-      metric.successCriterion,
-      metric.failureCriterion
-    )
-  );
+  return metric.evaluationMode ?? "PER_POINT";
 }
 
-/** Extract the first numeric value from a KPI text (e.g. "12 neue Anfragen", "2,5 %"). */
-export function parseNumericValue(text: string): number | null {
-  const match = text.match(/(\d+(?:[.,]\d+)?)\s*%?/);
-  if (!match) return null;
-  const num = Number.parseFloat(match[1].replace(",", "."));
-  return Number.isFinite(num) ? num : null;
+/** Parse only a complete canonical number, never a number embedded in a label. */
+export function parseNumericValue(text: string | null | undefined): number | null {
+  if (text == null) return null;
+  const normalized = text.trim().replace(",", ".");
+  if (!/^-?(?:\d+|\d*\.\d+)$/.test(normalized)) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseMinThreshold(criterion: string): number | null {
-  const patterns = [
-    /(?:mindestens|über|mehr als|≥|>=|bei über|bleibt bei über)\s*(\d+(?:[.,]\d+)?)\s*%?/i,
-    /(\d+(?:[.,]\d+)?)\s*%?\s*oder (?:mehr|steigt|höher)/i,
-  ];
-  for (const pattern of patterns) {
-    const match = criterion.match(pattern);
-    if (match) {
-      const num = Number.parseFloat(match[1].replace(",", "."));
-      if (Number.isFinite(num)) return num;
-    }
-  }
-  return null;
-}
-
-function parseMaxThreshold(criterion: string): number | null {
-  const patterns = [
-    /(?:weniger als|unter|maximal|höchstens|<)\s*(\d+(?:[.,]\d+)?)\s*%?/i,
-    /fällt unter\s*(\d+(?:[.,]\d+)?)\s*%?/i,
-  ];
-  for (const pattern of patterns) {
-    const match = criterion.match(pattern);
-    if (match) {
-      const num = Number.parseFloat(match[1].replace(",", "."));
-      if (Number.isFinite(num)) return num;
-    }
-  }
-  return null;
-}
-
-function isPercentMetric(metric: MetricForAssessment): boolean {
-  const combined =
-    `${metric.name} ${metric.successCriterion} ${metric.failureCriterion}`.includes(
-      "%"
-    );
-  return combined;
-}
-
-function formatNumber(value: number, asPercent: boolean): string {
-  const formatted = Number.isInteger(value)
-    ? String(value)
-    : value.toFixed(1).replace(".", ",");
-  return asPercent ? `${formatted} %` : formatted;
-}
-
-export function assessValue(
-  value: number,
-  successCriterion: string,
-  failureCriterion: string,
-  options?: { isFinalPeriod?: boolean; forCumulative?: boolean }
-): KpiAssessment {
-  const successMin = parseMinThreshold(successCriterion);
-  const failureMax = parseMaxThreshold(failureCriterion);
-
-  if (successMin !== null && value >= successMin) {
-    return "SUPPORTING";
-  }
-
-  if (options?.forCumulative && !options.isFinalPeriod) {
-    return "NEUTRAL";
-  }
-
-  if (failureMax !== null && value < failureMax) {
-    return "CONTRADICTING";
-  }
-
-  return "NEUTRAL";
-}
-
-/** Recompute assessments: per-period for PER_POINT; period-level only for CUMULATIVE. */
 export function reassessDataPoints<T extends KpiPoint>(
   metric: MetricForAssessment,
   points: T[]
 ): T[] {
-  const mode = resolveEvaluationMode(metric);
-
-  if (mode === "PER_POINT") {
-    return points.map((point) => {
-      const num = parseNumericValue(point.value);
-      if (num === null) return point;
-      return {
-        ...point,
-        assessment: assessValue(
-          num,
-          metric.successCriterion,
-          metric.failureCriterion
-        ),
-      };
-    });
-  }
-
-  let runningTotal = 0;
-  const periodAssessment = derivePeriodAssessment(metric, points);
-
   return points.map((point, index) => {
-    runningTotal += parseNumericValue(point.value) ?? 0;
-    const isFinalPeriod = index === points.length - 1;
-    return {
-      ...point,
-      assessment: isFinalPeriod ? periodAssessment : "NEUTRAL",
-    };
+    const result = aggregateMetric(metric, points.slice(0, index + 1));
+    return { ...point, assessment: result.assessment };
   });
 }
 
@@ -178,86 +71,57 @@ export function derivePeriodAssessment(
   metric: MetricForAssessment,
   points: KpiPoint[]
 ): KpiAssessment {
-  if (points.length === 0) return "NEUTRAL";
-  const total = computeCumulativeTotal(points);
-  return assessValue(total, metric.successCriterion, metric.failureCriterion, {
-    isFinalPeriod: true,
-    forCumulative: true,
-  });
-}
-
-export function computeCumulativeTotal(points: KpiPoint[]): number {
-  return points.reduce(
-    (sum, point) => sum + (parseNumericValue(point.value) ?? 0),
-    0
-  );
+  return aggregateMetric(metric, points).assessment;
 }
 
 export function deriveOverallAssessment(
   metric: MetricForAssessment,
   points: KpiPoint[]
 ): KpiAssessment {
-  const mode = resolveEvaluationMode(metric);
-  if (points.length === 0) return "NEUTRAL";
-
-  if (mode === "CUMULATIVE") {
-    return derivePeriodAssessment(metric, points);
-  }
-
-  const reassessed = reassessDataPoints(metric, points);
-  const supporting = reassessed.filter(
-    (point) => point.assessment === "SUPPORTING"
-  ).length;
-  const contradicting = reassessed.filter(
-    (point) => point.assessment === "CONTRADICTING"
-  ).length;
-
-  if (supporting > contradicting && supporting > reassessed.length / 2) {
-    return "SUPPORTING";
-  }
-  if (contradicting > supporting && contradicting > reassessed.length / 2) {
-    return "CONTRADICTING";
-  }
-  return "NEUTRAL";
+  return aggregateMetric(metric, points).assessment;
 }
 
-/** Whether the running cumulative total already exceeds the success threshold. */
+export function computeCumulativeTotal(
+  points: KpiPoint[],
+  metric?: MetricForAssessment
+): number {
+  if (!metric) {
+    return points.reduce(
+      (sum, point) => sum + (parseNumericValue(point.value) ?? 0),
+      0
+    );
+  }
+  const result = aggregateMetric(metric, points);
+  return result.numerator ?? result.value ?? 0;
+}
+
 export function isCumulativeEarlySupporting(
   metric: MetricForAssessment,
   points: KpiPoint[]
 ): boolean {
-  if (resolveEvaluationMode(metric) !== "CUMULATIVE") return false;
-  const successMin = parseMinThreshold(metric.successCriterion);
-  if (successMin === null) return false;
-  return computeCumulativeTotal(points) >= successMin;
-}
-
-/** Extract text after the leading number (e.g. "12 neue Anfragen" → "neue Anfragen"). */
-function extractValueSuffix(value: string): string {
-  return value.replace(/^(\d+(?:[.,]\d+)?)\s*%?\s*/, "").trim();
+  return aggregateMetric(metric, points).assessment === "SUPPORTING";
 }
 
 export function formatCumulativeTotal(
   metric: MetricForAssessment,
   points: KpiPoint[]
 ): string {
-  const total = computeCumulativeTotal(points);
-  const asPercent = isPercentMetric(metric);
-  const formatted = formatNumber(total, asPercent);
-  const suffix = points
-    .map((point) => extractValueSuffix(point.value))
-    .find(Boolean);
-  return suffix ? `${formatted} ${suffix}` : formatted;
+  return aggregateMetric(metric, points).displayValue;
 }
 
 export function formatRunningTotal(
   metric: MetricForAssessment,
-  runningTotal: number
+  pointsOrValue: KpiPoint[] | number
 ): string {
-  return formatNumber(runningTotal, isPercentMetric(metric));
+  if (Array.isArray(pointsOrValue)) {
+    return aggregateMetric(metric, pointsOrValue).displayValue;
+  }
+  return new Intl.NumberFormat("de-DE", {
+    maximumFractionDigits: 2,
+  }).format(pointsOrValue);
 }
 
-/** Normalize criterion text for inline use after „wenn". */
+/** Normalize criterion text only for display; it is never used for evaluation. */
 export function formatCriterionInline(criterion: string): string {
   let text = criterion
     .replace(/^gilt als (?:stützend|widerlegend),?\s*wenn\s*/i, "")
@@ -271,5 +135,3 @@ export function formatCriterionInline(criterion: string): string {
   }
   return text;
 }
-
-export { parseMinThreshold, parseMaxThreshold };

@@ -1,104 +1,86 @@
-import type { EvaluationMode, KpiAssessment, ProxyStrength } from "@prisma/client";
+import type { ProxyStrength } from "@prisma/client";
+import {
+  aggregateMetric,
+  type MetricAggregationInput,
+  type MetricPointInput,
+} from "@/lib/metrics/aggregateMetric";
 import {
   assessmentLabel,
-  computeCumulativeTotal,
-  deriveOverallAssessment,
-  derivePeriodAssessment,
   formatCriterionInline,
-  formatCumulativeTotal,
-  formatRunningTotal,
-  parseNumericValue,
-  periodAssessmentLabel,
   reassessDataPoints,
   resolveEvaluationMode,
-  type KpiPoint,
-  type MetricForAssessment,
 } from "@/lib/kpiAssessment";
 
-export type KpiSummaryMetric = MetricForAssessment & {
+export type KpiSummaryMetric = MetricAggregationInput & {
   proxyStrength?: ProxyStrength | null;
-  dataPoints: KpiPoint[];
+  successCriterion: string;
+  failureCriterion: string;
+  dataPoints: (MetricPointInput & {
+    assessment: "SUPPORTING" | "NEUTRAL" | "CONTRADICTING" | "PENDING";
+  })[];
 };
 
-function assessmentDisplayLabel(
-  assessment: KpiAssessment,
-  isProxy: boolean
+function assessmentExplanation(
+  metric: KpiSummaryMetric,
+  assessment: KpiSummaryMetric["dataPoints"][number]["assessment"],
+  isComplete: boolean
 ): string {
-  if (assessment === "SUPPORTING" && isProxy) {
-    return "mittelbarer Beleg (Proxy)";
+  if (!isComplete || assessment === "PENDING") {
+    return "Noch nicht abschließend bewertbar";
   }
-  return assessmentLabel(assessment);
-}
-
-function periodDisplayLabel(
-  assessment: KpiAssessment,
-  evaluationMode: EvaluationMode,
-  isProxy: boolean
-): string {
-  if (evaluationMode === "CUMULATIVE" && assessment === "NEUTRAL") {
-    return periodAssessmentLabel(assessment, evaluationMode);
+  if (assessment === "SUPPORTING") {
+    return `Stützend – der festgelegte Schwellenwert (${formatCriterionInline(
+      metric.successCriterion
+    )}) wurde erreicht.`;
   }
-  return assessmentDisplayLabel(assessment, isProxy);
-}
-
-function extractPeriodCountLabel(points: KpiPoint[]): string {
-  const count = points.length;
-  if (count === 0) return "der Periode";
-  const firstLabel = points[0]!.periodLabel.toLowerCase();
-  if (firstLabel.includes("woche")) {
-    return count === 1 ? "1 Woche" : `${count} Wochen`;
+  if (assessment === "CONTRADICTING") {
+    return `Widerlegend – der festgelegte Schwellenwert (${formatCriterionInline(
+      metric.failureCriterion
+    )}) wurde erreicht.`;
   }
-  if (firstLabel.includes("tag")) {
-    return count === 1 ? "1 Tag" : `${count} Tage`;
-  }
-  return `${count} Perioden`;
-}
-
-function formatCumulativeTrendLine(
-  metric: MetricForAssessment,
-  point: KpiPoint,
-  runningTotal: number
-): string {
-  const runningLabel = formatRunningTotal(metric, runningTotal);
-  return `- ${point.value} · kumuliert ${runningLabel}`;
-}
-
-function formatPerPointLine(point: KpiPoint, isProxy: boolean): string {
-  return `- ${point.periodLabel}: ${point.value} (${assessmentDisplayLabel(point.assessment, isProxy)})`;
+  return "Neutral – das Ergebnis liegt zwischen Erfolgs- und Misserfolgsschwelle.";
 }
 
 export function buildKpiFeedbackSummary(metrics: KpiSummaryMetric[]): string {
   const sections = metrics
     .filter((metric) => metric.dataPoints.length > 0)
     .map((metric) => {
-      const isProxy = metric.proxyStrength === "PROXY";
-      const reassessed = reassessDataPoints(metric, metric.dataPoints);
-      const mode = resolveEvaluationMode(metric);
-      const successText = formatCriterionInline(metric.successCriterion);
-      const failureText = formatCriterionInline(metric.failureCriterion);
-      const lines: string[] = [
-        `Metrik „${metric.name}" — stützend, wenn ${successText}; widerlegend, wenn ${failureText}:`,
-      ];
+      const result = aggregateMetric(metric, metric.dataPoints);
+      const lines = [`Metrik „${metric.name}":`];
 
-      if (mode === "CUMULATIVE") {
-        let runningTotal = 0;
-        for (const point of reassessed) {
-          runningTotal += parseNumericValue(point.value) ?? 0;
-          lines.push(formatCumulativeTrendLine(metric, point, runningTotal));
-        }
-        const overall = derivePeriodAssessment(metric, metric.dataPoints);
-        const periodLabel = extractPeriodCountLabel(reassessed);
+      if (!result.isValid) {
+        lines.push(result.explanation);
+        return lines.join("\n");
+      }
+
+      for (const period of result.periods) {
         lines.push(
-          `Gesamt nach ${periodLabel}: ${formatCumulativeTotal(metric, metric.dataPoints)} — ${periodDisplayLabel(overall, mode, isProxy)}`
+          `${period.periodLabel}\nDiese Periode: ${period.periodDisplayValue}\nKumuliert: ${period.cumulativeDisplayValue}`
+        );
+      }
+
+      lines.push(
+        `Gesamtergebnis: ${result.displayValue}`,
+        `${result.periodCount} ${
+          result.periodCount === 1 ? "Erhebungswelle" : "Erhebungswellen"
+        }`,
+        `Bewertung: ${assessmentExplanation(
+          metric,
+          result.assessment,
+          result.isComplete
+        )}`
+      );
+
+      if (result.assessment === "SUPPORTING") {
+        lines.push(
+          metric.proxyStrength === "PROXY"
+            ? "Die Messgröße liefert einen mittelbaren Beleg für einen Teilaspekt der geprüften Annahme."
+            : "Die Messgröße stützt einen Teilaspekt der geprüften Annahme; die Gesamtannahme wird aus allen entscheidenden Messgrößen und qualitativen Befunden bewertet."
         );
       } else {
-        lines.push(...reassessed.map((point) => formatPerPointLine(point, isProxy)));
-        const overall = deriveOverallAssessment(metric, metric.dataPoints);
-        if (reassessed.length > 1) {
-          lines.push(
-            `Gesamturteil über die Periode: ${assessmentDisplayLabel(overall, isProxy)}`
-          );
-        }
+        lines.push(
+          `Technische Einordnung: ${assessmentLabel(result.assessment)}. Die Gesamtannahme wird nicht aus dieser einzelnen Messgröße abgeleitet.`
+        );
       }
 
       return lines.join("\n");
@@ -110,5 +92,4 @@ export function buildKpiFeedbackSummary(metrics: KpiSummaryMetric[]): string {
   ].join("\n\n");
 }
 
-export { reassessDataPoints, resolveEvaluationMode, computeCumulativeTotal };
-export type { KpiAssessment, EvaluationMode };
+export { aggregateMetric, reassessDataPoints, resolveEvaluationMode };

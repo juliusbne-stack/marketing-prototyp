@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   Check,
   CircleCheck,
   CircleX,
+  ExternalLink,
   ListChecks,
   Pencil,
   Radio,
@@ -15,6 +17,7 @@ import { useConfirm } from "@/components/ui/DialogProvider";
 import {
   MARKETING_ACTIVITIES_HEADING,
   METHOD_WARNING_ADOPT_CONFIRM,
+  METRIC_ROLE_LABEL,
   PROXY_STRENGTH_LABEL,
   SIGNAL_CATEGORY_LABEL,
   stepCopy,
@@ -23,10 +26,7 @@ import { resolveMethodWarningForDisplay } from "@/lib/phase4/methodWarning";
 import { StrategyDimensionChip } from "./StrategyDimensionChip";
 import type { StepData } from "./types";
 
-const METRIC_ROLE_LABELS = {
-  DECISIVE: "Entscheidend",
-  SUPPORTING: "Unterstützend",
-} as const;
+const METRIC_ROLE_LABELS = METRIC_ROLE_LABEL;
 
 export function ValidationStepCard({
   step,
@@ -223,6 +223,15 @@ export function ValidationStepCard({
               >
                 <Pencil className="h-3.5 w-3.5" aria-hidden />
               </button>
+              <Link
+                href={`/project/${step.projectId}/phase/4/step/${step.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-medium text-text-muted transition-colors hover:border-accent hover:text-accent"
+              >
+                <ExternalLink className="h-3 w-3" aria-hidden />
+                Detailansicht
+              </Link>
             </div>
 
             {step.validationQuestion && (

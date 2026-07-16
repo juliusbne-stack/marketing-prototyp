@@ -244,13 +244,14 @@ export function Phase2View({
             </p>
           )}
           <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {options.map((option) => {
+            {options.map((option, index) => {
               const isRevisionTarget =
                 showRevisionMode && option.status === "PRIORITIZED";
               return (
                 <OptionCard
                   key={option.id}
                   option={option}
+                  toneIndex={index}
                   onChanged={handleChanged}
                   revisions={isRevisionTarget ? revisions : []}
                   unchangedDimensions={

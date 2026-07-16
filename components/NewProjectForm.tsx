@@ -46,16 +46,20 @@ export function NewProjectForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <div className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-2">
+      <div className="flex items-center gap-2 rounded-2xl border border-[#B7D5DA] bg-surface p-1.5 shadow-[0_0_0_3px_rgba(183,213,218,0.28)] focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(14,90,99,0.16)] sm:gap-0">
         <input
           type="text"
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Name des Start-up-Projekts, z. B. „Yoga-Studio Köln“"
           aria-label="Projektname"
-          className="h-10 flex-1 rounded-md border border-border bg-surface px-3 text-sm text-text placeholder:text-text-muted"
+          className="h-10 min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-text shadow-none outline-none! ring-0 placeholder:text-text-muted focus:border-0 focus:ring-0 disabled:opacity-60 sm:px-3.5"
           disabled={isSubmitting}
+        />
+        <span
+          className="mx-1 hidden h-7 w-px shrink-0 bg-border sm:block"
+          aria-hidden
         />
         <ProgressButton
           type="submit"
@@ -63,7 +67,7 @@ export function NewProjectForm() {
           loadingPhase="save"
           disabled={!name.trim()}
           loadingLabel="Wird angelegt …"
-          className="h-10"
+          className="h-10 shrink-0 rounded-xl px-4 shadow-none"
         >
           <Plus className="h-4 w-4" aria-hidden />
           Projekt anlegen

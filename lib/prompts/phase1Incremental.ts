@@ -38,7 +38,11 @@ REGELN:
   in adoptedAnalysisStatements noch nicht als Aussage abgebildet sind.
 - Bei TARGET_SEGMENT: nur fehlende Segmentprofile oder fehlende Aspekte
   (segmentAspect) zu bestehenden segmentLabels ergänzen — keine bestehenden
-  Aspekte neu formulieren.
+  Aspekte neu formulieren. Nutze für neue/ergänzte Segmentprofile die aktuelle
+  Struktur WHO_CORE, WHO_DISTINGUISHERS, optional WHO_BOUNDARY_ROLE,
+  PROBLEM_NEED, BEHAVIOR_CONTEXT, WILLINGNESS_TO_PAY, REACHABILITY.
+  Ergänze neue Wer-Teilaspekte nur, wenn dadurch keine inhaltliche Doppelung
+  entsteht.
 - Bei COMPETITOR: nur fehlende Akteursprofile oder fehlende Aspekte
   (competitorAspect) zu bestehenden competitorLabels ergänzen — keine
   bestehenden Aspekte neu formulieren. Landschafts-Aussagen ohne competitorLabel
@@ -57,7 +61,7 @@ ${competitorTargetBlock}
 
 Mengen in diesem Modus (Orientierung, keine Pflichtvorgabe außer COMPETITOR oben):
 - PESTEL: 0–2 neue Aussagen je relevante Dimension
-- TARGET_SEGMENT: 0–5 je neuem Segment oder fehlendem Aspekt
+- TARGET_SEGMENT: 0–7 je neuem Segment oder fehlendem Aspekt
 - CUSTOMER_PROBLEM, RESOURCE, SWOT, MARKET_PATH: 0–3 neue Aussagen
   je Bereich — nur wenn wirklich neu.`;
 }

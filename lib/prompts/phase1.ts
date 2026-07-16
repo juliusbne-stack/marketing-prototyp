@@ -117,17 +117,20 @@ Erzeuge Aussagen in diesen Bereichen:
      enthalten? → verwerfen/reformulieren (nur Faktor + prüfbare Konsequenz).
    Aussagen, die durchfallen: verwerfen oder so reformulieren, dass sie bestehen
    — nicht ausgeben.
-2. TARGET_SEGMENT: Entwickle 2–3 Zielgruppensegmente. Erzeuge je Segment GENAU 5
+2. TARGET_SEGMENT: Entwickle 2–3 Zielgruppensegmente. Erzeuge je Segment 6 bis 7
    Aussagen (category TARGET_SEGMENT), alle mit demselben segmentLabel und je einem
-   segmentAspect: DESCRIPTION (wer genau: Abgrenzung, relevante Merkmale wie Alter,
-   Situation, Einstellung), PROBLEM_NEED (welches Problem/welcher Bedarf, wie
-   relevant/dringlich), BEHAVIOR_CONTEXT (Kauf-/Nutzungsverhalten, in welchem Kontext
-   das Angebot genutzt würde), WILLINGNESS_TO_PAY (Zahlungsbereitschaft, ggf.
-   plausible fiktive Preisspanne), REACHABILITY (über welche Kanäle erreichbar).
+   segmentAspect: WHO_CORE (Segmentkern: Lebensphase, Rolle, Unternehmensart,
+   Kundensituation, Region sofern begründet), WHO_DISTINGUISHERS (abgrenzende,
+   strategisch relevante Merkmale), optional WHO_BOUNDARY_ROLE (Ausschluss,
+   Nutzer-/Käufer-/Entscheiderrolle oder angrenzende Gruppen), PROBLEM_NEED
+   (Problem/Bedarf), BEHAVIOR_CONTEXT (Verhalten/Kontext), WILLINGNESS_TO_PAY
+   (Zahlungsbereitschaft) und REACHABILITY (Kontaktpunkte/Zugang/Kanäle).
    Jede Aussage bleibt ein eigenständig prüfbarer Aussagesatz mit EIGENEM, ehrlich
-   differenziertem Evidenzstatus — typischerweise ist DESCRIPTION besser gestützt als
-   WILLINGNESS_TO_PAY (oft OPEN_QUESTION). Wenn der Nutzer keine Zielgruppe angegeben
+   differenziertem Evidenzstatus. Segmentprofil/Wer darf Problem, Preislogik,
+   Verhalten und Erreichbarkeit nicht unnötig doppeln. Typischerweise ist
+   WILLINGNESS_TO_PAY oft OPEN_QUESTION. Wenn der Nutzer keine Zielgruppe angegeben
    hat, leite die Segmente aus Geschäftsidee, Problem und Nutzenversprechen ab.
+   Keine Persona, kein erfundener Name, keine Scheingenauigkeit.
 3. CUSTOMER_PROBLEM: 2–4 Aussagen zu Kundenproblemen und deren Relevanz.
 4. COMPETITOR — ZWEI TEILE:
 
@@ -244,7 +247,7 @@ AUSGABEFORMAT (JSON, exakt dieses Schema):
       "sourceRef": "string | null  (Pflicht bei SIMULATED_RESEARCH, endet mit '(fiktiv)')",
       "uncertainty": "string | null",
       "segmentLabel": "string | null  (Pflicht bei TARGET_SEGMENT: Name des Segments, z. B. Studierende mit begrenztem Budget)",
-      "segmentAspect": "DESCRIPTION | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)",
+      "segmentAspect": "WHO_CORE | WHO_DISTINGUISHERS | WHO_BOUNDARY_ROLE | PROBLEM_NEED | BEHAVIOR_CONTEXT | WILLINGNESS_TO_PAY | REACHABILITY | null  (Pflicht bei TARGET_SEGMENT)",
       "competitorLabel": "string | null  (Pflicht bei COMPETITOR-Profilen: fiktiver Akteursname, z. B. SocialFlow Pro (fiktiv))",
       "competitorAspect": "ENTITY_TYPE | OFFERING | TARGET_CUSTOMERS | PRICING | SCALE | RELEVANCE | null  (Pflicht bei COMPETITOR-Profilen)"
     }

@@ -8,7 +8,7 @@ import type {
 const NEED_SIGNAL =
   /\b(bedarf|bedürfnis|sucht nach|benötigt|braucht|interesse an|nachfrage nach|wollen.*(lösung|methode|unterstützung))\b/i;
 const PROBLEM_SIGNAL =
-  /\b(problem|schmerz|problemrelevanz|unzureichend gelöst|schwierigkeit|mühe|herausforderung|unstrukturiert)\b/i;
+  /\b(problem|schmerz|problemrelevanz|unzureichend gelöst|schwierigkeit(en)?|mühe|herausforderung|unstrukturiert)\b/i;
 const PAYMENT_SIGNAL =
   /\b(zahlungsbereitschaft|zahlungsbereit|zahlen|abo|abonnement|preis|€|euro|monatlich)\b/i;
 const REACH_SIGNAL =
@@ -19,6 +19,8 @@ const VALUE_SIGNAL =
   /\b(nutzen|hilfreich|wahrgenommen|verständnis|nutzenversprechen|wert|präferenz|gegenüber|besser als|vergleich)\b/i;
 const ADOPTION_SIGNAL =
   /\b(nutzung|nutzen|registrierung|aktivierung|testbeginn|adoption|einlassen|akzeptanz)\b/i;
+const PREFERENCE_SIGNAL =
+  /\b(präferenz|praeferenz|bevorzugt|vorziehen|gegenüber|gegenueber|auswahl|konzepttest|individueller|humorvoller)\b/i;
 const DIFFERENTIATION_SIGNAL =
   /\b(abgrenzung|alternative|differenzierung|einzigartig|unterscheidet)\b/i;
 const REVENUE_SIGNAL =
@@ -27,6 +29,10 @@ const SEGMENT_FIT_SIGNAL =
   /\b(passt zur|segment.*relevant|homogen|zielgruppe.*passt|adressiert das segment)\b/i;
 const RETENTION_SIGNAL = /\b(bindung|retention|wiederverwendung|wiederkehrend)\b/i;
 const TRUST_SIGNAL = /\b(vertrauen|glaubwürdigkeit|seriosität)\b/i;
+const SEGMENT_MEMBERSHIP_SIGNAL =
+  /\b(gehören zum segment|gehoeren zum segment|bilden ein relevantes segment|bilden das relevanteste segment|segmentkern|kundensegment|zielkundensegment|lebensphase|berufseinsteiger|studierende|start-ups ohne|kleine .*betriebe)\b/i;
+const PURCHASE_ROLE_SIGNAL =
+  /\b(kaufrolle|entscheider|entscheidet|budgetentscheidung|käufer|kaeufer|nutzer.*entscheid|nutzen.*entscheiden|geschäftsführung|geschaeftsfuehrung|inhaber.*entscheid)\b/i;
 
 const COMPOUND_NEED_AND_REACH =
   /\b(bedarf|bedürfnis|problem).{0,60}\bund\b.{0,60}\b(erreichbar|reichweite|linkedin|kanal)\b/i;
@@ -83,6 +89,9 @@ function scoreClaimTypes(text: string): Map<ValidationClaimType, number> {
   if (NEED_SIGNAL.test(text)) add("NEED", 3);
   if (PROBLEM_SIGNAL.test(text)) add("PROBLEM_RELEVANCE", 3);
   if (VALUE_SIGNAL.test(text)) add("VALUE_PERCEPTION", 3);
+  if (PREFERENCE_SIGNAL.test(text)) add("PREFERENCE", 4);
+  if (PURCHASE_ROLE_SIGNAL.test(text)) add("PURCHASE_ROLE", 4);
+  if (SEGMENT_MEMBERSHIP_SIGNAL.test(text)) add("SEGMENT_MEMBERSHIP", 3);
   if (ADOPTION_SIGNAL.test(text)) add("ADOPTION_INTENT", 2);
   if (DIFFERENTIATION_SIGNAL.test(text)) add("VALUE_PERCEPTION", 2);
   if (REVENUE_SIGNAL.test(text)) add("WILLINGNESS_TO_PAY", 1);
@@ -180,13 +189,35 @@ function buildClaimTexts(
           "Die Zielgruppe erkennt keinen relevanten Problemdruck oder zeigt trotz verständlichem Angebot kein konkretes Interesse.",
       };
     case "VALUE_PERCEPTION":
+    case "PREFERENCE":
       return {
         claim: `Das Nutzenversprechen wird von ${targetGroup} als hilfreich oder überlegen wahrgenommen.`,
         claimedOutcome:
-          "Qualifizierte Personen bevorzugen das Angebot, bestätigen den Nutzen oder nutzen es aktiv.",
+          "Qualifizierte Personen bevorzugen das Angebot, bestätigen den Nutzen oder treffen eine nachvollziehbare Auswahlentscheidung.",
         strategicConsequence: "Die Wertkommunikation trifft den Kernbedarf.",
         falsificationCondition:
           "Die Zielgruppe sieht keinen klaren Mehrwert oder bevorzugt Alternativen.",
+      };
+    case "PURCHASE_ROLE":
+      return {
+        claim: `Die Nutzer-, Käufer- oder Entscheiderrollen im Segment ${targetGroup} sind wie angenommen verteilt.`,
+        claimedOutcome:
+          "Qualifizierte Gespräche oder Prozessbeobachtungen bestätigen, wer nutzt, wer bezahlt und wer entscheidet.",
+        strategicConsequence:
+          "Ansprache, Testdesign und Verkaufsprozess können auf die richtige Rolle ausgerichtet werden.",
+        falsificationCondition:
+          "Die tatsächliche Kauf- oder Entscheidungsrolle liegt bei anderen Personen als angenommen.",
+      };
+    case "SEGMENT_MEMBERSHIP":
+    case "SEGMENT_FIT":
+      return {
+        claim: `${targetGroup} bildet ein sinnvoll abgrenzbares Zielkundensegment.`,
+        claimedOutcome:
+          "Screening oder vergleichende Gespräche zeigen, dass die beschriebenen Personen oder Organisationen unterscheidbare Merkmale und relevante Passung aufweisen.",
+        strategicConsequence:
+          "Das Segment kann als Grundlage der strategischen Fokussierung dienen.",
+        falsificationCondition:
+          "Die beschriebenen Merkmale grenzen kein belastbares Segment ab oder die Gruppe zeigt keine erkennbare Passung.",
       };
     case "ADOPTION_INTENT":
     case "USAGE_BEHAVIOR":

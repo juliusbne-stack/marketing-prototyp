@@ -79,10 +79,10 @@ ${JSON.stringify(
       ...llmResult.data.issues.map((issue) => ({
         severity: issue.severity,
         module: issue.module,
-        objectId: issue.objectId,
+        objectId: issue.objectId ?? undefined,
         issueType: issue.issueType,
         explanation: issue.explanation,
-        repairInstruction: issue.repairInstruction,
+        repairInstruction: issue.repairInstruction ?? undefined,
       })),
     ];
 

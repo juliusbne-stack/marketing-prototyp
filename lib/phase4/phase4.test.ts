@@ -339,6 +339,78 @@ describe("TEST 4: Erreichbarkeitsannahme", () => {
   });
 });
 
+describe("Zielgruppen-Teilannahmen", () => {
+  it("klassifiziert Segmentkern nicht automatisch als REACHABILITY", () => {
+    const assumption = {
+      id: "segment-core",
+      content:
+        "Frühphasige Start-ups ohne Marketingteam bilden das relevanteste Segment.",
+      justification:
+        "Die Gruppe ist als Segmentkern beschrieben; der Kanalzugang ist separat zu prüfen.",
+      uncertainty: null,
+      strategyDimension: "TARGET_GROUP" as const,
+      category: "OPT_TARGET_GROUP",
+    };
+    const core = deriveValidationCore(assumption);
+    expect(core.claimType).toBe("SEGMENT_MEMBERSHIP");
+    expect(derivePrimaryTestSubject(assumption, core)).not.toBe(
+      "REACHABILITY"
+    );
+  });
+
+  it("klassifiziert Präferenzannahme als Nutzen-/Konzeptprüfung", () => {
+    const assumption = {
+      id: "preference",
+      content:
+        "Die Zielgruppe bevorzugt geführte Marketingunterstützung gegenüber einem freien Chat.",
+      justification: null,
+      uncertainty: null,
+      strategyDimension: "VALUE_PROPOSITION" as const,
+      category: "OPT_VALUE_PROPOSITION",
+    };
+    const core = deriveValidationCore(assumption);
+    expect(core.claimType).toBe("PREFERENCE");
+    expect(derivePrimaryTestSubject(assumption, core)).toBe(
+      "VALUE_UNDERSTANDING"
+    );
+  });
+
+  it("klassifiziert Kaufrollenannahme als Rollenklärung", () => {
+    const assumption = {
+      id: "purchase-role",
+      content:
+        "Marketingmitarbeiter nutzen das Tool, die Geschäftsführung entscheidet über den Kauf.",
+      justification: null,
+      uncertainty: null,
+      strategyDimension: "TARGET_GROUP" as const,
+      category: "OPT_TARGET_GROUP",
+    };
+    const core = deriveValidationCore(assumption);
+    expect(core.claimType).toBe("PURCHASE_ROLE");
+    expect(core.claimedOutcome.toLowerCase()).toMatch(/wer nutzt/);
+    expect(derivePrimaryTestSubject(assumption, core)).toBe(
+      "VALUE_UNDERSTANDING"
+    );
+  });
+
+  it("klassifiziert Problemprävalenz als PROBLEM_RELEVANCE", () => {
+    const assumption = {
+      id: "problem-prevalence",
+      content:
+        "Kleine Cafés haben regelmäßig Schwierigkeiten, Social-Media-Inhalte zu planen.",
+      justification: null,
+      uncertainty: null,
+      strategyDimension: "CUSTOMER_PROBLEM" as const,
+      category: "OPT_CUSTOMER_PROBLEM",
+    };
+    const core = deriveValidationCore(assumption);
+    expect(["PROBLEM_RELEVANCE", "NEED"]).toContain(core.claimType);
+    expect(derivePrimaryTestSubject(assumption, core)).toBe(
+      "PROBLEM_RELEVANCE"
+    );
+  });
+});
+
 describe("TEST 5: Zahlungsbereitschaft", () => {
   it("erfordert COMMITMENT, nicht Engagement", () => {
     const assumption = {
@@ -381,7 +453,9 @@ describe("TEST 6: Nutzenversprechen", () => {
       category: "OPT_VALUE_PROPOSITION",
     };
     const core = deriveValidationCore(assumption);
-    expect(["VALUE_PERCEPTION", "ADOPTION_INTENT"]).toContain(core.claimType);
+    expect(["VALUE_PERCEPTION", "ADOPTION_INTENT", "PREFERENCE"]).toContain(
+      core.claimType
+    );
     expect(derivePrimaryTestSubject(assumption, core)).toBe(
       "VALUE_UNDERSTANDING"
     );

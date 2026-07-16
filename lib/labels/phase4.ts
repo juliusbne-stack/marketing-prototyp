@@ -42,6 +42,25 @@ export const PROXY_STRENGTH_LABEL: Record<ProxyStrength, string> = {
   PROXY: "Indirekt / Proxy",
 };
 
+export const METRIC_ROLE_LABEL: Record<"DECISIVE" | "SUPPORTING", string> = {
+  DECISIVE: "Entscheidend",
+  SUPPORTING: "Unterstützend",
+};
+
+export const EVALUATION_MODE_LABEL: Record<"PER_POINT" | "CUMULATIVE", string> = {
+  PER_POINT: "Je Messzeitpunkt",
+  CUMULATIVE: "Kumulativ über die Prüfperiode",
+};
+
+export const LAUFMODUS_FULL_LABEL: Record<
+  "EIGENSTAENDIG" | "PARALLEL" | "NACHGELAGERT",
+  string
+> = {
+  EIGENSTAENDIG: "Eigenständig",
+  PARALLEL: "Parallel mitinstrumentiert",
+  NACHGELAGERT: "Nachgelagert",
+};
+
 export const VALIDATION_QUESTION_HEADING = "Was muss geprüft werden?";
 export const VALIDATION_DESIGN_HEADING = "Testdesign";
 export const VALIDATION_SIGNALS_HEADING = "Entscheidende Signale";

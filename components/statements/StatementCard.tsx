@@ -133,111 +133,143 @@ export function StatementCard({
     ? "border border-border bg-surface"
     : "border border-dashed border-accent/50 bg-accent-soft/40";
 
+  const actionButtons = (
+    <div className="flex shrink-0 items-center gap-0.5">
+      <button
+        type="button"
+        onClick={() => {
+          setDraftContent(statement.content);
+          setIsEditing(true);
+        }}
+        disabled={isBusy || isEditing}
+        aria-label="Aussage bearbeiten"
+        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors hover:border-border hover:bg-background hover:text-accent disabled:opacity-50"
+      >
+        <Pencil className="h-3.5 w-3.5" aria-hidden />
+      </button>
+      {onDeleted && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isBusy}
+          aria-label="Aussage löschen"
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors hover:border-border hover:bg-background hover:text-danger-text disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+
+  const contentBlock = isEditing ? (
+    <div>
+      <textarea
+        value={draftContent}
+        onChange={(event) => setDraftContent(event.target.value)}
+        rows={3}
+        aria-label="Inhalt der Aussage"
+        className="w-full rounded-md border border-border bg-surface p-2 text-sm text-text"
+      />
+      <div className="mt-1.5 flex gap-2">
+        <button
+          type="button"
+          onClick={handleSaveContent}
+          disabled={isBusy || !draftContent.trim()}
+          className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+        >
+          Speichern
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setIsEditing(false);
+            setDraftContent(statement.content);
+          }}
+          disabled={isBusy}
+          className="rounded-md border border-border px-3 py-1 text-xs text-text transition-colors hover:bg-background"
+        >
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  ) : (
+    <p className="break-words text-sm leading-relaxed text-text">
+      {statement.content}
+    </p>
+  );
+
+  const metaBlock =
+    metaParts.length > 0 ? (
+      <div className="border-t border-border/70 pt-2">
+        <div
+          className={`break-words text-[13px] text-text-muted ${
+            metaCollapsible && !metaExpanded ? "line-clamp-1" : ""
+          }`}
+        >
+          {metaParts.map((part) => (
+            <span key={part.label} className="mr-2">
+              <span className="font-medium">{part.label}:</span> {part.text}
+            </span>
+          ))}
+        </div>
+        {metaCollapsible && (
+          <button
+            type="button"
+            onClick={() => setMetaExpanded((value) => !value)}
+            className="mt-0.5 text-xs font-medium text-accent hover:underline"
+          >
+            {metaExpanded ? "Weniger" : "Mehr"}
+          </button>
+        )}
+      </div>
+    ) : null;
+
   return (
     <div
       className={`min-w-0 rounded-[10px] transition-colors ${compact ? "p-3" : "p-4"} ${cardClasses} ${
         isBusy ? "opacity-60" : ""
       }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-          <EvidenceBadge
-            status={statement.evidenceStatus}
-            onChange={handleStatusChange}
-            disabled={isBusy}
-          />
-          {validationHistory && (
-            <ValidationHistoryChip counts={validationHistory} />
-          )}
-        </div>
-        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-          <OriginTag origin={statement.origin} />
-          <button
-            type="button"
-            onClick={() => {
-              setDraftContent(statement.content);
-              setIsEditing(true);
-            }}
-            disabled={isBusy || isEditing}
-            aria-label="Aussage bearbeiten"
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors hover:border-border hover:bg-background hover:text-accent disabled:opacity-50"
-          >
-            <Pencil className="h-3.5 w-3.5" aria-hidden />
-          </button>
-          {onDeleted && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isBusy}
-              aria-label="Aussage löschen"
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors hover:border-border hover:bg-background hover:text-danger-text disabled:opacity-50"
-            >
-              <Trash2 className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {isEditing ? (
-        <div className="mt-2">
-          <textarea
-            value={draftContent}
-            onChange={(event) => setDraftContent(event.target.value)}
-            rows={3}
-            aria-label="Inhalt der Aussage"
-            className="w-full rounded-md border border-border bg-surface p-2 text-sm text-text"
-          />
-          <div className="mt-1.5 flex gap-2">
-            <button
-              type="button"
-              onClick={handleSaveContent}
-              disabled={isBusy || !draftContent.trim()}
-              className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
-            >
-              Speichern
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditing(false);
-                setDraftContent(statement.content);
-              }}
-              disabled={isBusy}
-              className="rounded-md border border-border px-3 py-1 text-xs text-text transition-colors hover:bg-background"
-            >
-              Abbrechen
-            </button>
+      {compact ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">{contentBlock}</div>
+            {actionButtons}
           </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+            <EvidenceBadge
+              status={statement.evidenceStatus}
+              onChange={handleStatusChange}
+              disabled={isBusy}
+            />
+            <OriginTag origin={statement.origin} />
+            {validationHistory && (
+              <ValidationHistoryChip counts={validationHistory} />
+            )}
+          </div>
+          {metaBlock}
         </div>
       ) : (
-        <p className="mt-2 break-words text-sm leading-relaxed text-text">
-          {statement.content}
-        </p>
-      )}
-
-      {metaParts.length > 0 && (
-        <div className="mt-2 border-t border-border/70 pt-2">
-          <div
-            className={`break-words text-[13px] text-text-muted ${
-              metaCollapsible && !metaExpanded ? "line-clamp-1" : ""
-            }`}
-          >
-            {metaParts.map((part) => (
-              <span key={part.label} className="mr-2">
-                <span className="font-medium">{part.label}:</span> {part.text}
-              </span>
-            ))}
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+              <EvidenceBadge
+                status={statement.evidenceStatus}
+                onChange={handleStatusChange}
+                disabled={isBusy}
+              />
+              {validationHistory && (
+                <ValidationHistoryChip counts={validationHistory} />
+              )}
+            </div>
+            <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <OriginTag origin={statement.origin} />
+              {actionButtons}
+            </div>
           </div>
-          {metaCollapsible && (
-            <button
-              type="button"
-              onClick={() => setMetaExpanded((value) => !value)}
-              className="mt-0.5 text-xs font-medium text-accent hover:underline"
-            >
-              {metaExpanded ? "Weniger" : "Mehr"}
-            </button>
-          )}
-        </div>
+          <div className="mt-2">{contentBlock}</div>
+          {metaBlock && <div className="mt-2">{metaBlock}</div>}
+        </>
       )}
 
       {!statement.adopted && showAdoptAction && (

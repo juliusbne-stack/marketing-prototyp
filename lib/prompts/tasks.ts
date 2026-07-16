@@ -42,6 +42,12 @@ REGELN:
   konsistent mit timeframe, budgetFrame und den Metrik-Schwellen.
 - Wo eine Aufgabe auf ein Ziel einzahlt, benenne es — bevorzugt Bezug zur
   validationQuestion und zu entscheidenden Metriken.
+- Zielgruppenbezug: Nutze das Segment der priorisierten Option. Vermische nicht
+  mehrere Phase-1-Segmente. Erreichbarkeits- und Kanalaufgaben orientieren sich
+  primär an OPT_MARKET_ACCESS, REACHABILITY und den Methoden-/Ressourcenangaben,
+  nicht allein am Segmentkern.
+- Wenn Nutzer-, Käufer- oder Entscheiderrollen im Segmentprofil stehen, adressiere
+  Interviews, Verkaufstests und Usability-Aufgaben an die jeweils passende Rolle.
 - Verboten: parameterlose Sammelaufgaben wie „Marketing vorbereiten".
 - title: kurze Verb-Formulierung mit Zahlen und Zeiträumen.
 - hint: GENAU 1 Satz Praxistipp (Werkzeug, Abkürzung, typischer Fehler).

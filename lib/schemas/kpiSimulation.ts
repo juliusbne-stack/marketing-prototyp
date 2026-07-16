@@ -9,6 +9,49 @@ export const kpiScenarioSchema = z.enum([
 
 export type KpiScenario = z.infer<typeof kpiScenarioSchema>;
 
+export const kpiDataPointInputSchema = z
+  .object({
+    periodLabel: z.string().trim().min(1),
+    value: z.number().finite().optional(),
+    numerator: z.number().finite().nonnegative().optional(),
+    denominator: z.number().finite().positive().optional(),
+    assessment: z.enum(["SUPPORTING", "NEUTRAL", "CONTRADICTING"]),
+  })
+  .superRefine((point, ctx) => {
+    const hasValue = point.value !== undefined;
+    const hasRatio =
+      point.numerator !== undefined || point.denominator !== undefined;
+    if (hasValue === hasRatio) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Ein Datenpunkt benötigt entweder einen Einzelwert oder getrennte Angaben für Treffer und Beobachtungen.",
+      });
+      return;
+    }
+    if (
+      hasRatio &&
+      (point.numerator === undefined || point.denominator === undefined)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Für Verhältniswerte müssen Treffer und Beobachtungen gemeinsam angegeben werden.",
+      });
+    }
+    if (
+      point.numerator !== undefined &&
+      point.denominator !== undefined &&
+      point.numerator > point.denominator
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["numerator"],
+        message: "Die Trefferzahl darf nicht größer als die Beobachtungszahl sein.",
+      });
+    }
+  });
+
 // Zod schema mirroring the KPI simulation JSON output (docs/PROMPTS.md,
 // Umsetzungs-Cockpit).
 export const kpiSimulationResponseSchema = z.object({
@@ -17,13 +60,7 @@ export const kpiSimulationResponseSchema = z.object({
       z.object({
         metricId: z.string().trim().min(1),
         points: z
-          .array(
-            z.object({
-              periodLabel: z.string().trim().min(1),
-              value: z.string().trim().min(1),
-              assessment: z.enum(["SUPPORTING", "NEUTRAL", "CONTRADICTING"]),
-            })
-          )
+          .array(kpiDataPointInputSchema)
           .min(3)
           .max(5),
       })
@@ -32,3 +69,4 @@ export const kpiSimulationResponseSchema = z.object({
 });
 
 export type KpiSimulationResponse = z.infer<typeof kpiSimulationResponseSchema>;
+export type KpiDataPointInput = z.infer<typeof kpiDataPointInputSchema>;

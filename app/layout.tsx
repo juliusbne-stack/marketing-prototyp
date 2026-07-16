@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
-import { TriangleAlert } from "lucide-react";
+import { PrototypeBanner } from "@/components/dashboard/PrototypeBanner";
 import { AppProviders } from "./providers";
 import "./globals.css";
 
@@ -32,17 +32,8 @@ export default function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <div
-          role="note"
-          className="flex items-center gap-2 border-b border-evidence-assumption-border/40 bg-evidence-assumption-bg px-4 py-2 text-xs text-evidence-assumption-text"
-        >
-          <TriangleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          <span>
-            Prototyp — alle Recherche- und Marktdaten werden zu
-            Demonstrationszwecken von der KI simuliert und sind fiktiv.
-          </span>
-        </div>
         <AppProviders>
+          <PrototypeBanner />
           <div className="flex flex-1 flex-col">{children}</div>
         </AppProviders>
       </body>

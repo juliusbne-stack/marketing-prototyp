@@ -1,13 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, MoreVertical, Plus } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  CircleAlert,
+  MoreVertical,
+  Plus,
+  Users,
+} from "lucide-react";
 import { StatementCard } from "@/components/statements/StatementCard";
+import { CollapsibleSection } from "@/components/wizard/CollapsibleSection";
 import type { StatementData } from "@/components/statements/types";
 import type { ValidationHistoryCounts } from "@/lib/validation";
 import {
   SEGMENT_ASPECTS,
   SEGMENT_ASPECT_LABELS,
+  WHO_SEGMENT_ASPECTS,
   isSegmentAspect,
   type SegmentAspect,
 } from "@/lib/segmentAspects";
@@ -24,6 +33,17 @@ function evidenceCounts(statements: StatementData[]) {
   };
 }
 
+// Soft card washes — deliberately neutral, not evidence colors (UI_KONZEPT).
+const SEGMENT_CARD_TINTS = [
+  "bg-[#F2F7F3]",
+  "bg-[#F1F6F8]",
+  "bg-[#F8F4F0]",
+  "bg-[#F3F6F4]",
+] as const;
+
+const ASPECT_TILE =
+  "min-w-0 rounded-[8px] border border-border/55 bg-surface/95 px-3 py-2.5 shadow-[0_1px_0_rgba(31,36,33,0.03)]";
+
 function SegmentProfileCard({
   projectId,
   segmentLabel,
@@ -31,7 +51,8 @@ function SegmentProfileCard({
   onChanged,
   onDeleted,
   onAdded,
-  layout = "vertical",
+  toneIndex = 0,
+  defaultOpen = false,
 }: {
   projectId: string;
   segmentLabel: string;
@@ -39,10 +60,12 @@ function SegmentProfileCard({
   onChanged: (statement: StatementData) => void;
   onDeleted: (id: string) => void;
   onAdded: (statement: StatementData) => void;
-  layout?: "vertical" | "horizontal";
+  toneIndex?: number;
+  defaultOpen?: boolean;
 }) {
   const { facts, assumptions, open } = evidenceCounts(statements);
   const hasDraft = statements.some((statement) => !statement.adopted);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isAdopting, setIsAdopting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [aspectFormOpen, setAspectFormOpen] = useState(false);
@@ -52,7 +75,9 @@ function SegmentProfileCard({
   const existingAspects = statements
     .map((statement) => statement.segmentAspect)
     .filter((aspect): aspect is SegmentAspect => !!aspect && isSegmentAspect(aspect));
-  const canAddAspect = existingAspects.length < SEGMENT_ASPECTS.length;
+  const canAddAspect = SEGMENT_ASPECTS.some(
+    (aspect) => !existingAspects.includes(aspect)
+  );
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -65,9 +90,12 @@ function SegmentProfileCard({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
+  const tint =
+    SEGMENT_CARD_TINTS[toneIndex % SEGMENT_CARD_TINTS.length] ??
+    SEGMENT_CARD_TINTS[0];
   const frameClasses = hasDraft
-    ? "border border-dashed border-accent/50 bg-accent-soft/30"
-    : "border border-border bg-surface";
+    ? "border border-dashed border-accent/50 bg-accent-soft/35"
+    : `border border-border/80 ${tint}`;
 
   async function adoptProfile() {
     const drafts = statements.filter((statement) => !statement.adopted);
@@ -102,127 +130,151 @@ function SegmentProfileCard({
   }
 
   return (
-    <article className={`rounded-[10px] p-4 ${frameClasses}`}>
-      <header className="border-b border-border/70 pb-3">
-        <div className="flex items-start justify-between gap-3">
+    <article
+      className={`overflow-hidden rounded-[10px] ${frameClasses} border-l-2 border-l-accent/35`}
+    >
+      <header
+        className={`flex items-stretch bg-accent-soft/40 ${
+          isOpen ? "border-b border-border/60" : ""
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setIsOpen((current) => !current)}
+          aria-expanded={isOpen}
+          className="group flex min-w-0 flex-1 items-start justify-between gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-accent-soft/55"
+        >
           <div className="min-w-0">
-            <h4 className="font-heading text-base font-medium text-text">
+            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent">
+              <Users className="h-3.5 w-3.5" aria-hidden />
+              Zielgruppe
+            </div>
+            <h4 className="font-heading text-base font-medium text-text transition-colors group-hover:text-accent">
               {segmentLabel}
             </h4>
             <p className="mt-1 text-xs text-text-muted">
-              {facts} Fakten · {assumptions} Annahmen · {open} offen
+              Segmentprofil · {facts} Fakten · {assumptions} Annahmen · {open}{" "}
+              offen
             </p>
           </div>
+          <ChevronDown
+            className={`mt-1 h-4 w-4 shrink-0 text-text-muted transition-[transform,color] duration-200 group-hover:text-accent motion-reduce:transition-none ${
+              isOpen ? "rotate-180" : ""
+            }`}
+            aria-hidden
+          />
+        </button>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {canAddAspect && (
-              <div ref={menuRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((value) => !value)}
-                  aria-haspopup="menu"
-                  aria-expanded={menuOpen}
-                  aria-label="Profilaktionen"
-                  className="rounded p-1 text-text-muted transition-colors hover:text-accent"
-                >
-                  <MoreVertical className="h-4 w-4" aria-hidden />
-                </button>
-                {menuOpen && (
-                  <ul
-                    role="menu"
-                    className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border border-border bg-surface py-1 shadow-sm"
-                  >
-                    <li role="none">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          setAspectFormOpen(true);
-                        }}
-                        className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs text-text hover:bg-accent-soft"
-                      >
-                        <Plus className="h-3.5 w-3.5" aria-hidden />
-                        Aspekt ergänzen
-                      </button>
-                    </li>
-                  </ul>
-                )}
-              </div>
-            )}
-
-            {hasDraft && (
+        <div className="flex shrink-0 items-start gap-2 py-3 pr-4">
+          {canAddAspect && (
+            <div ref={menuRef} className="relative">
               <button
                 type="button"
-                onClick={adoptProfile}
-                disabled={isAdopting}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+                onClick={() => {
+                  setIsOpen(true);
+                  setMenuOpen((value) => !value);
+                }}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="Profilaktionen"
+                className="rounded p-1 text-text-muted transition-colors hover:text-accent"
               >
-                <Check className="h-3.5 w-3.5" aria-hidden />
-                {isAdopting ? "Wird übernommen …" : "Profil übernehmen"}
+                <MoreVertical className="h-4 w-4" aria-hidden />
               </button>
-            )}
-          </div>
+              {menuOpen && (
+                <ul
+                  role="menu"
+                  className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border border-border bg-surface py-1 shadow-sm"
+                >
+                  <li role="none">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setIsOpen(true);
+                        setAspectFormOpen(true);
+                      }}
+                      className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs text-text hover:bg-accent-soft"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden />
+                      Aspekt ergänzen
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </div>
+          )}
+
+          {hasDraft && (
+            <button
+              type="button"
+              onClick={adoptProfile}
+              disabled={isAdopting}
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+            >
+              <Check className="h-3.5 w-3.5" aria-hidden />
+              {isAdopting ? "Wird übernommen …" : "Profil übernehmen"}
+            </button>
+          )}
         </div>
-
-        {aspectFormOpen && (
-          <div className="mt-3">
-            <AddSegmentAspectForm
-              projectId={projectId}
-              segmentLabel={segmentLabel}
-              existingAspects={existingAspects}
-              onAdded={(statement) => {
-                onAdded(statement);
-                setAspectFormOpen(false);
-              }}
-              open={aspectFormOpen}
-              onOpenChange={setAspectFormOpen}
-              hideTrigger
-            />
-          </div>
-        )}
-
-        {adoptError && (
-          <p className="mt-2 text-xs text-danger-text">{adoptError}</p>
-        )}
       </header>
 
-      <div
-        className={
-          layout === "horizontal"
-            ? "mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2"
-            : "grid grid-cols-[auto_max-content_minmax(0,1fr)] divide-y divide-border/70"
-        }
-      >
-        {SEGMENT_ASPECTS.map((aspect) => {
-          const statement = statements.find(
-            (candidate) => candidate.segmentAspect === aspect
-          );
+      {isOpen && (
+        <>
+          {(aspectFormOpen || adoptError) && (
+            <div className="border-b border-border/60 bg-accent-soft/25 px-4 py-3">
+              {aspectFormOpen && (
+                <AddSegmentAspectForm
+                  projectId={projectId}
+                  segmentLabel={segmentLabel}
+                  existingAspects={existingAspects}
+                  onAdded={(statement) => {
+                    onAdded(statement);
+                    setAspectFormOpen(false);
+                  }}
+                  open={aspectFormOpen}
+                  onOpenChange={setAspectFormOpen}
+                  hideTrigger
+                />
+              )}
+              {adoptError && (
+                <p className="text-xs text-danger-text">{adoptError}</p>
+              )}
+            </div>
+          )}
 
-          const rowProps = {
-            statement,
-            aspectLabel: SEGMENT_ASPECT_LABELS[aspect],
-            onChanged,
-            onDeleted,
-            emptyPlaceholder: "Noch keine Aussage zu dieser Dimension.",
-          };
+          <div className="grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2">
+            {SEGMENT_ASPECTS.map((aspect) => {
+              const statement = statements.find(
+                (candidate) => candidate.segmentAspect === aspect
+              );
 
-          if (layout === "horizontal") {
-            return (
-              <div
-                key={aspect}
-                className={`min-w-0 rounded-md border border-border/60 bg-background/60 p-3 ${
-                  aspect === "DESCRIPTION" ? "sm:col-span-2" : ""
-                }`}
-              >
-                <CompactStatementRow {...rowProps} layout="column" />
-              </div>
-            );
-          }
-
-          return <CompactStatementRow key={aspect} {...rowProps} layout="row" />;
-        })}
-      </div>
+              return (
+                <div
+                  key={aspect}
+                  className={`${ASPECT_TILE} ${
+                    WHO_SEGMENT_ASPECTS.includes(
+                      aspect as (typeof WHO_SEGMENT_ASPECTS)[number]
+                    )
+                      ? "sm:col-span-2"
+                      : ""
+                  }`}
+                >
+                  <CompactStatementRow
+                    statement={statement}
+                    aspectLabel={SEGMENT_ASPECT_LABELS[aspect]}
+                    onChanged={onChanged}
+                    onDeleted={onDeleted}
+                    emptyPlaceholder="Noch keine Aussage zu dieser Dimension."
+                    layout="column"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </article>
   );
 }
@@ -246,43 +298,51 @@ function CustomerProblemsCard({
   const hasDraft = problems.some((statement) => !statement.adopted);
 
   const frameClasses = hasDraft
-    ? "border border-dashed border-accent/50 bg-accent-soft/30"
-    : "border border-border bg-surface";
+    ? "border border-dashed border-accent/50 bg-accent-soft/35"
+    : "border border-border/80 bg-[#F6F3EE]";
 
   return (
-    <article className={`mt-5 rounded-[10px] p-4 ${frameClasses}`}>
-      <header className="border-b border-border/70 pb-3">
+    <article className={`mt-5 overflow-hidden rounded-[10px] ${frameClasses}`}>
+      <header className="border-b border-border/60 bg-surface/80 px-4 py-3">
+        <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-md bg-background px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted ring-1 ring-border">
+          <CircleAlert className="h-3.5 w-3.5" aria-hidden />
+          Übergreifend
+        </div>
         <h4 className="font-heading text-base font-medium text-text">
           Kundenprobleme
         </h4>
         {problems.length > 0 && (
           <p className="mt-1 text-xs text-text-muted">
-            {facts} Fakten · {assumptions} Annahmen · {open} offen
+            Geteilte Bedarfe · {facts} Fakten · {assumptions} Annahmen · {open}{" "}
+            offen
           </p>
         )}
       </header>
 
       {problems.length === 0 ? (
-        <p className="py-3 text-xs text-text-muted">
+        <p className="px-4 py-3 text-xs text-text-muted">
           Keine Aussagen zu Kundenproblemen vorhanden.
         </p>
       ) : (
-        <div className="divide-y divide-border/70">
+        <div className="flex flex-col gap-2 p-3">
           {problems.map((statement) => (
-            <CompactStatementRow
-              key={statement.id}
-              statement={statement}
-              showOriginInline
-              showAdoptInline
-              validationHistory={validationHistoryByStatementId?.get(statement.id)}
-              onChanged={onChanged}
-              onDeleted={onDeleted}
-            />
+            <div key={statement.id} className={ASPECT_TILE}>
+              <CompactStatementRow
+                statement={statement}
+                showOriginInline
+                showAdoptInline
+                validationHistory={validationHistoryByStatementId?.get(
+                  statement.id
+                )}
+                onChanged={onChanged}
+                onDeleted={onDeleted}
+              />
+            </div>
           ))}
         </div>
       )}
 
-      <div className="mt-3 border-t border-border/70 pt-3">
+      <div className="border-t border-border/60 bg-surface/50 px-4 py-3">
         <AddStatementForm
           projectId={projectId}
           categories={[{ value: "CUSTOMER_PROBLEM", label: "Kundenproblem" }]}
@@ -322,34 +382,30 @@ export function SegmentCards({
   }
 
   const hasAnySegments = segments.length > 0;
-  const segmentCardCount = profileGroups.size + legacySegments.length;
-  const useHorizontalLayout = segmentCardCount === 1;
+  const profileEntries = Array.from(profileGroups.entries());
 
   return (
-    <section
+    <CollapsibleSection
       id="zielgruppen"
+      title="Zielgruppen & Kundenprobleme"
+      highlightUntilOpened
       className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
     >
-      <h3 className="font-heading text-base font-medium text-text">
-        Zielgruppen & Kundenprobleme
-      </h3>
-
-      <div
-        className={`mt-3 grid gap-3 ${useHorizontalLayout ? "grid-cols-1" : "sm:grid-cols-2"}`}
-      >
+      <div className="flex flex-col gap-3">
         {!hasAnySegments && (
-          <p className="text-xs text-text-muted sm:col-span-2">
+          <p className="text-xs text-text-muted">
             Keine Zielgruppenhypothesen vorhanden.
           </p>
         )}
 
-        {Array.from(profileGroups.entries()).map(([segmentLabel, group]) => (
+        {profileEntries.map(([segmentLabel, group], index) => (
           <SegmentProfileCard
             key={segmentLabel}
             projectId={projectId}
             segmentLabel={segmentLabel}
             statements={group}
-            layout={useHorizontalLayout ? "horizontal" : "vertical"}
+            toneIndex={index}
+            defaultOpen={index === 0}
             onChanged={onChanged}
             onDeleted={onDeleted}
             onAdded={onAdded}
@@ -374,6 +430,6 @@ export function SegmentCards({
         onAdded={onAdded}
         validationHistoryByStatementId={validationHistoryByStatementId}
       />
-    </section>
+    </CollapsibleSection>
   );
 }

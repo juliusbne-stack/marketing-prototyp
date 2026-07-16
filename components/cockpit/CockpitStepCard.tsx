@@ -14,21 +14,15 @@ import { StepImplementationFrame } from "@/components/steps/StepImplementationFr
 import { ProgressButton } from "@/components/ui/ProgressButton";
 import { getAnchorAssumptionInlinePrefix } from "@/lib/anchorAssumptionLabel";
 import { formatImplementationGoals } from "@/lib/formatImplementationGoals";
-import {
-  derivePeriodAssessment,
-  formatCumulativeTotal,
-  formatRunningTotal,
-  parseNumericValue,
-  periodAssessmentLabel,
-  reassessDataPoints,
-  resolveEvaluationMode,
-} from "@/lib/kpiAssessment";
+import { reassessDataPoints } from "@/lib/kpiAssessment";
+import { aggregateMetric } from "@/lib/metrics/aggregateMetric";
 import {
   deriveStepReadiness,
   TIMEFRAME_ENDPOINT_TOOLTIP,
 } from "@/lib/cockpitPeriod";
 import { StepReadinessChip } from "./StepReadinessChip";
 import { CockpitTaskRow } from "./CockpitTaskRow";
+import { KpiDataPointForm } from "./KpiDataPointForm";
 import { RESULT_CONFIG } from "@/components/phase5/types";
 import type { KpiScenario } from "@/lib/schemas/kpiSimulation";
 import { LAUFMODUS_LABELS } from "@/lib/crossImplementation";
@@ -458,47 +452,21 @@ export function CockpitStepCard({
 
         <div className="mt-2 flex flex-col gap-3">
           {metrics.map((metric) => {
-            const reassessed = reassessDataPoints(metric, metric.dataPoints);
-            const latest = reassessed.at(-1);
-            const isCumulative = resolveEvaluationMode(metric) === "CUMULATIVE";
-            const periodAssessment = isCumulative
-              ? derivePeriodAssessment(metric, metric.dataPoints)
-              : latest?.assessment ?? null;
-            const displayAssessment = isCumulative
-              ? periodAssessment
-              : latest?.assessment ?? null;
-            const displayConfig = displayAssessment
-              ? KPI_ASSESSMENT_CONFIG[displayAssessment]
-              : null;
-            const assessmentText =
-              displayAssessment && isCumulative
-                ? periodAssessmentLabel(displayAssessment, "CUMULATIVE")
-                : displayAssessment
-                  ? displayConfig?.label
-                  : null;
-            const chipLabel =
-              latest && isCumulative
-                ? `Gesamt: ${formatCumulativeTotal(metric, reassessed)}${assessmentText ? ` — ${assessmentText}` : ""}`
-                : latest
-                  ? `${latest.periodLabel}: ${latest.value}`
-                  : null;
-            const chipTitle =
-              latest && displayConfig
-                ? isCumulative
-                  ? `Gesamt über die Periode: ${formatCumulativeTotal(metric, reassessed)} (${assessmentText})`
-                  : `${latest.periodLabel}: ${latest.value} (${displayConfig.label})`
-                : undefined;
-            const neutralDot = KPI_ASSESSMENT_CONFIG.NEUTRAL;
+            const result = aggregateMetric(metric, metric.dataPoints);
+            const displayConfig = KPI_ASSESSMENT_CONFIG[result.assessment];
             return (
               <div key={metric.id}>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-xs font-medium text-text">{metric.name}</p>
-                  {latest && displayConfig && chipLabel ? (
+                  {metric.dataPoints.length > 0 ? (
                     <span
-                      title={chipTitle}
+                      title={result.explanation}
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${displayConfig.chipClassName}`}
                     >
-                      {chipLabel}
+                      {result.aggregationStrategy === "NONE"
+                        ? "Aktuell"
+                        : "Gesamt"}
+                      : {result.displayValue} — {displayConfig.label}
                     </span>
                   ) : (
                     <span className="text-xs text-text-muted">
@@ -506,34 +474,54 @@ export function CockpitStepCard({
                     </span>
                   )}
                 </div>
-                {reassessed.length > 0 && (
-                  <div
-                    className="mt-1.5 flex items-center gap-1.5"
-                    aria-label={`Verlauf ${metric.name}`}
-                  >
-                    {reassessed.map((point, index) => {
-                      const config = isCumulative
-                        ? neutralDot
-                        : KPI_ASSESSMENT_CONFIG[point.assessment];
-                      let runningTotal = 0;
-                      if (isCumulative) {
-                        for (let i = 0; i <= index; i++) {
-                          runningTotal +=
-                            parseNumericValue(reassessed[i]!.value) ?? 0;
-                        }
-                      }
-                      const dotTitle = isCumulative
-                        ? `${point.periodLabel}: ${point.value} · kumuliert ${formatRunningTotal(metric, runningTotal)}`
-                        : `${point.periodLabel}: ${point.value} (${config.label})`;
-                      return (
-                        <span
-                          key={point.id}
-                          title={dotTitle}
-                          className={`h-2 w-2 rounded-full ${config.dotClassName}`}
-                        />
-                      );
-                    })}
+                {result.periods.length > 0 && (
+                  <div className="mt-2 grid gap-1.5" aria-label={`Verlauf ${metric.name}`}>
+                    {result.periods.map((period, index) => (
+                      <div
+                        key={`${period.periodLabel}-${index}`}
+                        className="rounded-md border border-border bg-background px-2.5 py-2 text-xs"
+                      >
+                        <p className="font-medium text-text">{period.periodLabel}</p>
+                        <p className="mt-0.5 text-text-muted">
+                          Diese Periode: {period.periodDisplayValue}
+                        </p>
+                        <p className="text-text-muted">
+                          Kumuliert: {period.cumulativeDisplayValue}
+                        </p>
+                      </div>
+                    ))}
+                    <p className="text-xs text-text-muted">
+                      {result.periodCount}{" "}
+                      {result.periodCount === 1
+                        ? "Erhebungswelle"
+                        : "Erhebungswellen"}
+                    </p>
+                    {!result.isValid && (
+                      <p className="text-xs text-kpi-contradicting-text">
+                        {result.explanation}
+                      </p>
+                    )}
                   </div>
+                )}
+                {!readOnly && (
+                  <KpiDataPointForm
+                    metric={metric}
+                    onSaved={(dataPoints) =>
+                      setMetrics((current) =>
+                        current.map((entry) =>
+                          entry.id === metric.id
+                            ? {
+                                ...entry,
+                                dataPoints: reassessDataPoints(
+                                  entry,
+                                  dataPoints
+                                ),
+                              }
+                            : entry
+                        )
+                      )
+                    }
+                  />
                 )}
               </div>
             );

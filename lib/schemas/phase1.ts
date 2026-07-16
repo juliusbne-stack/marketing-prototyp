@@ -3,7 +3,11 @@ import {
   MAX_COMPETITOR_COUNT,
   MIN_COMPETITOR_COUNT,
 } from "@/lib/competitorCount";
-import { SEGMENT_ASPECTS } from "@/lib/segmentAspects";
+import {
+  OPTIONAL_GENERATED_SEGMENT_ASPECTS,
+  REQUIRED_GENERATED_SEGMENT_ASPECTS,
+  SEGMENT_ASPECTS,
+} from "@/lib/segmentAspects";
 import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
 import { phase1EvidenceStatus, phase1Origin } from "@/lib/schemas/evidenceStatus";
 import { validateStatementContentNotIntention } from "@/lib/schemas/statementContent";
@@ -525,6 +529,56 @@ function validateRequiredAnalysisSections(
   }
 }
 
+function validateTargetSegmentStructure(
+  statements: Phase1StatementInput[],
+  ctx: z.RefinementCtx,
+  options: { incremental: boolean } = { incremental: false }
+) {
+  const byLabel = new Map<string, Phase1StatementInput[]>();
+  for (const statement of statements) {
+    if (statement.category !== "TARGET_SEGMENT") continue;
+    const label = statement.segmentLabel?.trim();
+    if (!label) continue;
+    byLabel.set(label, [...(byLabel.get(label) ?? []), statement]);
+  }
+
+  if (!options.incremental && byLabel.size < 2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Es müssen mindestens 2 Zielgruppensegmente vorhanden sein (gefunden: ${byLabel.size}).`,
+      path: ["statements"],
+    });
+  }
+
+  const allowedGeneratedAspects = new Set<string>([
+    ...REQUIRED_GENERATED_SEGMENT_ASPECTS,
+    ...OPTIONAL_GENERATED_SEGMENT_ASPECTS,
+  ]);
+
+  for (const [label, group] of byLabel) {
+    const aspects = group
+      .map((statement) => statement.segmentAspect)
+      .filter((aspect): aspect is (typeof SEGMENT_ASPECTS)[number] => !!aspect);
+    const aspectSet = new Set(aspects);
+
+    const missingRequired = REQUIRED_GENERATED_SEGMENT_ASPECTS.filter(
+      (aspect) => !aspectSet.has(aspect)
+    );
+    const hasDuplicateAspect = aspects.length !== aspectSet.size;
+    const hasInvalidGeneratedAspect = [...aspectSet].some(
+      (aspect) => !allowedGeneratedAspects.has(aspect)
+    );
+
+    if (missingRequired.length > 0 || hasDuplicateAspect || hasInvalidGeneratedAspect) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Segment „${label}" braucht genau ein Segmentkern-Statement, genau ein Statement zu abgrenzenden Merkmalen sowie die Aspekte PROBLEM_NEED, BEHAVIOR_CONTEXT, WILLINGNESS_TO_PAY und REACHABILITY; WHO_BOUNDARY_ROLE ist optional.`,
+        path: ["statements"],
+      });
+    }
+  }
+}
+
 /** Schema for the initial Phase-1 analysis with a fixed actor target count. */
 export function createPhase1ResponseSchema(targetCompetitorCount: number) {
   return z
@@ -539,6 +593,7 @@ export function createPhase1ResponseSchema(targetCompetitorCount: number) {
         targetCompetitorCount,
         ctx
       );
+      validateTargetSegmentStructure(data.statements, ctx);
       validateRequiredAnalysisSections(data.statements, ctx);
       validateStatementContents(data.statements, ctx);
     });
@@ -597,6 +652,7 @@ export function createPhase1IncrementalResponseSchema(
         options.requiredNewProfiles,
         ctx
       );
+      validateTargetSegmentStructure(data.statements, ctx, { incremental: true });
       validateStatementContents(data.statements, ctx);
     });
 }

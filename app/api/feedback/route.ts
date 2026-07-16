@@ -159,6 +159,9 @@ export async function PATCH(request: Request) {
             uncertainty: true,
             isCritical: true,
             adopted: true,
+            segmentLabel: true,
+            segmentAspect: true,
+            supersededByStatementId: true,
           },
         })
       : null;

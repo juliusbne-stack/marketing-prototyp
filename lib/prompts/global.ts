@@ -48,9 +48,12 @@ EVIDENZLOGIK (gilt für jede Aussage, die du erzeugst):
   sinnvoll die Frage „Stimmt das?" anschließen, ist es keine Aussage.
   Bei Zielgruppen-Segmenten (TARGET_SEGMENT) gilt zusätzlich:
   Jede Aussage gehört zu einem Segmentprofil (gemeinsames segmentLabel) und einer
-  von fünf Dimensionen (segmentAspect). Der content muss die jeweilige Dimension
+  fachlichen Dimension (segmentAspect). Der content muss die jeweilige Dimension
   als eigenständig prüfbare Behauptung formulieren — nicht nur den Segmentnamen
-  wiederholen.
+  wiederholen. Segmentprofil/Wer wird in getrennte Teilbehauptungen aufgeteilt:
+  WHO_CORE (Segmentkern), WHO_DISTINGUISHERS (abgrenzende Merkmale) und optional
+  WHO_BOUNDARY_ROLE (Abgrenzung, Nutzer-/Käufer-/Entscheiderrolle). Problem,
+  Verhalten, Zahlungsbereitschaft und Erreichbarkeit bleiben eigene Aspekte.
   Bei Wettbewerberprofilen (COMPETITOR mit competitorLabel) gilt analog:
   Jede Aussage gehört zu einem Profil (gemeinsames competitorLabel) und einer von
   sechs Dimensionen (competitorAspect). Der content muss die jeweilige Dimension

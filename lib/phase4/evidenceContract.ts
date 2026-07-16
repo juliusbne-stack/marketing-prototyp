@@ -75,7 +75,10 @@ function contractForClaimType(
           "Person gehört zur definierten Zielgruppe und wurde über den getesteten Kanal erreicht.",
       };
     case "VALUE_PERCEPTION":
+    case "PREFERENCE":
     case "SEGMENT_FIT":
+    case "SEGMENT_MEMBERSHIP":
+    case "PURCHASE_ROLE":
     case "ADOPTION_INTENT":
     case "USAGE_BEHAVIOR":
       return {

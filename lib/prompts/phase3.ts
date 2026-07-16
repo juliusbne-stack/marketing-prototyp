@@ -12,6 +12,16 @@ KRITERIEN (je Option, Score 1–5, 5 = am besten):
 
 REGELN:
 - Jede rationale bezieht sich konkret auf Profil und Analysebild, nicht generisch.
+- Nutze je Option addressedSegmentProfile, sofern vorhanden. ATTRACTIVENESS
+  bewertet Segmentkern, Problempassung und strategische Stimmigkeit; RESOURCE_FIT
+  bewertet Ressourcen- und Zugangspassung; EVIDENCE bewertet die Evidenzstatus
+  der zugrunde liegenden Aussagen. Detailreichere Segmenttexte erhöhen den
+  EVIDENCE-Score nicht automatisch.
+- Vermische Zielgruppenattraktivität und Erreichbarkeit nicht: fehlender Zugang
+  senkt primär RESOURCE_FIT oder VALIDATION_EFFORT, nicht automatisch die
+  inhaltliche Attraktivität des Segments.
+- Leite keine Marktgröße oder Sicherheit aus präzisen Segmentformulierungen ab,
+  wenn sie nicht als Aussage mit passendem Evidenzstatus im Kontext steht.
 - Bewerte JEDE übergebene Option mit ALLEN 6 Kriterien.
 - recommendation: genau EINE Option als Priorisierungsvorschlag mit Begründung,
   die die Kriterienlage zusammenfasst UND ausdrücklich benennt, was gegen die

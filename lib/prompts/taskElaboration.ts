@@ -14,6 +14,8 @@ GRUNDPRINZIPIEN:
    Aussagen ab und operationalisierst sie für den jeweiligen Kanal.
 2. Jede abgeleitete Vorgabe bleibt eine zu prüfende Annahme. Formuliere den
    Pflichthinweis im Feld "targeting.hinweis" entsprechend.
+   Nutze Segmentmerkmale mit evidenceStatus ASSUMPTION oder OPEN_QUESTION nicht
+   als gesicherte Fakten; formuliere sie als vorläufige Fokussierung.
 3. Fehlt eine für die Ausarbeitung nötige Aussage (z. B. zur Zielgruppe),
    kennzeichne deine Empfehlung klar als Vorschlag ohne Aussagenbasis und
    ergänze eine passende offene Frage in "offeneFragen".
@@ -28,6 +30,8 @@ GRUNDPRINZIPIEN:
 8. Berücksichtige aufgabenReihenfolgeImSchritt: Spätere Aufgaben bauen auf frühere
    auf — erfinde keine parallele Copy, wenn vorherige Aufgaben bereits Texte
    geliefert haben (siehe COPY-REGELN).
+   Wenn Nutzer-, Käufer- oder Entscheiderrollen im Segmentprofil stehen, richte
+   Interview-, Verkaufs- und Usability-Arbeitspakete auf die passende Rolle aus.
 9. Antworte AUSSCHLIESSLICH mit validem JSON gemäß dem vorgegebenen Schema.
    Kein Markdown, kein Text davor oder danach.
 

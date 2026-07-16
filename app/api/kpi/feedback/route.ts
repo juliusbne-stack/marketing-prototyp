@@ -40,7 +40,13 @@ export async function POST(request: Request) {
         include: {
           dataPoints: {
             orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-            select: { periodLabel: true, value: true, assessment: true },
+            select: {
+              periodLabel: true,
+              value: true,
+              numerator: true,
+              denominator: true,
+              assessment: true,
+            },
           },
         },
       },

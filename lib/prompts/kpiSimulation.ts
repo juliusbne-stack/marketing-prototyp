@@ -10,13 +10,19 @@ REGELN:
   - CONTRADICTING: Das Ergebnis auf Auswertungsebene widerspricht der Annahme.
   - MIXED: Das Ergebnis liegt zwischen Erfolgs- und Misserfolgsschwelle
     (teilweise gestützt) bzw. zeigt bei PER_POINT ein uneinheitliches Bild.
+- Wertart und aggregationStrategy je Metrik sind verbindlich:
+  - RATE_FROM_SUMS / COUNT_OF_TOTAL: Gib für JEDE Periode ausschließlich
+    numerator (Treffer dieser Periode) und denominator (Beobachtungen dieser
+    Periode) als Zahlen aus. Kein value, kein Prozenttext und niemals einen
+    bereits kumulierten Zwischenstand ausgeben.
+  - Alle anderen Strategien: Gib ausschließlich value als endliche Zahl ohne
+    Einheit oder Beschreibung aus. Kein numerator/denominator.
 - evaluationMode je Metrik (aus dem Kontext):
-  - PER_POINT: Gib den Periodenwert an (z. B. „2,5 %", „3,2 %"). Die Bewertung
+  - PER_POINT: Gib den numerischen Periodenwert an. Die Bewertung
     erfolgt je Periode gegen die Schwellen. Bei SUPPORTING liegen die meisten
     Periodenwerte über der Stütz-Schwelle; bei CONTRADICTING reißen die meisten
     das Misserfolgskriterium; bei MIXED eine Mischung ohne klaren Trend.
-  - CUMULATIVE: Gib den Zuwachs JE Periode an (z. B. „12 neue Anfragen" in
-    Woche 1, „8 neue Anfragen" in Woche 2) — NICHT den kumulierten Stand.
+  - CUMULATIVE: Gib den Zuwachs JE Periode an — NICHT den kumulierten Stand.
     Die Gesamtsumme über alle Perioden wird gegen die Kriterien geprüft:
     Bei SUPPORTING erreicht die Endsumme die Erfolgsschwelle; bei
     CONTRADICTING liegt sie unter der Misserfolgsschwelle; bei MIXED dazwischen.
@@ -26,12 +32,10 @@ REGELN:
   successCriterion erfüllt; CONTRADICTING nur, wenn er das failureCriterion
   erfüllt; sonst NEUTRAL. Für CUMULATIVE setze auf allen Punkten NEUTRAL —
   die Klassifikation erfolgt ausschließlich auf Periodenebene (serverseitig).
-- value: kurzer, konkreter Wert mit Einheit bzw. Bezugsgröße (z. B.
-  "14 Registrierungen", "3 von 5 Interviews bestätigen das Problem",
-  "Conversion 1,8 %"). Realistische Größenordnungen für den Ressourcenrahmen
-  des Profils — keine Scheinpräzision.
+- Werte enthalten keine Labels oder Einheiten; die Anzeige formatiert sie aus
+  den strukturierten Metrik-Metadaten.
 - periodLabel: fortlaufende, gleichartige Perioden ("Woche 1", "Woche 2", …).
-  Wenn im Kontext existingPeriodLabels übergeben werden, setze die Zählung
+  Wenn im Kontext existingPeriodLabelsByMetric übergeben wird, setze die Zählung
   nahtlos fort (nach "Woche 3" folgt "Woche 4") statt neu zu beginnen.
 - Alle Metriken erhalten dieselben Perioden-Labels (gleicher Zeitraum).
 - Die Werte sind Teil des Simulationsmodus und damit FIKTIV — erfinde keine
@@ -46,10 +50,16 @@ Kontext, unverändert übernehmen):
       "points": [
         {
           "periodLabel": "string (z. B. Woche 1)",
-          "value": "string",
+          "value": 12.5,
+          "numerator": null,
+          "denominator": null,
           "assessment": "SUPPORTING | NEUTRAL | CONTRADICTING"
         }
       ]
     }
   ]
-}`;
+}
+
+Für RATE_FROM_SUMS lasse value vollständig weg und setze numerator und
+denominator als Zahlen. Für alle anderen Strategien lasse numerator und
+denominator vollständig weg.}`;

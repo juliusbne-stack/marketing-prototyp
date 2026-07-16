@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { LayoutGroup } from "framer-motion";
 import { CheckCheck, CheckCircle2 } from "lucide-react";
-import { StatementCard } from "@/components/statements/StatementCard";
 import { EvidenceBadge } from "@/components/statements/EvidenceBadge";
 import { OriginTag } from "@/components/statements/OriginTag";
 import type { StatementData } from "@/components/statements/types";
 import { PhaseAdvanceButton } from "@/components/wizard/PhaseAdvanceButton";
+import { requestOpenAnalysisSection } from "@/components/wizard/CollapsibleSection";
 import {
   AI_ERROR_FALLBACK,
   AI_LOADING_MESSAGES,
@@ -19,10 +19,10 @@ import type { Phase1Statement, PestelRelevance } from "@/lib/schemas/phase1";
 import type { Phase1StreamEvent } from "@/lib/phase1/events";
 import { ProfileForm, type ProfileData } from "./ProfileForm";
 import { ProfileOnboardingWizard } from "./onboarding/ProfileOnboardingWizard";
-import { AddStatementForm } from "./AddStatementForm";
 import { PestelGrid } from "./PestelGrid";
 import { SegmentCards } from "./SegmentCards";
 import { CompetitorCards } from "./CompetitorCards";
+import { ResourceCards } from "./ResourceCards";
 import { SwotMatrix } from "./SwotMatrix";
 
 const ANCHORS = [
@@ -542,7 +542,30 @@ export function Phase1View({
                   )}
                   <a
                     href={anchor.href}
-                    onClick={() => setActiveAnchor(anchor.href)}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setActiveAnchor(anchor.href);
+
+                      const sectionId = anchor.href.slice(1);
+                      requestOpenAnalysisSection(sectionId);
+                      // SWOT nav also reveals the related market-paths block.
+                      if (sectionId === "swot") {
+                        requestOpenAnalysisSection("marktpfade");
+                      }
+
+                      const section = document.getElementById(sectionId);
+                      if (section) {
+                        const reduceMotion = window.matchMedia(
+                          "(prefers-reduced-motion: reduce)"
+                        ).matches;
+                        section.scrollIntoView({
+                          behavior: reduceMotion ? "auto" : "smooth",
+                          block: "start",
+                        });
+                      }
+
+                      window.history.replaceState(null, "", anchor.href);
+                    }}
                     className={`relative flex min-h-14 w-full items-center justify-center px-4 text-center transition-colors hover:text-accent ${
                       activeAnchor === anchor.href
                         ? "text-accent"
@@ -562,69 +585,50 @@ export function Phase1View({
             </nav>
           </div>
 
-          <PestelGrid
-            projectId={project.id}
-            statements={byCategory("PESTEL_")}
-            pestelRelevance={pestelRelevance}
-            onChanged={handleChanged}
-            onDeleted={handleDeleted}
-            onAdded={handleAdded}
-          />
+          <div className="flex flex-col gap-3">
+            <PestelGrid
+              projectId={project.id}
+              statements={byCategory("PESTEL_")}
+              pestelRelevance={pestelRelevance}
+              onChanged={handleChanged}
+              onDeleted={handleDeleted}
+              onAdded={handleAdded}
+            />
 
-          <SegmentCards
-            projectId={project.id}
-            segments={byCategory("TARGET_SEGMENT")}
-            problems={byCategory("CUSTOMER_PROBLEM")}
-            onChanged={handleChanged}
-            onDeleted={handleDeleted}
-            onAdded={handleAdded}
-          />
+            <SegmentCards
+              projectId={project.id}
+              segments={byCategory("TARGET_SEGMENT")}
+              problems={byCategory("CUSTOMER_PROBLEM")}
+              onChanged={handleChanged}
+              onDeleted={handleDeleted}
+              onAdded={handleAdded}
+            />
 
-          <CompetitorCards
-            projectId={project.id}
-            statements={byCategory("COMPETITOR")}
-            onChanged={handleChanged}
-            onDeleted={handleDeleted}
-            onAdded={handleAdded}
-          />
+            <CompetitorCards
+              projectId={project.id}
+              statements={byCategory("COMPETITOR")}
+              onChanged={handleChanged}
+              onDeleted={handleDeleted}
+              onAdded={handleAdded}
+            />
 
-          <section
-            id="ressourcen"
-            className="scroll-mt-[20rem] sm:scroll-mt-[12rem] lg:scroll-mt-[9rem]"
-          >
-            <h3 className="font-heading text-base font-medium text-text">
-              Ressourcen & Fähigkeiten
-            </h3>
-            <div className="mt-3 flex flex-col gap-3">
-              {resources.length === 0 && (
-                <p className="text-xs text-text-muted">
-                  Keine Ressourcen-Aussagen vorhanden.
-                </p>
-              )}
-              {resources.map((statement) => (
-                <StatementCard
-                  key={statement.id}
-                  statement={statement}
-                  onChanged={handleChanged}
-                  onDeleted={handleDeleted}
-                />
-              ))}
-              <AddStatementForm
-                projectId={project.id}
-                categories={[{ value: "RESOURCE", label: "Ressource" }]}
-                onAdded={handleAdded}
-              />
-            </div>
-          </section>
+            <ResourceCards
+              projectId={project.id}
+              statements={resources}
+              onChanged={handleChanged}
+              onDeleted={handleDeleted}
+              onAdded={handleAdded}
+            />
 
-          <SwotMatrix
-            projectId={project.id}
-            statements={byCategory("SWOT_")}
-            marketPaths={byCategory("MARKET_PATH")}
-            onChanged={handleChanged}
-            onDeleted={handleDeleted}
-            onAdded={handleAdded}
-          />
+            <SwotMatrix
+              projectId={project.id}
+              statements={byCategory("SWOT_")}
+              marketPaths={byCategory("MARKET_PATH")}
+              onChanged={handleChanged}
+              onDeleted={handleDeleted}
+              onAdded={handleAdded}
+            />
+          </div>
         </>
       )}
 

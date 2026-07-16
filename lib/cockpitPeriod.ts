@@ -110,10 +110,23 @@ export type StepReadinessInput = {
   tasks: Pick<TaskData, "done">[];
   metrics: {
     evaluationMode?: CockpitMetricData["evaluationMode"];
+    valueType?: CockpitMetricData["valueType"];
+    aggregationStrategy?: CockpitMetricData["aggregationStrategy"];
+    evaluationConfig?: unknown;
+    numeratorLabel?: string | null;
+    denominatorLabel?: string | null;
+    observationUnit?: string | null;
     name: string;
     successCriterion: string;
     failureCriterion: string;
-    dataPoints: Pick<KpiDataPointData, "periodLabel" | "value" | "assessment">[];
+    dataPoints: Pick<
+      KpiDataPointData,
+      | "periodLabel"
+      | "value"
+      | "numerator"
+      | "denominator"
+      | "assessment"
+    >[];
   }[];
 };
 

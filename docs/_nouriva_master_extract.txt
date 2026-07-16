@@ -1,0 +1,1353 @@
+﻿Nouriva Meals
+VollstÃ¤ndige Demo-Fallakte fÃ¼r alle Phasen des KI-gestÃ¼tzten Marketingstrategie-Prototyps
+Projektprofil Â· Situationsanalyse Â· Strategieoptionen Â· Bewertung Â· Validierung Â· Umsetzungs-Cockpit Â· Lernen und Anpassung
+Artefaktstatus
+Deterministisch vorbefÃ¼lltes Demonstrationsprojekt
+Recherchehinweis
+Alle Quellen und Marktdaten sind fÃ¼r die Prototyp-Demonstration simuliert und fiktiv.
+Technischer Zielzustand
+currentPhase=5; alle Phasen und das Cockpit navigierbar
+Verwendungszweck
+Screenshot-Grundlage fÃ¼r Kapitel 5.4 und qualitative Artefakt-Demonstration
+Dokumentstatus und Zweck
+Wichtiger Transparenzhinweis
+Dieses Dokument beschreibt eine bewusst kuratierte Demonstrationsinstanz. Die Inhalte sind fachlich konsistent vorgegeben und werden spÃ¤ter ohne OpenAI-Aufrufe Ã¼ber ein deterministisches Fixture in dieselben Prisma-Modelle geschrieben, die der regulÃ¤re Nutzerfluss verwendet. Die fiktiven Quellen dienen ausschlieÃŸlich der UI-Demonstration und sind keine tatsÃ¤chlich durchgefÃ¼hrte Marktstudie.
+Die Fallakte bildet einen vollstÃ¤ndigen Durchlauf des hypothesen- und evidenzbasierten Marketingstrategieprozesses ab. Sie trennt externe Umweltbefunde, Zielgruppenannahmen, interne Ressourcen, Strategieoptionen, Bewertung, Validierung und Lernen. SpÃ¤tere Phasen greifen nur auf aktive, Ã¼bernommene und nicht abgelÃ¶ste Aussagen zurÃ¼ck.
+Phase 1 erzeugt ein ausfÃ¼hrliches, evidenzbewertetes Analysebild statt einer vermeintlich abschlieÃŸenden Vollanalyse.
+Phase 2 entwickelt drei klar unterscheidbare Strategieoptionen als HypothesenbÃ¼ndel.
+Phase 3 priorisiert eine Option nachvollziehbar, ohne sie als objektiv endgÃ¼ltige Strategie darzustellen.
+Phase 4 verbindet jede kritische Annahme mit direkter Evidenz, passenden Messpunkten und ressourcensiblen Umsetzungsschritten.
+Das Umsetzungs-Cockpit operationalisiert die Schritte durch Aufgaben, Ausarbeitungen und KPI-VerlÃ¤ufe.
+Phase 5 aktualisiert den Evidenzstatus und fÃ¼hrt zu einer bestÃ¤tigten ADAPT-Entscheidung.
+InhaltsÃ¼bersicht
+1. Verbindliches Projektprofil und Fixture-Grundregeln
+2. Phase 1 â€“ Hypothesenorientierte Situationsanalyse
+2.1 PESTEL Â· 2.2 Zielgruppen Â· 2.3 Kundenprobleme Â· 2.4 Wettbewerb Â· 2.5 Ressourcen Â· 2.6 SWOT Â· 2.7 Marktpfade
+3. Phase 2 â€“ Entwicklung vorlÃ¤ufiger Strategieoptionen
+4. Phase 3 â€“ Bewertung und Priorisierung
+5. Phase 4 â€“ Validierende Umsetzung
+6. Umsetzungs-Cockpit â€“ Aufgaben, Ausarbeitung und KPI-Simulation
+7. Phase 5 â€“ Lernen und strategische Anpassung
+8. PhasenÃ¼bergreifende RÃ¼ckverfolgbarkeit
+9. Technisches Seed-Mapping und Screenshot-ZustÃ¤nde
+1. Verbindliches Projektprofil
+Projektname
+Nouriva Meals â€“ Vegane High-Protein-Fertigmahlzeiten
+GeschÃ¤ftsidee
+Nouriva Meals entwickelt vollstÃ¤ndig zubereitete vegane High-Protein-Mahlzeiten. Die Gerichte werden Ã¼ber einen eigenen Online-Store in Mehrfachboxen bestellt, gekÃ¼hlt nach Hause geliefert und vor dem Verzehr lediglich erwÃ¤rmt.
+Produktstatus
+MVP / Pilotvorbereitung. Erste Rezepturen, NÃ¤hrwertberechnungen und ein vorlÃ¤ufiges Verpackungs- und Markenkonzept bestehen; ein regulÃ¤rer Lieferbetrieb ist noch nicht etabliert.
+Region
+Pilotmarkt DÃ¼sseldorf, KÃ¶ln und Rhein-Ruhr; nach erfolgreicher Validierung schrittweise Expansion in weitere deutsche GroÃŸstÃ¤dte.
+Vermutete Zielgruppe
+Gesundheits- und fitnessorientierte BerufstÃ¤tige zwischen etwa 25 und 39 Jahren, die auf Protein und NÃ¤hrwerte achten, im Alltag aber wenig Zeit fÃ¼r Planung, Einkauf und Kochen haben.
+Vermutetes Kundenproblem
+Eine ausgewogene und proteinreiche ErnÃ¤hrung ist im Arbeitsalltag mit wiederkehrendem Planungs-, Einkaufs- und Kochaufwand verbunden. Viele Alternativen bieten zu wenig Protein, unklare NÃ¤hrwerte, geringe Abwechslung oder keine attraktive vegane Auswahl.
+VorlÃ¤ufiges Nutzenversprechen
+Fertig zubereitete vegane Mahlzeiten mit hohem Proteingehalt, transparenten NÃ¤hrwerten und abwechslungsreichen Rezepten ermÃ¶glichen eine planbare, gesunde ErnÃ¤hrung ohne regelmÃ¤ÃŸiges Vorkochen.
+VorlÃ¤ufige ErlÃ¶slogik
+Sechs-, Zehn- und Vierzehn-Gerichte-Boxen; Einzelbestellungen bleiben mÃ¶glich. ErgÃ¤nzend wird eine flexibel pausierbare Wiederbestellung ohne langfristige Bindung geprÃ¼ft.
+TeamgrÃ¶ÃŸe
+3 Personen
+Budget
+Rund 5.000 Euro monatlich fÃ¼r Pilotierung und frÃ¼he Validierung; grÃ¶ÃŸere Produktions- und Kampagnenbudgets erst nach belastbaren MarktrÃ¼ckmeldungen.
+Zeit
+Zusammen rund 30 Stunden pro Woche fÃ¼r Kundenforschung, Marketingtests, Vertriebsvorbereitung und Auswertung.
+FÃ¤higkeiten
+Rezept- und Produktentwicklung, Grundlagen ErnÃ¤hrungswissenschaft, Markenentwicklung, Content-Produktion, Social-Media-Marketing und grundlegende E-Commerce-Erfahrung.
+Begrenzte FÃ¤higkeiten
+KÃ¼hlkettenlogistik, skalierte Produktion, Lebensmittelrecht, Performance Marketing in grÃ¶ÃŸerem Umfang und systematische Kundenforschung.
+Vorhandene Erkenntnisse
+Informelle Verkostungen im persÃ¶nlichen und sportlichen Umfeld zeigen positives Interesse an Geschmack, Convenience und Proteingehalt. Belastbare Erkenntnisse zu Zahlungsbereitschaft, Wiederkauf, BoxgrÃ¶ÃŸen und Akquisitionskosten fehlen.
+Zentrale Unsicherheiten
+ProblemintensitÃ¤t, Kaufmotive, akzeptierter Preis, Wiederkaufsbereitschaft, passende BoxgrÃ¶ÃŸe, Lieferfrequenz, KÃ¼hlversandqualitÃ¤t und wirtschaftliche Kundenakquisition.
+Fixture-Grundregeln
+Project.currentPhase
+5
+profileOnboardingComplete
+true
+profileOnboardingStep
+12
+Adoption
+Alle fÃ¼r den Endzustand relevanten Statements adopted=true; supersededByStatementId=null.
+Optionsstatus
+Option 1 PRIORITIZED; Optionen 2 und 3 DEFERRED.
+Validierung
+Drei ValidationSteps adopted=true und discardedAt=null.
+Lernentscheidung
+ADAPT, userConfirmed=true.
+Forschungstransparenz
+Origin, Evidenzstatus, Unsicherheit und fiktive Quellen bleiben sichtbar.
+2. Phase 1 â€“ Hypothesenorientierte Situationsanalyse
+Ziel ist ein ausfÃ¼hrliches, aber priorisiertes Analysebild. PESTEL enthÃ¤lt ausschlieÃŸlich externe Makroumweltfaktoren. Konkrete Preis-, Zielgruppen-, Ressourcen- und GeschÃ¤ftsmodellfragen werden in eigenen Kategorien gefÃ¼hrt.
+2.1 PESTEL-Relevanzentscheidung
+Dimension
+Relevanz
+BegrÃ¼ndung
+POLITICAL
+nachrangig
+Kein hinreichend direkter Einfluss auf die frÃ¼he Validierung von Zielgruppe, Kundennutzen und Zahlungsbereitschaft.
+ECONOMIC
+hoch
+Kaufkraft, PreissensibilitÃ¤t sowie Kostenentwicklungen bei Lebensmitteln, Energie, Verpackung und Logistik wirken unmittelbar auf Nachfrage und TragfÃ¤higkeit.
+SOCIAL
+hoch
+Gesundheitsorientierung, Proteinbewusstsein, pflanzliche ErnÃ¤hrung, Zeitmangel und Convenience-Verhalten prÃ¤gen den mÃ¶glichen Bedarf.
+TECHNOLOGICAL
+hoch
+D2C-Commerce, KÃ¼hlversand, Sendungsverfolgung und digitale Bestellprozesse sind zentrale Leistungsvoraussetzungen.
+ECOLOGICAL
+mittel bis hoch
+Verpackung, gekÃ¼hlte Zustellung, Lebensmittelverluste und Nachhaltigkeit beeinflussen Marktanforderungen und Markenwahrnehmung.
+LEGAL
+hoch
+Kennzeichnung, Claims, Hygiene, KÃ¼hlkette, RÃ¼ckverfolgbarkeit und Verpackungspflichten setzen verbindliche Rahmenbedingungen.
+2.2 PESTEL-Statements
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-ECO-01PESTEL_ECONOMIC
+KÃ¼hlpflichtiger Lebensmittelversand verursacht hÃ¶here Verpackungs-, Transport- und Zustellkosten als der Versand ungekÃ¼hlter Produkte.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Die Kostenstruktur gekÃ¼hlter D2C-Angebote wird stÃ¤rker von Bestellwert, Versandvolumen und Lieferdichte beeinflusst.Unsicherheit: Die KostenhÃ¶he unterscheidet sich nach Region, Volumen und Dienstleister.Quelle: D2C-Food-Kostenmonitor 2026 (fiktiv)
+P1-ECO-02PESTEL_ECONOMIC
+Schwankende Energie-, Rohstoff-, Verpackungs- und Logistikkosten erhÃ¶hen die Kalkulationsunsicherheit bei gekÃ¼hlten Fertigmahlzeiten.
+FaktSimulierte Recherche
+BegrÃ¼ndung: VerÃ¤nderungen externer Kosten kÃ¶nnen Margen und Endpreise beeinflussen, ohne dass das Start-up sie vollstÃ¤ndig kontrollieren kann.Unsicherheit: Die Entwicklung einzelner Kostenpositionen bleibt schwer vorhersehbar.Quelle: Food-Logistics-Index 2026 (fiktiv)
+P1-ECO-03PESTEL_ECONOMIC
+Eine erhÃ¶hte PreissensibilitÃ¤t erschwert den Absatz hÃ¶herpreisiger Convenience-Produkte, wenn deren zusÃ¤tzlicher Nutzen nicht klar erkennbar ist.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Premiumangebote konkurrieren mit Selbstkochen, Supermarktprodukten, Kantinen und Lieferdiensten.Unsicherheit: Die StÃ¤rke des Effekts variiert zwischen Kundensegmenten.Quelle: Premium-Convenience-Studie 2026 (fiktiv)
+P1-ECO-04PESTEL_ECONOMIC
+Offen ist, wie stabil die Nachfrage nach hÃ¶herpreisigen gesundheitsorientierten Fertigmahlzeiten bei schwÃ¤cherer Konsumstimmung bleibt.
+Offene FrageKI-Ableitung
+BegrÃ¼ndung: Eine allgemein positive Nachfrage nach Convenience muss sich nicht gleichermaÃŸen auf preisintensive Direktvertriebsangebote Ã¼bertragen.Unsicherheit: FÃ¼r den Pilotmarkt fehlen belastbare Nachfragewerte.
+P1-SOC-01PESTEL_SOCIAL
+Gesundheitsorientierung und das Interesse an proteinreicher ErnÃ¤hrung sind Ã¼ber klassische Fitnesszielgruppen hinaus gesellschaftlich sichtbar.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Proteinbezogene Angebote kÃ¶nnen auch gesundheitsorientierte und Ã¼berwiegend pflanzenbasiert lebende Personen ansprechen.Unsicherheit: Sichtbares Interesse fÃ¼hrt nicht automatisch zu regelmÃ¤ÃŸigen KÃ¤ufen.Quelle: ErnÃ¤hrungstrends Deutschland 2026 (fiktiv)
+P1-SOC-02PESTEL_SOCIAL
+Pflanzliche ErnÃ¤hrung wird zunehmend auch von Personen genutzt, die sich nicht dauerhaft oder vollstÃ¤ndig vegan ernÃ¤hren.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Ein veganes Produkt kann dadurch auch fÃ¼r Flexitarier und gesundheitsorientierte MischkÃ¶stler relevant sein.Unsicherheit: NutzungshÃ¤ufigkeit und Kaufmotive unterscheiden sich deutlich.Quelle: Plant-Based-Monitor 2026 (fiktiv)
+P1-SOC-03PESTEL_SOCIAL
+Zeitintensive Arbeits- und Alltagsroutinen erhÃ¶hen den Bedarf an schnell verfÃ¼gbaren und planbaren Mahlzeiten.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Convenience gewinnt an Bedeutung, wenn Einkauf, Kochen und Essensplanung mit anderen Verpflichtungen konkurrieren.Unsicherheit: Der Bedarf kann auch durch gÃ¼nstigere Alternativen gedeckt werden.Quelle: Arbeitsalltag &amp; ErnÃ¤hrung 2026 (fiktiv)
+P1-SOC-04PESTEL_SOCIAL
+Verbraucher erwarten bei gesundheitsorientierten Lebensmitteln zunehmend verstÃ¤ndliche Angaben zu Zutaten, NÃ¤hrwerten und funktionalem Nutzen.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Transparenz kann wahrgenommenes Kaufrisiko reduzieren und den Vergleich mit Alternativen erleichtern.Unsicherheit: Transparenz allein begrÃ¼ndet noch keine Zahlungsbereitschaft.Quelle: Food-Transparency-Studie 2026 (fiktiv)
+P1-TEC-01PESTEL_TECHNOLOGICAL
+Standardisierte D2C-Commerce-Systeme ermÃ¶glichen Boxkonfiguration, wiederkehrende Bestellungen, Zahlungsabwicklung und grundlegende Kundenanalyse.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Die technischen Markteintrittsbarrieren fÃ¼r einen grundlegenden Direktvertrieb sind dadurch geringer als bei Individualentwicklungen.Unsicherheit: StandardlÃ¶sungen decken nicht jede operative Anforderung ab.Quelle: D2C-Commerce-Report 2026 (fiktiv)
+P1-TEC-02PESTEL_TECHNOLOGICAL
+TemperaturÃ¼berwachung, Sendungsverfolgung und spezialisierte KÃ¼hlverpackungen verbessern die Kontrollierbarkeit gekÃ¼hlter Lebensmittellieferungen.
+FaktSimulierte Recherche
+BegrÃ¼ndung: VerfÃ¼gbare Technologien kÃ¶nnen QualitÃ¤tsrisiken reduzieren und Abweichungen frÃ¼her sichtbar machen.Unsicherheit: ZuverlÃ¤ssigkeit und Kosten unterscheiden sich zwischen LÃ¶sungen.Quelle: Cold-Chain-Tech-Report 2026 (fiktiv)
+P1-TEC-03PESTEL_TECHNOLOGICAL
+Offen ist, wie flÃ¤chendeckend zuverlÃ¤ssige und wirtschaftliche KÃ¼hlversandkapazitÃ¤ten im vorgesehenen Pilotgebiet verfÃ¼gbar sind.
+Offene FrageKI-Ableitung
+BegrÃ¼ndung: Die regionale Infrastruktur begrenzt Liefergebiet, Lieferfrequenz und erreichbare ServicequalitÃ¤t.Unsicherheit: Es fehlen vergleichbare Angebote und reale Pilotsendungen.
+P1-ECL-01PESTEL_ECOLOGICAL
+VerpackungsabfÃ¤lle und transportbedingte Emissionen stehen bei gekÃ¼hlten Lebensmittel-Liefermodellen zunehmend unter gesellschaftlicher Beobachtung.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Der Ã¶kologische Eindruck des Liefermodells kann die positive Wahrnehmung eines pflanzlichen Produkts einschrÃ¤nken.Unsicherheit: Die Bewertung hÃ¤ngt von Material, Entfernung und Auslastung ab.Quelle: Food-Delivery-Ã–kobilanz 2026 (fiktiv)
+P1-ECL-02PESTEL_ECOLOGICAL
+Die Vermeidung von Lebensmittelverlusten gewinnt bei frischen und gekÃ¼hlten Convenience-Produkten Ã¶kologisch und wirtschaftlich an Bedeutung.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Begrenzte Haltbarkeit erhÃ¶ht die Bedeutung genauer Produktionsplanung und realistischer Nachfrageprognosen.Unsicherheit: Verlustraten hÃ¤ngen stark vom Betriebsmodell ab.Quelle: Food-Waste-Monitor 2026 (fiktiv)
+P1-ECL-03PESTEL_ECOLOGICAL
+Pflanzliche Lebensmittel kÃ¶nnen positiv mit Nachhaltigkeit verbunden werden, wÃ¤hrend Einwegverpackung und gekÃ¼hlter Einzelversand diesen Vorteil abschwÃ¤chen kÃ¶nnen.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Die Ã¶kologische Markenwahrnehmung entsteht aus dem Gesamtangebot und nicht allein aus der Rezeptur.Unsicherheit: Die Gewichtung durch die Zielgruppen ist ungeklÃ¤rt.Quelle: Sustainable-Packaging-Study 2026 (fiktiv)
+P1-LEG-01PESTEL_LEGAL
+Beim Online-Verkauf von Lebensmitteln mÃ¼ssen wesentliche Produktinformationen bereits vor Abschluss der Bestellung zugÃ¤nglich sein.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Der Online-Store muss Zutaten, Allergene, Aufbewahrung und Zubereitung strukturiert darstellen.Unsicherheit: Die konkrete Umsetzung muss rechtlich geprÃ¼ft werden.Quelle: Online-Food-Compliance 2026 (fiktiv)
+P1-LEG-02PESTEL_LEGAL
+NÃ¤hrwertbezogene Aussagen wie ein hoher Proteingehalt mÃ¼ssen durch die Zusammensetzung des jeweiligen Produkts belegbar sein.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Das zentrale Kommunikationsversprechen ist nur nutzbar, wenn die Rezepturen die erforderlichen Bedingungen erfÃ¼llen.Unsicherheit: Die finalen Rezepturen wurden noch nicht vollstÃ¤ndig geprÃ¼ft.Quelle: Nutrition-Claims-Guide 2026 (fiktiv)
+P1-LEG-03PESTEL_LEGAL
+Produktion, Lagerung und Zustellung gekÃ¼hlter Mahlzeiten unterliegen Hygiene-, Temperatur- und RÃ¼ckverfolgbarkeitsanforderungen.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Die Anforderungen gelten entlang der gesamten Leistungskette und begrenzen eine unkontrollierte Skalierung.Unsicherheit: Die konkrete Prozessausgestaltung ist noch nicht geprÃ¼ft.Quelle: Chilled-Food-Safety 2026 (fiktiv)
+P1-LEG-04PESTEL_LEGAL
+Verpackungs-, Entsorgungs- und Verbraucherpflichten beeinflussen Materialwahl, Versandprozess und Kommunikation im Lebensmittel-Direktvertrieb.
+FaktSimulierte Recherche
+BegrÃ¼ndung: Rechtliche Vorgaben kÃ¶nnen zusÃ¤tzliche organisatorische und finanzielle Anforderungen erzeugen.Unsicherheit: Der konkrete Pflichtenumfang hÃ¤ngt vom gewÃ¤hlten Modell ab.Quelle: Packaging-Obligations 2026 (fiktiv)
+2.3 Zielgruppensegmente
+2.3.1 Fitnessorientierte BerufstÃ¤tige
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-SEG-01-01TARGET_SEGMENTFitnessorientierte BerufstÃ¤tige Â· WHO_CORE
+Fitnessorientierte BerufstÃ¤tige zwischen etwa 25 und 39 Jahren trainieren regelmÃ¤ÃŸig, achten auf Protein und NÃ¤hrwerte und verfÃ¼gen an Arbeitstagen nur Ã¼ber begrenzte Zeit fÃ¼r Meal Prep.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Das Segment verbindet den funktionalen Produktvorteil High Protein mit einem konkreten Convenience-Problem.Unsicherheit: GrÃ¶ÃŸe und KaufhÃ¤ufigkeit sind ungeprÃ¼ft.
+P1-SEG-01-02TARGET_SEGMENTFitnessorientierte BerufstÃ¤tige Â· WHO_DISTINGUISHERS
+Das Segment unterscheidet sich durch regelmÃ¤ÃŸiges Training, aktiven NÃ¤hrwertvergleich und den Wunsch, ErnÃ¤hrung trotz hoher Arbeitsbelastung kontrollierbar zu halten.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Diese Merkmale machen Proteinmenge, PortionsgrÃ¶ÃŸe und verlÃ¤ssliche VerfÃ¼gbarkeit besonders relevant.Unsicherheit: Nicht jeder sportlich Aktive empfindet Meal Prep als Problem.
+P1-SEG-01-03TARGET_SEGMENTFitnessorientierte BerufstÃ¤tige Â· PROBLEM_NEED
+Das Segment benÃ¶tigt sÃ¤ttigende, proteinreiche Mahlzeiten, die ohne tÃ¤gliche Vorbereitung verfÃ¼gbar sind und sich in Arbeits-, Trainings- und Regenerationsroutinen integrieren lassen.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Selbst zubereitetes Meal Prep erfÃ¼llt den Bedarf, bindet aber regelmÃ¤ÃŸig Zeit fÃ¼r Planung, Einkauf und Kochen.Unsicherheit: Die ProblemintensitÃ¤t muss validiert werden.
+P1-SEG-01-04TARGET_SEGMENTFitnessorientierte BerufstÃ¤tige Â· BEHAVIOR_CONTEXT
+Bei Zeitmangel wechselt das Segment zwischen eigenem Meal Prep, Supermarkt-Convenience, Proteinprodukten, Kantinen und spontanen Lieferdienstbestellungen.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Bestehende LÃ¶sungen erfÃ¼llen nur TeilbedÃ¼rfnisse hinsichtlich Protein, Aufwand, Abwechslung, Preis oder Geschmack.Unsicherheit: NutzungshÃ¤ufigkeit und Alternativen variieren.Quelle: Segment-Snapshot Fitnessorientierte BerufstÃ¤tige 2026 (fiktiv)
+P1-SEG-01-05TARGET_SEGMENTFitnessorientierte BerufstÃ¤tige Â· WILLINGNESS_TO_PAY
+Offen ist, ob das Segment innerhalb einer Mehrfachbox regelmÃ¤ÃŸig etwa 9,90 bis 11,90 Euro je gekÃ¼hlter High-Protein-Mahlzeit bezahlt.
+Offene FrageKI-Ableitung
+BegrÃ¼ndung: Protein, Convenience und NÃ¤hrwerttransparenz kÃ¶nnen einen Mehrpreis begrÃ¼nden, konkurrieren aber mit gÃ¼nstigerem Meal Prep.Unsicherheit: Interesse und tatsÃ¤chliche Zahlungsbereitschaft sind nicht gleichzusetzen.
+P1-SEG-01-06TARGET_SEGMENTFitnessorientierte BerufstÃ¤tige Â· REACHABILITY
+Das Segment erscheint Ã¼ber Fitnessstudios, Trainingscommunities, Sportveranstaltungen, Trainer, Creator sowie performanceorientierte Inhalte grundsÃ¤tzlich erreichbar.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Sport- und ErnÃ¤hrungsinteressen erzeugen thematisch konzentrierte digitale und lokale Kontaktpunkte.Unsicherheit: Erreichbarkeit sagt noch nichts Ã¼ber Akquisitionskosten oder Kaufbereitschaft aus.Quelle: Segment-Snapshot Fitnessorientierte BerufstÃ¤tige 2026 (fiktiv)
+2.3.2 Zeitknappe gesundheitsbewusste Professionals
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-SEG-02-01TARGET_SEGMENTZeitknappe gesundheitsbewusste Professionals Â· WHO_CORE
+Beruflich stark beanspruchte Erwachsene zwischen etwa 28 und 44 Jahren mÃ¶chten ausgewogen essen, ohne tÃ¤glich umfangreiche Planung und Zubereitung zu organisieren.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Das Segment verbindet Gesundheitsorientierung mit hoher Arbeitsbelastung und Bedarf nach verlÃ¤sslicher Alltagserleichterung.Unsicherheit: Das Segment ist breit und muss weiter eingegrenzt werden.
+P1-SEG-02-02TARGET_SEGMENTZeitknappe gesundheitsbewusste Professionals Â· WHO_DISTINGUISHERS
+Das Segment wird stÃ¤rker durch Zeitknappheit, Planungsaufwand und wechselnde Arbeitsorte geprÃ¤gt als durch sportliche Leistungsziele oder eine feste ErnÃ¤hrungsform.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Protein ist eher QualitÃ¤ts- und SÃ¤ttigungsmerkmal als primÃ¤rer Kaufzweck.Unsicherheit: Unterschiede zwischen BÃ¼ro-, Hybrid- und Homeoffice-Tagen sind offen.
+P1-SEG-02-03TARGET_SEGMENTZeitknappe gesundheitsbewusste Professionals Â· PROBLEM_NEED
+Das Segment benÃ¶tigt eine verlÃ¤ssliche MahlzeitenlÃ¶sung, die eine ausgewogene ErnÃ¤hrung ermÃ¶glicht, ohne an jedem Arbeitstag Einkauf, Rezeptauswahl, Kochen und Abwasch einzuplanen.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Bei hoher Arbeitsbelastung konkurrieren ErnÃ¤hrungsziele mit Bequemlichkeit und spontanen TerminÃ¤nderungen.Unsicherheit: Die Bereitschaft zur langfristigen Nutzung ist unbekannt.
+P1-SEG-02-04TARGET_SEGMENTZeitknappe gesundheitsbewusste Professionals Â· BEHAVIOR_CONTEXT
+Das Segment nutzt eine wechselnde Kombination aus Kantine, Lieferdiensten, Supermarkt-Convenience, schnellen selbst gekochten Gerichten und vorbereiteten Mahlzeiten.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Die ErnÃ¤hrung wird situativ organisiert und folgt hÃ¤ufig keiner stabilen WochenlÃ¶sung.Unsicherheit: Die tatsÃ¤chliche HÃ¤ufigkeit je Alternative ist ungeklÃ¤rt.Quelle: Segment-Snapshot Zeitknappe gesundheitsbewusste Professionals 2026 (fiktiv)
+P1-SEG-02-05TARGET_SEGMENTZeitknappe gesundheitsbewusste Professionals Â· WILLINGNESS_TO_PAY
+Offen ist, welchen Mehrpreis das Segment gegenÃ¼ber Supermarkt-Convenience fÃ¼r Zeitersparnis, NÃ¤hrwertqualitÃ¤t, Lieferung und verlÃ¤sslichen Geschmack akzeptiert.
+Offene FrageKI-Ableitung
+BegrÃ¼ndung: Das verfÃ¼gbare Einkommen kann hÃ¶her sein, der Mehrwert muss gegenÃ¼ber vielen Alternativen dennoch deutlich werden.Unsicherheit: Gesundheitsorientierung belegt keine regelmÃ¤ÃŸige Kaufbereitschaft.
+P1-SEG-02-06TARGET_SEGMENTZeitknappe gesundheitsbewusste Professionals Â· REACHABILITY
+Das Segment erscheint Ã¼ber Suchmaschinen, berufliche Netzwerke, Coworking-Spaces, Arbeitgeberkooperationen, BÃ¼ro-Communities und Gesundheitsnewsletter erreichbar.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Die Kontaktpunkte orientieren sich stÃ¤rker an Arbeitsalltag und Gesundheit als an einer einzelnen Szene.Unsicherheit: Breite KanÃ¤le kÃ¶nnen hohe Streuverluste erzeugen.Quelle: Segment-Snapshot Zeitknappe gesundheitsbewusste Professionals 2026 (fiktiv)
+2.3.3 Pflanzlich orientierte Convenience-KÃ¤ufer
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-SEG-03-01TARGET_SEGMENTPflanzlich orientierte Convenience-KÃ¤ufer Â· WHO_CORE
+Vegan oder Ã¼berwiegend pflanzlich lebende Personen suchen alltagstaugliche Fertigmahlzeiten mit attraktiven Rezepten, transparenten Zutaten und ausreichendem Proteingehalt.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Das Segment verbindet eine klare ErnÃ¤hrungsprÃ¤ferenz mit dem Wunsch nach bequemen und nÃ¤hrwertlich Ã¼berzeugenden Mahlzeiten.Unsicherheit: KaufhÃ¤ufigkeit und SegmentgrÃ¶ÃŸe im Pilotgebiet sind unbekannt.
+P1-SEG-03-02TARGET_SEGMENTPflanzlich orientierte Convenience-KÃ¤ufer Â· WHO_DISTINGUISHERS
+Die pflanzliche Ausrichtung ist fÃ¼r dieses Segment nicht nur Zusatznutzen, sondern zentrale Produkterwartung; Zutaten, GlaubwÃ¼rdigkeit und Verpackung werden stÃ¤rker geprÃ¼ft.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Die Kaufentscheidung kann dadurch stÃ¤rker von Markenvertrauen und Produkttransparenz abhÃ¤ngen.Unsicherheit: Nicht alle pflanzlich orientierten KÃ¤ufer prÃ¼fen Produkte gleich intensiv.
+P1-SEG-03-03TARGET_SEGMENTPflanzlich orientierte Convenience-KÃ¤ufer Â· PROBLEM_NEED
+Das Segment benÃ¶tigt vegane Convenience-Gerichte, die Protein, SÃ¤ttigung, Geschmack, Abwechslung und transparente Zutaten Ã¼berzeugend verbinden.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Viele LÃ¶sungen erfÃ¼llen die ErnÃ¤hrungsform, unterscheiden sich aber hinsichtlich NÃ¤hrwertprofil, PortionsgrÃ¶ÃŸe und Alltagstauglichkeit.Unsicherheit: Die Unzufriedenheit mit bestehenden Alternativen ist nicht belegt.
+P1-SEG-03-04TARGET_SEGMENTPflanzlich orientierte Convenience-KÃ¤ufer Â· BEHAVIOR_CONTEXT
+Das Segment vergleicht Zutatenlisten und NÃ¤hrwerte, kocht teilweise selbst und ergÃ¤nzt den Alltag durch vegane Supermarktprodukte, Bowls, Lieferdienste und spezialisierte Marken.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: ErnÃ¤hrungsform, Geschmack, NÃ¤hrwertqualitÃ¤t, Komfort und Markenvertrauen wirken gemeinsam.Unsicherheit: Die relative Bedeutung der Kriterien ist offen.Quelle: Segment-Snapshot Pflanzlich orientierte Convenience-KÃ¤ufer 2026 (fiktiv)
+P1-SEG-03-05TARGET_SEGMENTPflanzlich orientierte Convenience-KÃ¤ufer Â· WILLINGNESS_TO_PAY
+Offen ist, ob hochwertige Zutaten, hoher Proteingehalt und vollstÃ¤ndig vegane Rezepturen einen regelmÃ¤ÃŸigen Preis oberhalb klassischer veganer Supermarktgerichte rechtfertigen.
+Offene FrageKI-Ableitung
+BegrÃ¼ndung: Spezialisierung kann Mehrwert schaffen, zugleich bestehen zahlreiche gÃ¼nstigere Alternativen.Unsicherheit: Markeninteresse darf nicht mit dauerhafter Zahlungsbereitschaft verwechselt werden.
+P1-SEG-03-06TARGET_SEGMENTPflanzlich orientierte Convenience-KÃ¤ufer Â· REACHABILITY
+Das Segment erscheint Ã¼ber vegane Communities, thematische Creator, ErnÃ¤hrungsplattformen, Newsletter, Veranstaltungen und Kooperationen mit veganen Marken erreichbar.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Die ErnÃ¤hrungsorientierung schafft klar identifizierbare InteressenrÃ¤ume.Unsicherheit: Gute thematische Erreichbarkeit kann mit begrenzter SegmentgrÃ¶ÃŸe einhergehen.Quelle: Segment-Snapshot Pflanzlich orientierte Convenience-KÃ¤ufer 2026 (fiktiv)
+2.4 EigenstÃ¤ndige Kundenproblem-Statements
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-CP-01CUSTOMER_PROBLEMFitnessorientierte BerufstÃ¤tige
+RegelmÃ¤ÃŸige proteinreiche ErnÃ¤hrung erfordert wiederkehrende Planung, Einkauf, Kochen, Portionierung und Lagerung, die im Arbeits- und Trainingsalltag als belastend empfunden werden kÃ¶nnen.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Das Problem verbindet den funktionalen Produktnutzen unmittelbar mit einem wiederkehrenden Aufwand.Unsicherheit: ProblemintensitÃ¤t und Zahlungsbereitschaft mÃ¼ssen getrennt geprÃ¼ft werden.
+P1-CP-02CUSTOMER_PROBLEMFitnessorientierte BerufstÃ¤tige
+An unvorhersehbaren Arbeitstagen fÃ¼hrt fehlendes Meal Prep vermutlich zu proteinÃ¤rmeren oder weniger ausgewogenen ErsatzlÃ¶sungen.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Der Bedarf entsteht besonders dann, wenn geplante Routinen ausfallen und schnell verfÃ¼gbare Alternativen dominieren.Unsicherheit: HÃ¤ufigkeit und subjektive Relevanz sind offen.
+P1-CP-03CUSTOMER_PROBLEMZeitknappe gesundheitsbewusste Professionals
+An arbeitsintensiven Tagen werden gesundheitliche ErnÃ¤hrungsziele hÃ¤ufig durch spontan verfÃ¼gbare, aber weniger ausgewogene Mahlzeiten ersetzt.
+AnnahmeSimulierte Recherche
+BegrÃ¼ndung: Zwischen langfristiger Gesundheitsorientierung und kurzfristiger Bequemlichkeit besteht ein wiederkehrender Alltagskonflikt.Unsicherheit: HÃ¤ufigkeit und wirtschaftliche Relevanz sind ungeklÃ¤rt.Quelle: ErnÃ¤hrung unter Zeitdruck 2026 (fiktiv)
+P1-CP-04CUSTOMER_PROBLEMZeitknappe gesundheitsbewusste Professionals
+Die mentale Belastung durch Auswahl, Einkauf und Wochenplanung kann selbst dann bestehen, wenn grundsÃ¤tzlich Zeit zum Kochen vorhanden wÃ¤re.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Das Angebot adressiert damit nicht nur reine Zubereitungszeit, sondern auch Planungs- und Entscheidungsaufwand.Unsicherheit: Die relative Bedeutung gegenÃ¼ber Preis und Geschmack ist offen.
+P1-CP-05CUSTOMER_PROBLEMPflanzlich orientierte Convenience-KÃ¤ufer
+Vegane Fertigmahlzeiten erfÃ¼llen mÃ¶glicherweise nicht gleichzeitig die Erwartungen an Protein, SÃ¤ttigung, Abwechslung, transparente Zutaten und schnelle VerfÃ¼gbarkeit.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Eine LÃ¼cke zwischen veganer VerfÃ¼gbarkeit und funktionaler ProduktqualitÃ¤t kÃ¶nnte eine spezialisierte Positionierung ermÃ¶glichen.Unsicherheit: Umfang und Relevanz der AngebotslÃ¼cke sind nicht validiert.
+P1-CP-06CUSTOMER_PROBLEMPflanzlich orientierte Convenience-KÃ¤ufer
+Viele pflanzliche Convenience-Angebote werden vermutlich als gelegentliche Alternative statt als verlÃ¤ssliche wiederkehrende MahlzeitenlÃ¶sung genutzt.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: WiederholungskÃ¤ufe setzen gleichbleibenden Geschmack, SÃ¤ttigung, Abwechslung und Vertrauen voraus.Unsicherheit: Reale Wiederkaufsdaten fehlen.
+2.5 Wettbewerbs- und Alternativenanalyse
+Die Analyse berÃ¼cksichtigt direkte Anbieter, indirekte Wettbewerber und ErsatzlÃ¶sungen. Jeder Akteur wird spÃ¤ter in sechs COMPETITOR-Aspekte aufgeteilt; die nachstehende Struktur liefert die vollstÃ¤ndigen Inhalte fÃ¼r diese sechs DatensÃ¤tze.
+2.5.1 FitFuel Meals (fiktiv)
+Klassifikation
+Direkter Wettbewerber
+Angebot
+GekÃ¼hlte Fitness-Mahlzeiten mit MakronÃ¤hrwertangaben; gemischtes Sortiment aus Fleisch- und vegetarischen Gerichten.
+Zielgruppe
+Kraftsportler und fitnessorientierte MÃ¤nner und Frauen mit wenig Zeit.
+Preis- und Vertriebslogik
+6er- bis 14er-Boxen; etwa 9,50â€“12,00 Euro je Gericht; Versand ab Mindestbestellwert.
+StÃ¤rke aus Kundensicht
+Klare Performance-Positionierung, groÃŸe PortionsgrÃ¶ÃŸen und bekannte Fitness-Creator.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Vegane Auswahl begrenzt; stark sportlich-mÃ¤nnliche Ansprache kann breitere gesundheitsorientierte KÃ¤ufer ausschlieÃŸen.
+2.5.2 GreenPrep Kitchen (fiktiv)
+Klassifikation
+Direkter Wettbewerber
+Angebot
+AusschlieÃŸlich vegane, gekÃ¼hlte Wochenboxen mit Zutaten- und Nachhaltigkeitsfokus.
+Zielgruppe
+Vegan lebende urbane Konsumenten und nachhaltigkeitsorientierte Haushalte.
+Preis- und Vertriebslogik
+8er- und 12er-Boxen; etwa 10,50â€“12,50 Euro je Gericht; Abo-Rabatt.
+StÃ¤rke aus Kundensicht
+GlaubwÃ¼rdige vegane Marke, transparente Zutaten und starke Nachhaltigkeitskommunikation.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Proteingehalt und Performance-Nutzen sind nachrangig; weniger anschlussfÃ¤hig fÃ¼r fitnessorientierte Flexitarier.
+2.5.3 UrbanMacro (fiktiv)
+Klassifikation
+Direkter Wettbewerber
+Angebot
+Personalisierbare Makro-Mahlzeiten mit Auswahl nach Kalorien- und Proteinziel.
+Zielgruppe
+Daten- und leistungsorientierte Sportler sowie DiÃ¤tkunden.
+Preis- und Vertriebslogik
+Einzelkonfiguration ab 11,90 Euro; Mindestmenge zehn Gerichte.
+StÃ¤rke aus Kundensicht
+Hohe Personalisierung und prÃ¤zise NÃ¤hrwertsteuerung.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Komplexe Auswahl, hohe EinstiegshÃ¼rde und geringe emotionale Markenbreite.
+2.5.4 VeganBatch (fiktiv)
+Klassifikation
+Direkter Wettbewerber
+Angebot
+TiefgekÃ¼hlte vegane Mahlzeiten und Bowls im Online-Abo.
+Zielgruppe
+Pflanzlich orientierte Haushalte mit Vorrats- und Convenience-Bedarf.
+Preis- und Vertriebslogik
+12er-Box ab etwa 8,90 Euro je Mahlzeit; Versand inklusive.
+StÃ¤rke aus Kundensicht
+Lange Haltbarkeit, gÃ¼nstiger StÃ¼ckpreis und geringe Lieferfrequenz.
+Strategische LÃ¼cke fÃ¼r Nouriva
+TiefkÃ¼hlformat wird teilweise als weniger frisch wahrgenommen; Proteinfokus fehlt.
+2.5.5 FreshForm Meals (fiktiv)
+Klassifikation
+Direkter Wettbewerber
+Angebot
+GekÃ¼hlte gesundheitsorientierte Fertiggerichte mit Fokus auf Kalorienkontrolle und alltagstaugliche ErnÃ¤hrung.
+Zielgruppe
+BerufstÃ¤tige, Abnehmwillige und gesundheitsorientierte Professionals.
+Preis- und Vertriebslogik
+6er-Testbox und flexible Wochenboxen; 9,90â€“11,50 Euro je Gericht.
+StÃ¤rke aus Kundensicht
+Breite Gesundheitsansprache und niedrige EinstiegshÃ¼rde.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Wenig klare Differenzierung; vegane und proteinreiche Varianten sind nur Teil des Sortiments.
+2.5.6 Supermarkt-Convenience
+Klassifikation
+Indirekter Wettbewerber / Alternative
+Angebot
+GekÃ¼hlte und tiefgekÃ¼hlte Fertiggerichte, Bowls, Salate und High-Protein-Produkte im stationÃ¤ren Handel.
+Zielgruppe
+Breiter Massenmarkt mit spontanem Convenience-Bedarf.
+Preis- und Vertriebslogik
+Typisch etwa 3,50â€“8,00 Euro je Produkt.
+StÃ¤rke aus Kundensicht
+Sofort verfÃ¼gbar, kein Versand, niedriger Preis und bekannte Marken.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Uneinheitliche NÃ¤hrwertqualitÃ¤t, begrenzte vegane High-Protein-Auswahl und geringere Planbarkeit Ã¼ber mehrere Tage.
+2.5.7 Kochbox-Anbieter
+Klassifikation
+Indirekter Wettbewerber / Alternative
+Angebot
+Portionierte Zutaten und Rezepte zur Zubereitung zu Hause; teilweise vegane und proteinreiche Auswahl.
+Zielgruppe
+Haushalte, die Abwechslung suchen und grundsÃ¤tzlich kochen mÃ¶chten.
+Preis- und Vertriebslogik
+Etwa 5,50â€“9,00 Euro je Portion plus eigener Zubereitungsaufwand.
+StÃ¤rke aus Kundensicht
+Frische, Rezeptvielfalt und Erlebnischarakter.
+Strategische LÃ¼cke fÃ¼r Nouriva
+LÃ¶st Einkaufsaufwand, aber nicht Koch- und Abwaschzeit; NÃ¤hrwerte sind nicht immer zentral.
+2.5.8 Lieferdienst-Plattformen
+Klassifikation
+ErsatzlÃ¶sung
+Angebot
+Spontane Bestellung lokaler Restaurants, Bowls, Salate und veganer Gerichte.
+Zielgruppe
+Situativer Sofortbedarf bei fehlender Zeit oder Planung.
+Preis- und Vertriebslogik
+HÃ¤ufig 12â€“20 Euro je Mahlzeit inklusive GebÃ¼hren.
+StÃ¤rke aus Kundensicht
+GroÃŸe Auswahl, spontane VerfÃ¼gbarkeit und kein Vorratsbedarf.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Hohe variable Kosten, uneinheitliche NÃ¤hrwerte und geringe Wochenplanbarkeit.
+2.5.9 Selbstorganisiertes Meal Prep
+Klassifikation
+ErsatzlÃ¶sung
+Angebot
+EigenstÃ¤ndige Planung, Einkauf, Zubereitung und Portionierung mehrerer Mahlzeiten.
+Zielgruppe
+Preisbewusste und ernÃ¤hrungsorientierte Personen mit Zeit und Routine.
+Preis- und Vertriebslogik
+Niedrigere Lebensmittelkosten, aber hoher Zeit- und Planungsaufwand.
+StÃ¤rke aus Kundensicht
+Maximale Kontrolle Ã¼ber Zutaten, Makros, Geschmack und Preis.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Wiederkehrender Aufwand, geringe SpontanitÃ¤t und Risiko monotoner Gerichte.
+2.5.10 Kantine, Bowls und Protein-Snacks
+Klassifikation
+ErsatzlÃ¶sung / Teilersatz
+Angebot
+Mittagstisch, Bowls, Skyr, Shakes, Riegel oder schnelle Snacks fÃ¼r einzelne Mahlzeitensituationen.
+Zielgruppe
+BerufstÃ¤tige mit situativem Bedarf am Arbeitsplatz oder unterwegs.
+Preis- und Vertriebslogik
+Breite Spanne von 2 bis 15 Euro.
+StÃ¤rke aus Kundensicht
+Hohe VerfÃ¼gbarkeit im Nutzungsmoment und geringe Vorausplanung.
+Strategische LÃ¼cke fÃ¼r Nouriva
+Deckt hÃ¤ufig nur einzelne Situationen; Protein, Ausgewogenheit und vegane Auswahl sind nicht verlÃ¤sslich kombinierbar.
+2.6 Ressourcen- und FÃ¤higkeitsanalyse
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-RES-01RESOURCE
+Das dreikÃ¶pfige Team deckt Produktentwicklung, ErnÃ¤hrungsgrundlagen, Markenaufbau, Content und grundlegenden E-Commerce intern ab.
+FaktNutzereingabe
+BegrÃ¼ndung: Die Kombination ermÃ¶glicht einen eigenstÃ¤ndigen MVP-Aufbau ohne vollstÃ¤ndige externe AgenturabhÃ¤ngigkeit.Unsicherheit: Die verfÃ¼gbare KapazitÃ¤t bleibt bei paralleler Produkt- und Marktarbeit begrenzt.
+P1-RES-02RESOURCE
+Erste Rezepturen und NÃ¤hrwertberechnungen liegen vor und kÃ¶nnen als Grundlage fÃ¼r Produkt- und Kommunikationstests genutzt werden.
+FaktNutzereingabe
+BegrÃ¼ndung: Ein testbares Produktkonzept ist bereits konkreter als eine reine GeschÃ¤ftsidee.Unsicherheit: Finale Haltbarkeit, Claims und ProduktionsstabilitÃ¤t sind noch nicht geprÃ¼ft.
+P1-RES-03RESOURCE
+Das Team verfÃ¼gt Ã¼ber ein vorlÃ¤ufiges visuelles Markenkonzept und kann Landingpages, Social Content und Testmaterialien selbst erstellen.
+FaktNutzereingabe
+BegrÃ¼ndung: Dadurch lassen sich frÃ¼he Tests schnell und mit begrenztem Budget umsetzen.Unsicherheit: Professionelle Performance-Kampagnen und Skalierungserfahrung fehlen.
+P1-RES-04RESOURCE
+FÃ¼r die frÃ¼he Pilotphase stehen rund 5.000 Euro pro Monat und etwa 30 gemeinsame Wochenstunden fÃ¼r Forschung und Markttests zur VerfÃ¼gung.
+FaktNutzereingabe
+BegrÃ¼ndung: Das Budget erlaubt fokussierte Experimente, aber keinen breiten Marktlaunch.Unsicherheit: Produktions- und Logistikkosten kÃ¶nnen den verfÃ¼gbaren Testspielraum reduzieren.
+P1-RES-05RESOURCE
+Das Team besitzt nur begrenzte Erfahrung mit gekÃ¼hlter Lebensmittel-Logistik, skalierter Produktion und dokumentierten QualitÃ¤tsprozessen.
+FaktNutzereingabe
+BegrÃ¼ndung: Diese LÃ¼cke erhÃ¶ht Umsetzungsrisiko und AbhÃ¤ngigkeit von spezialisierten Partnern.Unsicherheit: Der benÃ¶tigte externe UnterstÃ¼tzungsumfang ist noch nicht geklÃ¤rt.
+P1-RES-06RESOURCE
+Es bestehen persÃ¶nliche Kontakte zu zwei lokalen Fitnessstudios, einem Personal Trainer und einer kleinen Sport-Community im Pilotgebiet.
+FaktNutzereingabe
+BegrÃ¼ndung: Diese Beziehungen ermÃ¶glichen kostengÃ¼nstige Rekrutierung fÃ¼r erste Interviews und Pilottests.Unsicherheit: Reichweite und Konversionspotenzial der Kontakte sind begrenzt.
+P1-RES-07RESOURCE
+Belastbare Daten zu Zahlungsbereitschaft, Wiederkauf, LieferqualitÃ¤t, Akquisitionskosten und Deckungsbeitrag fehlen vollstÃ¤ndig.
+FaktNutzereingabe
+BegrÃ¼ndung: Die zentralen strategischen und wirtschaftlichen Entscheidungen beruhen damit noch auf Annahmen.Unsicherheit: Erste Pilotdaten kÃ¶nnen nur begrenzte Generalisierbarkeit besitzen.
+P1-RES-08RESOURCE
+Offen ist, welcher Produktions- und Logistikaufbau fÃ¼r einen regionalen Pilot wirtschaftlich, rechtlich und operativ tragfÃ¤hig ist.
+Offene FrageKI-Ableitung
+BegrÃ¼ndung: Eigenproduktion, Lohnherstellung und spezialisierte Fulfillment-Partner erzeugen unterschiedliche Kosten und KontrollmÃ¶glichkeiten.Unsicherheit: Konkrete Angebote und Testsendungen fehlen.
+2.7 SWOT-Synthese
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-SWOT-S1SWOT_STRENGTH
+Klare Verbindung aus Convenience, hohem Proteingehalt und pflanzlicher Rezeptur.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Die Merkmalskombination kann gegenÃ¼ber allgemeinen Fertiggerichten eine verstÃ¤ndliche Differenzierung schaffen.Unsicherheit: Die tatsÃ¤chliche Relevanz muss im Zielsegment geprÃ¼ft werden.
+P1-SWOT-S2SWOT_STRENGTH
+KomplementÃ¤res Kernteam mit Produkt-, ErnÃ¤hrungs-, Marken- und Content-Kompetenzen.
+FaktNutzereingabe
+BegrÃ¼ndung: Wesentliche MVP- und Kommunikationsaufgaben kÃ¶nnen intern umgesetzt werden.Unsicherheit: KÃ¼hlketten- und Skalierungskompetenz fehlen.
+P1-SWOT-S3SWOT_STRENGTH
+Ein eigener Online-Store ermÃ¶glicht direkte Kundendaten, flexible Tests und Kontrolle Ã¼ber Produktdarstellung und Wiederbestellung.
+FaktNutzereingabe
+BegrÃ¼ndung: D2C unterstÃ¼tzt Lernen Ã¼ber Varianten, Preis, BoxgrÃ¶ÃŸe und Wiederkauf.Unsicherheit: AussagekrÃ¤ftige Daten entstehen erst bei ausreichendem Traffic.
+P1-SWOT-S4SWOT_STRENGTH
+Erste Rezepturen und informelle Verkostungen reduzieren den Abstand zwischen Konzept und realem Produkttest.
+FaktNutzereingabe
+BegrÃ¼ndung: Ein physisch erlebbares MVP kann Nutzen, Geschmack und Wiederkauf besser prÃ¼fen als reine Kommunikation.Unsicherheit: Die Stichprobe war klein und nicht systematisch.
+P1-SWOT-W1SWOT_WEAKNESS
+Keine belastbaren Nachweise zu Zahlungsbereitschaft, Wiederkaufsrate und wirtschaftlicher Kundenakquisition.
+FaktNutzereingabe
+BegrÃ¼ndung: Die zentralen Wert- und Wachstumshypothesen sind noch offen.Unsicherheit: FrÃ¼he Tests liefern nur begrenzte Sicherheit.
+P1-SWOT-W2SWOT_WEAKNESS
+Begrenzte Erfahrung mit KÃ¼hlkette, Lebensmittelrecht und skalierter Produktion.
+FaktNutzereingabe
+BegrÃ¼ndung: Fehler kÃ¶nnen QualitÃ¤t, Sicherheit, Kosten und Markenvertrauen beeintrÃ¤chtigen.Unsicherheit: Externe Partner kÃ¶nnen die LÃ¼cke teilweise schlieÃŸen.
+P1-SWOT-W3SWOT_WEAKNESS
+Das verfÃ¼gbare Budget reicht nicht fÃ¼r parallele Bearbeitung mehrerer Zielgruppen und einen breiten Launch.
+FaktNutzereingabe
+BegrÃ¼ndung: Das Start-up muss Segment, Angebot und Tests bewusst priorisieren.Unsicherheit: Partnerschaften kÃ¶nnten Reichweite und Ressourcen erweitern.
+P1-SWOT-W4SWOT_WEAKNESS
+Die vorlÃ¤ufige Produktidee verbindet viele Vorteile und kann dadurch kommunikativ zu breit oder austauschbar wirken.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Vegan, High Protein, gesund, bequem und nachhaltig konkurrieren um Aufmerksamkeit.Unsicherheit: Die stÃ¤rkste Nutzenhierarchie ist noch nicht validiert.
+P1-SWOT-O1SWOT_OPPORTUNITY
+Gesundheits-, Protein- und Convenience-Trends schaffen mehrere anschlussfÃ¤hige Zielgruppenpfade.
+FaktNutzereingabe
+BegrÃ¼ndung: Das Angebot kann unterschiedliche Probleme adressieren, ohne auf rein vegane KÃ¤ufer begrenzt zu sein.Unsicherheit: Mehrere Pfade erhÃ¶hen zugleich Priorisierungsbedarf.
+P1-SWOT-O2SWOT_OPPORTUNITY
+Fitnessstudios und lokale Sport-Communities ermÃ¶glichen eine fokussierte regionale Pilotierung.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Kooperationen kÃ¶nnen Vertrauen, Rekrutierung und Probierkontakte mit begrenztem Media-Budget verbinden.Unsicherheit: Partnerbereitschaft und Skalierbarkeit sind offen.
+P1-SWOT-O3SWOT_OPPORTUNITY
+Eine flexible Wiederbestellung ohne Abozwang kÃ¶nnte die EinstiegshÃ¼rde gegenÃ¼ber klassischen Subscription-Modellen senken.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Kunden kÃ¶nnen testen, ohne langfristige Bindung wahrzunehmen.Unsicherheit: WiederholungskÃ¤ufe und Planbarkeit fÃ¼r Nouriva bleiben ungeprÃ¼ft.
+P1-SWOT-O4SWOT_OPPORTUNITY
+Die Kombination aus tatsÃ¤chlichem Produkttest und digitalem Direktvertrieb ermÃ¶glicht schnelles Lernen Ã¼ber Geschmack, Preis, BoxgrÃ¶ÃŸe und Wiederkauf.
+FaktNutzereingabe
+BegrÃ¼ndung: Mehrere strategische Annahmen kÃ¶nnen mit begrenztem Pilotvolumen direkt beobachtet werden.Unsicherheit: Operative QualitÃ¤t muss ausreichend stabil sein.
+P1-SWOT-T1SWOT_THREAT
+Hohe PreissensibilitÃ¤t kann den Wechsel von Meal Prep oder Supermarktprodukten zu einem Premium-D2C-Angebot begrenzen.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Der Nutzen muss den Preis- und Versandaufschlag sichtbar rechtfertigen.Unsicherheit: Die Preisgrenze ist segmentspezifisch.
+P1-SWOT-T2SWOT_THREAT
+Fehler bei Temperatur, Zustellung oder Haltbarkeit kÃ¶nnen Vertrauen und Wiederkauf bereits im Pilot stark beschÃ¤digen.
+FaktNutzereingabe
+BegrÃ¼ndung: LebensmittelqualitÃ¤t ist unmittelbar erfahrbar und schwer kommunikativ auszugleichen.Unsicherheit: Die reale Fehlerwahrscheinlichkeit ist noch unbekannt.
+P1-SWOT-T3SWOT_THREAT
+Direkte und indirekte Wettbewerber kÃ¶nnen einzelne Merkmale wie High Protein, vegan oder Convenience schnell nachahmen.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Langfristige Differenzierung erfordert mehr als eine isolierte Produkteigenschaft.Unsicherheit: Markenbindung und ServicequalitÃ¤t sind noch nicht aufgebaut.
+P1-SWOT-T4SWOT_THREAT
+Rechtliche oder kommunikative Fehler bei Claims, Allergenen oder Produktinformationen kÃ¶nnen MarkteinfÃ¼hrung und Reputation beeintrÃ¤chtigen.
+FaktNutzereingabe
+BegrÃ¼ndung: Das Leistungsversprechen ist eng mit regulierten Produktangaben verbunden.Unsicherheit: Die finale rechtliche PrÃ¼fung steht aus.
+2.8 MÃ¶gliche Marktpfade
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P1-PATH-01MARKET_PATH
+Regionaler D2C-Pilot fÃ¼r fitnessorientierte BerufstÃ¤tige mit klarem Fokus auf Protein, Geschmack und Zeitersparnis.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Der Pfad verbindet klare Produktdifferenzierung, vorhandene Sportkontakte und direkt prÃ¼fbare Kauf- und Wiederkaufannahmen.Unsicherheit: RegelmÃ¤ÃŸige Zahlungsbereitschaft und Akquisitionskosten sind offen.
+P1-PATH-02MARKET_PATH
+Gesunde AlltagslÃ¶sung fÃ¼r zeitknappe Professionals mit D2C-Vertrieb und ergÃ¤nzenden Arbeitgeber- oder Coworking-Kooperationen.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Der potenzielle Markt ist breiter und der Nutzen alltagsnah, die Positionierung jedoch weniger eindeutig.Unsicherheit: Streuverluste, Differenzierung und Partnerzugang sind offen.
+P1-PATH-03MARKET_PATH
+Pflanzliche Premium-Convenience fÃ¼r vegan und flexitarisch orientierte KÃ¤ufer mit Community- und Creator-getriebenem Marktzugang.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Der Pfad bietet hohe Markenpassung und klare Community-Kontaktpunkte.Unsicherheit: SegmentgrÃ¶ÃŸe, Preisakzeptanz und Relevanz des Proteinfokus sind ungeklÃ¤rt.
+2.9 Evidenzbilanz Phase 1
+PESTEL
+18 Aussagen: 11 Fakten, 5 Annahmen, 2 offene Fragen
+Zielgruppen
+18 Segmentaussagen: 15 Annahmen, 3 offene Fragen
+Kundenprobleme
+6 Annahmen
+Wettbewerb
+10 Akteure beziehungsweise Alternativen mit je 6 Aspekten
+Ressourcen
+8 Aussagen: 6 Fakten, 1 Annahme/Interpretation, 1 offene Frage
+SWOT
+16 priorisierte Syntheseaussagen
+Marktpfade
+3 vorlÃ¤ufige Pfade als Annahmen
+Ergebnis
+Ein umfangreiches, revisionsoffenes Analysebild mit klar erkennbaren Wissensgrenzen.
+3. Phase 2 â€“ Entwicklung vorlÃ¤ufiger Strategieoptionen
+Die drei Optionen greifen dieselben sechs Dimensionen auf und bleiben als HypothesenbÃ¼ndel vergleichbar. Sie unterscheiden sich nicht nur sprachlich, sondern in Zielgruppe, primÃ¤rem Problem, Nutzenhierarchie, Positionierung, Marktzugang und Wachstumslogik.
+3.1 Phasenbezogene Eingaben
+AusschlÃ¼sse / No-Gos
+Kein verpflichtendes Langzeitabonnement, kein bundesweiter Launch vor regionalem Logistiktest, keine Preispositionierung unterhalb der realistischen Vollkosten.
+Kernangebot
+GekÃ¼hlte Mehrfachboxen mit vollstÃ¤ndig zubereiteten Mahlzeiten, klarer Proteinangabe und schneller ErwÃ¤rmung; keine Kochbox.
+Eigene PrÃ¤ferenz des Teams
+Bevorzugt wird ein fokussierter regionaler Pilot Ã¼ber Fitnesskontakte, sofern die Bewertung Problemrelevanz, Preis und PrÃ¼fbarkeit bestÃ¤tigt.
+3.2
+Option 1 â€“ Performance ohne Meal Prep
+Nouriva richtet das Angebot auf sportlich aktive BerufstÃ¤tige aus, die Proteinziele und ErnÃ¤hrungsroutine ohne regelmÃ¤ÃŸiges Vorkochen einhalten mÃ¶chten.
+Status im Demo-Endzustand
+PRIORITIZED
+Entwicklungsmodus
+Marktbezogene Option mit ressourcenorientierter Pilotierung Ã¼ber vorhandene Fitnesskontakte.
+Abgrenzung
+Differenziert sich Ã¼ber Performance-Nutzen, klaren Nutzungskontext und direkte Testbarkeit; Veganismus ist unterstÃ¼tzend, nicht alleiniger Kern.
+Dimension
+Inhalt
+Evidenz
+BegrÃ¼ndung / Unsicherheit
+OPT_TARGET_GROUP
+Fitnessorientierte BerufstÃ¤tige zwischen 25 und 39 Jahren, die mindestens dreimal pro Woche trainieren, NÃ¤hrwerte vergleichen und an Arbeitstagen wenig Zeit fÃ¼r Meal Prep haben.
+Annahme
+Das Segment passt am klarsten zum High-Protein-Merkmal und ist Ã¼ber vorhandene lokale Kontakte erreichbar.Unsicherheit: SegmentgrÃ¶ÃŸe und KaufhÃ¤ufigkeit sind ungeprÃ¼ft.
+OPT_CUSTOMER_PROBLEM
+RegelmÃ¤ÃŸiges Meal Prep bindet Zeit und Planung; fÃ¤llt es aus, greifen Betroffene auf weniger passende oder proteinÃ¤rmere Alternativen zurÃ¼ck.
+Annahme
+Das Problem ist wiederkehrend, konkret und kann Ã¼ber Interviews sowie reale Nutzung beobachtet werden.Unsicherheit: Die wahrgenommene Belastung und Wechselbereitschaft sind offen.
+OPT_VALUE_PROPOSITION
+Fertig zubereitete vegane Mahlzeiten mit 30 bis 40 Gramm Protein, transparenten Makros und abwechslungsreichen Rezepten liefern in wenigen Minuten eine vollstÃ¤ndige Performance-Mahlzeit.
+Annahme
+Der Nutzen verbindet Proteinziel, Zeitersparnis, Planbarkeit und Geschmack in einem Angebot.Unsicherheit: ProduktqualitÃ¤t, Portion und wahrgenommener Mehrwert mÃ¼ssen im Pilot bestÃ¤tigt werden.
+OPT_POSITIONING
+Nouriva wird als verlÃ¤ssliche High-Protein-AlltagslÃ¶sung fÃ¼r aktive BerufstÃ¤tige positioniert â€“ einfacher als Meal Prep und nÃ¤hrwertorientierter als klassische Convenience.
+Annahme
+Die Positionierung grenzt sich sowohl von selbst gekochtem Meal Prep als auch von generischen Fertiggerichten ab.Unsicherheit: Ob vegan als Haupt- oder Zusatzbotschaft wirken sollte, ist offen.
+OPT_MARKET_ACCESS
+Der Marktzugang erfolgt zunÃ¤chst Ã¼ber lokale Fitnessstudios, Trainer, Sport-Communities, gezielte Creator-Kooperationen und performancebezogene Social- und Search-Inhalte.
+Annahme
+Die KanÃ¤le bÃ¼ndeln relevante Interessen und nutzen bestehende Kontakte fÃ¼r eine regionale Pilotierung.Unsicherheit: Reichweite, Conversion und Kosten pro zahlendem Kunden sind ungeprÃ¼ft.
+OPT_REVENUE_GROWTH
+Eine 6er-Testbox senkt die EinstiegshÃ¼rde; 10er- und 14er-Boxen sowie flexible Wiederbestellung sollen StÃ¼ckkosten, Warenkorb und Wiederkauf erhÃ¶hen.
+Offene Frage
+Die Logik verbindet TestmÃ¶glichkeit mit wirtschaftlich attraktiveren grÃ¶ÃŸeren Bestellungen.Unsicherheit: Preis, BoxgrÃ¶ÃŸe, Versandkosten und Abonnementbereitschaft sind offen.
+3.3
+Option 2 â€“ Gesunde Routine trotz vollem Kalender
+Nouriva adressiert beruflich stark beanspruchte Menschen, die ohne tÃ¤gliche Planung und Kochaufwand verlÃ¤sslich ausgewogen essen mÃ¶chten.
+Status im Demo-Endzustand
+DEFERRED
+Entwicklungsmodus
+Breiter marktbezogener Pfad mit potenziellen B2B2C-Kooperationen.
+Abgrenzung
+StÃ¤rker auf allgemeine Gesundheits- und ZeitersparnisbedÃ¼rfnisse ausgerichtet; Protein und vegan sind QualitÃ¤tsmerkmale statt HauptidentitÃ¤t.
+Dimension
+Inhalt
+Evidenz
+BegrÃ¼ndung / Unsicherheit
+OPT_TARGET_GROUP
+Zeitknappe gesundheitsbewusste Professionals zwischen etwa 28 und 44 Jahren mit hoher Arbeitsbelastung, wechselnden Arbeitsorten und mittlerem bis hÃ¶herem Einkommen.
+Annahme
+Das Segment besitzt ein plausibles Convenience-Problem und kann regelmÃ¤ÃŸige Bestellungen finanziell eher tragen.Unsicherheit: Die Zielgruppe ist breit und schwerer effizient abzugrenzen.
+OPT_CUSTOMER_PROBLEM
+Gesunde ErnÃ¤hrung scheitert an arbeitsintensiven Tagen an Planung, Einkauf und Zubereitung; spontane Alternativen sind hÃ¤ufig teurer oder weniger ausgewogen.
+Annahme
+Das Problem ist alltagsnah und betrifft mehrere wiederkehrende Mahlzeitensituationen.Unsicherheit: Die Zahlungsbereitschaft fÃ¼r eine geplante LÃ¶sung ist offen.
+OPT_VALUE_PROPOSITION
+Nouriva bietet verlÃ¤ssliche, nÃ¤hrwertoptimierte Mahlzeiten fÃ¼r volle Arbeitstage, die ohne Einkauf und Kochen verfÃ¼gbar sind und eine planbare gesunde Routine ermÃ¶glichen.
+Annahme
+Der Nutzen reduziert Zeit- und Entscheidungsaufwand statt primÃ¤r sportliche Leistung zu versprechen.Unsicherheit: Differenzierung gegenÃ¼ber Kochboxen, Bowls und Lieferdiensten muss geschÃ¤rft werden.
+OPT_POSITIONING
+Nouriva wird als gesunde AlltagslÃ¶sung zwischen Selbstkochen, Kantine und Lieferdienst positioniert â€“ planbarer als spontane Bestellung und bequemer als Kochboxen.
+Annahme
+Die Positionierung nutzt einen breiten Nutzungskontext und mehrere bestehende Vergleichsangebote.Unsicherheit: Die Botschaft kann ohne starken Fokus austauschbar wirken.
+OPT_MARKET_ACCESS
+Suchmaschinen, LinkedIn, Coworking-Spaces, Arbeitgeberkooperationen, Business-Newsletter und betriebliche Gesundheitsangebote bilden den primÃ¤ren Marktzugang.
+Offene Frage
+Die KanÃ¤le orientieren sich am Arbeitsalltag und kÃ¶nnten grÃ¶ÃŸere Nutzergruppen erreichen.Unsicherheit: Zugang, Streuverluste und lÃ¤ngere B2B-Entscheidungswege sind offen.
+OPT_REVENUE_GROWTH
+Flexible Wochenboxen werden durch Firmenangebote, Probiertage und mÃ¶gliche ArbeitgeberzuschÃ¼sse ergÃ¤nzt; Wiederbestellung steht vor langfristiger Bindung.
+Offene Frage
+B2C und B2B2C kÃ¶nnen sich ergÃ¤nzen und Akquisitionskosten reduzieren.Unsicherheit: Partnerinteresse, administrative KomplexitÃ¤t und NutzungshÃ¤ufigkeit sind ungeprÃ¼ft.
+3.4
+Option 3 â€“ Plant-based Premium Convenience
+Nouriva fokussiert vegan und Ã¼berwiegend pflanzlich lebende KÃ¤ufer, die Convenience ohne Abstriche bei Protein, SÃ¤ttigung, Zutaten und Markenwerten suchen.
+Status im Demo-Endzustand
+DEFERRED
+Entwicklungsmodus
+Nischenorientierter Community-Pfad mit hoher Markenpassung.
+Abgrenzung
+Stellt die vegane Rezeptur und GlaubwÃ¼rdigkeit in den Vordergrund; Performance ist QualitÃ¤tsbeweis statt HauptidentitÃ¤t.
+Dimension
+Inhalt
+Evidenz
+BegrÃ¼ndung / Unsicherheit
+OPT_TARGET_GROUP
+Vegan und Ã¼berwiegend pflanzlich lebende urbane KÃ¤ufer, die regelmÃ¤ÃŸig Convenience-Produkte nutzen und Zutaten, Protein, Abwechslung und Nachhaltigkeit vergleichen.
+Annahme
+Die Zielgruppe besitzt eine klare ErnÃ¤hrungsprÃ¤ferenz und identifizierbare Community-Touchpoints.Unsicherheit: SegmentgrÃ¶ÃŸe und regelmÃ¤ÃŸige Premiumbereitschaft sind offen.
+OPT_CUSTOMER_PROBLEM
+Viele vegane Convenience-Angebote erfÃ¼llen nicht gleichzeitig die Erwartungen an Protein, SÃ¤ttigung, Rezeptvielfalt, transparente Zutaten und Alltagstauglichkeit.
+Annahme
+Die vermutete LÃ¼cke schafft eine spezifische Positionierung jenseits der bloÃŸen Vegan-Kennzeichnung.Unsicherheit: Die Unzufriedenheit mit Alternativen muss nachgewiesen werden.
+OPT_VALUE_PROPOSITION
+Abwechslungsreiche vegane Fertigmahlzeiten verbinden hohen Proteingehalt, nachvollziehbare Zutaten, ausgewogene NÃ¤hrwerte und schnelle Zubereitung.
+Annahme
+Die Kombination adressiert funktionale und wertbezogene Erwartungen des Segments.Unsicherheit: Der Mehrwert gegenÃ¼ber Supermarkt- und TiefkÃ¼hlangeboten ist ungeprÃ¼ft.
+OPT_POSITIONING
+Nouriva wird als hochwertige vegane Convenience-Marke ohne NÃ¤hrwertkompromisse positioniert â€“ glaubwÃ¼rdiger als generische Fertiggerichte und alltagstauglicher als tÃ¤gliches Selbstkochen.
+Annahme
+Die Positionierung verbindet Markenwerte mit funktionaler ProduktqualitÃ¤t.Unsicherheit: Nachhaltigkeits- und Verpackungserwartungen kÃ¶nnen zusÃ¤tzlichen Aufwand erzeugen.
+OPT_MARKET_ACCESS
+Vegane Creator, ErnÃ¤hrungsplattformen, Community-Newsletter, Veranstaltungen, spezialisierte CafÃ©s und Kooperationen mit pflanzlichen Marken bilden den Marktzugang.
+Annahme
+Die Zielgruppe lÃ¤sst sich thematisch klarer adressieren als breite Gesundheitssegmente.Unsicherheit: Thematische Reichweite kann schnell gesÃ¤ttigt und kostenintensiv werden.
+OPT_REVENUE_GROWTH
+Themenboxen, saisonale Drops und flexible Abonnements sollen Vielfalt und Markenbindung fÃ¶rdern; Premiumpreise werden Ã¼ber Zutaten, Protein und GlaubwÃ¼rdigkeit begrÃ¼ndet.
+Offene Frage
+Sortiments- und Community-Logik kÃ¶nnen Wiederkauf unterstÃ¼tzen.Unsicherheit: Premiumpreis, SortimentskomplexitÃ¤t und Wiederkaufsrhythmus sind offen.
+4. Phase 3 â€“ Bewertung und Priorisierung
+Jede Option wird anhand von AttraktivitÃ¤t, Ressourcenpassung, tragbarem Risiko, PrÃ¼faufwand, Lernwert und Evidenzlage mit 1 bis 5 Punkten bewertet. Die Scores strukturieren die Entscheidung, ersetzen aber nicht das unternehmerische Urteil.
+Option
+Kriterium
+Score
+BegrÃ¼ndung
+Performance ohne Meal Prep
+AttraktivitÃ¤t
+5
+Das Segment besitzt ein klar formuliertes, wiederkehrendes Problem und das High-Protein-Merkmal schafft eine verstÃ¤ndliche Differenzierung. MarktgrÃ¶ÃŸe und Wiederkauf sind zwar offen, der Kundennutzen ist jedoch konkret.
+Performance ohne Meal Prep
+Ressourcenpassung
+4
+Vorhandene Fitnesskontakte, Content-Kompetenz und erste Rezepturen unterstÃ¼tzen einen fokussierten Pilot. KÃ¼hlversand und Produktion erfordern dennoch externe UnterstÃ¼tzung.
+Performance ohne Meal Prep
+Tragbares Risiko
+3
+Produkt- und Logistiktests binden reale Mittel, kÃ¶nnen aber regional und mit kleinen Chargen begrenzt werden. Ein breiter Launch ist nicht erforderlich.
+Performance ohne Meal Prep
+PrÃ¼faufwand
+4
+Problemrelevanz, Zahlungsbereitschaft und Wiederkauf lassen sich in aufeinanderfolgenden Interviews, Vorbestellungen und einem kleinen Produktpilot direkt beobachten.
+Performance ohne Meal Prep
+Lernwert
+5
+Die Option testet zentrale Wert- und Wachstumshypothesen und liefert zugleich Erkenntnisse zu Preis, Produkt, Positionierung, Kanal und Wiederkauf.
+Performance ohne Meal Prep
+Evidenzlage
+3
+Externe Trends und vorhandene Kontakte stÃ¼tzen die PlausibilitÃ¤t, aber ProblemintensitÃ¤t, Preis und Wiederkauf sind noch nicht validiert.
+Gesunde Routine trotz vollem Kalender
+AttraktivitÃ¤t
+5
+Der potenzielle Markt ist groÃŸ und Zeitknappheit ist ein verbreitetes Problem. Die Option besitzt jedoch weniger klare Abgrenzung gegenÃ¼ber zahlreichen bestehenden Angeboten.
+Gesunde Routine trotz vollem Kalender
+Ressourcenpassung
+3
+Das Team kann D2C-Inhalte umsetzen, verfÃ¼gt aber kaum Ã¼ber Arbeitgeber- oder Coworking-ZugÃ¤nge. B2B2C-Partnerschaften verlÃ¤ngern den Marktzugang.
+Gesunde Routine trotz vollem Kalender
+Tragbares Risiko
+3
+Breite Ansprache kann hÃ¶here Media-Ausgaben und Streuverluste verursachen; ein kleiner D2C-Test bleibt dennoch begrenzbar.
+Gesunde Routine trotz vollem Kalender
+PrÃ¼faufwand
+3
+Mehrere Nutzungssituationen und Alternativen erschweren eine fokussierte PrÃ¼fung. PartnerkanÃ¤le benÃ¶tigen zusÃ¤tzliche Abstimmung.
+Gesunde Routine trotz vollem Kalender
+Lernwert
+4
+Die Option liefert Erkenntnisse zu breitem Convenience-Bedarf, Arbeitgeberzugang und allgemeiner Gesundheitspositionierung, aber weniger klare Signale pro Einzelannahme.
+Gesunde Routine trotz vollem Kalender
+Evidenzlage
+2
+Die Zielgruppe ist breit und bisher nur aus externen Trends sowie allgemeinen Annahmen abgeleitet. Direkte Kontakte und segmentbezogene Erkenntnisse fehlen.
+Plant-based Premium Convenience
+AttraktivitÃ¤t
+3
+Das Segment hat klare BedÃ¼rfnisse und Community-Strukturen, ist aber vermutlich kleiner und besitzt viele spezialisierte Alternativen.
+Plant-based Premium Convenience
+Ressourcenpassung
+4
+Vegane Rezepturen, Markenkompetenz und Community-Content passen gut zum Team. Nachhaltigkeits- und Verpackungserwartungen erhÃ¶hen den Aufwand.
+Plant-based Premium Convenience
+Tragbares Risiko
+4
+Ein Community- und Creator-Test kann klein starten; das Risiko liegt eher in begrenzter MarktgrÃ¶ÃŸe und Premiumpreis als in hohen Anfangsinvestitionen.
+Plant-based Premium Convenience
+PrÃ¼faufwand
+4
+Zielgruppen lassen sich Ã¼ber spezialisierte Communities gut rekrutieren. Zahlungsbereitschaft und AngebotslÃ¼cke kÃ¶nnen gezielt getestet werden.
+Plant-based Premium Convenience
+Lernwert
+4
+Die Option liefert klare Erkenntnisse zur Rolle von vegan, Protein, Zutaten und Nachhaltigkeit, beantwortet aber weniger Ã¼ber den breiteren Markt.
+Plant-based Premium Convenience
+Evidenzlage
+3
+Plant-based-Trends und identifizierbare Alternativen stÃ¼tzen die PlausibilitÃ¤t; konkrete Unzufriedenheit und Premiumbereitschaft bleiben Annahmen.
+4.1 Zusammenfassung der Scores
+Performance ohne Meal Prep
+24 von 30 Punkten
+Gesunde Routine trotz vollem Kalender
+20 von 30 Punkten
+Plant-based Premium Convenience
+22 von 30 Punkten
+4.2 Priorisierungsentscheidung
+Priorisierte Option
+Option 1 â€“ Performance ohne Meal Prep
+PriorisierungsbegrÃ¼ndung
+Option 1 wird nicht als endgÃ¼ltig beste Strategie, sondern als zuerst zu validierende StoÃŸrichtung priorisiert. Sie verbindet die klarste Passung zwischen Produktmerkmal, Zielgruppenproblem und vorhandenen KontaktmÃ¶glichkeiten. Ihre kritischen Annahmen lassen sich mit begrenztem Budget in einer logischen Sequenz aus Probleminterviews, verbindlichem Preis- und Vorbestelltest sowie Produktpilot prÃ¼fen. GegenÃ¼ber Option 2 ist die Positionierung fokussierter und der Marktzugang konkreter. GegenÃ¼ber Option 3 besitzt sie ein grÃ¶ÃŸeres potenzielles Segment und ist nicht ausschlieÃŸlich an eine vegane IdentitÃ¤t gebunden.
+Gegenargumente und verbleibende Risiken
+Die Zielgruppe kann preissensibel sein und Meal Prep als deutlich gÃ¼nstigere Alternative akzeptieren.
+Der hohe Proteingehalt allein ist leicht imitierbar und schafft noch keinen nachhaltigen Wettbewerbsvorteil.
+Vorhandene Fitnesskontakte reichen nicht aus, um wirtschaftliche Akquisitionskosten fÃ¼r eine Skalierung zu belegen.
+KÃ¼hlversand und ProduktqualitÃ¤t kÃ¶nnen den wahrgenommenen Nutzen trotz starker Positionierung Ã¼berlagern.
+5. Phase 4 â€“ Validierende Umsetzung
+Die Umsetzung folgt einer Evidenzlogik: Aussagekern â†’ benÃ¶tigte Evidenz â†’ Methode und Kanal. Reichweiten- oder Engagementsignale werden nicht als entscheidende Nachweise fÃ¼r Problemrelevanz, Zahlungsbereitschaft oder Wiederkauf verwendet.
+5.1 Phasenbezogene Rahmenbedingungen
+VerfÃ¼gbares Testbudget
+Maximal 4.500 Euro fÃ¼r die drei aufeinanderfolgenden Validierungsschritte; Produkt- und Logistikkosten eingeschlossen.
+Zeitrahmen
+Insgesamt etwa acht Wochen; Interviews zwei Wochen, Vorbestelltest drei Wochen, Produktpilot bis zu fÃ¼nf Wochen mit Ãœberschneidung.
+Zielgruppenzugang
+Teilweise vorhanden: zwei Fitnessstudios, ein Personal Trainer, eine lokale Sport-Community und informelle Kontakte. ZusÃ¤tzliche Reichweite muss aufgebaut werden.
+ZulÃ¤ssige KanÃ¤le
+Lokale Partner, E-Mail, Instagram, Creator-Kooperationen, gezielte Ads und Landingpages. Keine breite bundesweite Kampagne.
+MethodenprÃ¤ferenz
+Direkte Kundenkontakte und verbindliche Verhaltenssignale vor reinen Reichweiten- oder Engagement-Metriken.
+Ã–ffentlichkeit
+Tests dÃ¼rfen unter der fiktiven Marke Nouriva Ã¶ffentlich erscheinen, mÃ¼ssen aber als Pilot beziehungsweise begrenzte Vorbestellung gekennzeichnet sein.
+5.2
+Validierungsschritt 1 â€“ Problem- und Nutzeninterviews
+Kritische Annahme
+Fitnessorientierte BerufstÃ¤tige empfinden den wiederkehrenden Aufwand proteinreicher ErnÃ¤hrung als relevant und sehen eine fertig zubereitete High-Protein-Mahlzeit als konkrete Entlastung.
+Strategiedimension
+OPT_CUSTOMER_PROBLEM / OPT_VALUE_PROPOSITION
+PrÃ¼fgegenstand
+Problemrelevanz und wahrgenommener Nutzen
+Kanal
+Direkte Rekrutierung Ã¼ber Fitnessstudios, Trainer und Sport-Community
+Zeitrahmen
+2 Wochen
+Budgetrahmen
+ca. 600 Euro inklusive Incentives und Testmaterialien
+Laufmodus
+EIGENSTAENDIG; Voraussetzung fÃ¼r Preis- und Produktpilot
+Status
+VALIDATION Â· adopted=true Â· discardedAt=null
+Validierungsfrage: Beschreiben qualifizierte Zielpersonen den Meal-Prep-Aufwand eigenstÃ¤ndig als wiederkehrendes Problem und benennen sie konkrete Situationen, in denen Nouriva eine bestehende LÃ¶sung ersetzen wÃ¼rde?
+Testdesign: 18 leitfadengestÃ¼tzte Interviews mit berufstÃ¤tigen Personen, die mindestens dreimal pro Woche trainieren. Zuerst offene Problemexploration ohne Produktnennung, danach Vergleich eines neutralen Nouriva-Konzepts mit Meal Prep, Supermarkt-Convenience und Lieferdienst.
+Widerlegungsbedingung: Die Annahme gilt als widerlegt, wenn hÃ¶chstens sieben von 18 Befragten einen wiederkehrenden relevanten Aufwand schildern oder hÃ¶chstens fÃ¼nf einen konkreten Ersatz-Nutzungskontext nennen.
+Marketing- und UmsetzungsaktivitÃ¤ten
+Screening-Fragen definieren und nur regelmÃ¤ÃŸig trainierende BerufstÃ¤tige mit eigener ErnÃ¤hrungsorganisation zulassen.
+Interviewleitfaden mit offener Problemphase, Alternativenvergleich und neutralem Konzeptstimulus erstellen.
+Je sechs Personen Ã¼ber Fitnessstudio, Trainer und lokale Sport-Community rekrutieren.
+18 Interviews durchfÃ¼hren, Aussagen wÃ¶rtlich dokumentieren und keine Preisfrage vor der Problemexploration stellen.
+ProblemstÃ¤rke, bestehende Alternativen, Nutzungssituationen und Kaufmotive in einem einheitlichen Kodierschema auswerten.
+Ergebniszusammenfassung mit stÃ¼tzenden, widersprechenden und mehrdeutigen Mustern erstellen.
+Messpunkte
+Metrik
+Rolle
+Auswertung
+Signal
+Erfolg
+Misserfolg
+Befragte mit eigenstÃ¤ndig genanntem wiederkehrendem Meal-Prep-Problem
+DECISIVE
+CUMULATIVE
+DIRECT_QUALITATIVEDIRECT
+Mindestens 12 von 18 nennen ohne Vorgabe einen wiederkehrenden relevanten Aufwand.
+HÃ¶chstens 7 von 18 nennen einen relevanten Aufwand.
+Befragte mit konkretem Ersatz-Nutzungskontext fÃ¼r Nouriva
+DECISIVE
+CUMULATIVE
+DIRECT_QUALITATIVEDIRECT
+Mindestens 10 von 18 nennen eine konkrete wÃ¶chentliche Nutzungssituation.
+HÃ¶chstens 5 von 18 nennen einen konkreten Ersatzkontext.
+Dominante Kaufmotive und EinwÃ¤nde
+SUPPORTING
+CUMULATIVE
+QUALITATIVE_CONTEXTSUPPORTING
+Klare Rangfolge aus Protein, Geschmack, Zeitersparnis, Vegan und Preis erkennbar.
+Motive bleiben stark fragmentiert und ohne gemeinsames Muster.
+5.3
+Validierungsschritt 2 â€“ Verbindlicher Preis- und Vorbestelltest
+Kritische Annahme
+Qualifizierte Zielpersonen sind bereit, fÃ¼r eine 10er-Box mit gekÃ¼hlten veganen High-Protein-Mahlzeiten bei inkludiertem Versand etwa 10,90 Euro je Mahlzeit zu bezahlen.
+Strategiedimension
+OPT_REVENUE_GROWTH
+PrÃ¼fgegenstand
+WILLINGNESS_TO_PAY
+Kanal
+Zwei Landingpage-Varianten, lokale Partner, E-Mail und gezielte Social Ads
+Zeitrahmen
+3 Wochen
+Budgetrahmen
+ca. 1.400 Euro inklusive Media, Landingpages und Zahlungsabwicklung
+Laufmodus
+NACHGELAGERT nach Schritt 1
+Status
+VALIDATION Â· adopted=true Â· discardedAt=null
+Validierungsfrage: Leisten qualifizierte Interessenten bei einem realistischen Angebot eine rÃ¼ckerstattbare Reservierungszahlung fÃ¼r eine 10er-Box zu 10,90 Euro je Mahlzeit?
+Testdesign: Zwei inhaltlich identische Landingpages mit einer 10er-Pilotbox, Versand inklusive und rÃ¼ckerstattbarer Reservierung von 10 Euro. Variante A zeigt 9,90 Euro, Variante B 10,90 Euro je Mahlzeit. Je Variante werden mindestens 60 qualifizierte Besuche aus denselben Zielgruppenquellen angestrebt.
+Widerlegungsbedingung: Die 10,90-Euro-Annahme gilt als widerlegt, wenn weniger als fÃ¼nf Prozent der qualifizierten Besucher reservieren oder die Reservierungsrate mehr als sechs Prozentpunkte unter der 9,90-Euro-Variante liegt.
+Marketing- und UmsetzungsaktivitÃ¤ten
+Produktumfang, Liefergebiet, Lieferfenster, RÃ¼ckerstattung und Preis transparent definieren.
+Zwei identische Landingpages erstellen, die sich ausschlieÃŸlich im Preis unterscheiden.
+Checkout mit realer, rÃ¼ckerstattbarer 10-Euro-Reservierung und Einwilligung zur Pilotkontaktaufnahme einrichten.
+Traffic aus denselben Studios, Communities und Anzeigenmotiven gleichmÃ¤ÃŸig auf beide Varianten verteilen.
+AbbrÃ¼che und Preisfragen nach dem Test durch kurze freiwillige Nachbefragung ergÃ¤nzen.
+Reservierungen, qualifizierte Besuche, Abbruchpunkte und qualitative EinwÃ¤nde getrennt auswerten.
+Messpunkte
+Metrik
+Rolle
+Auswertung
+Signal
+Erfolg
+Misserfolg
+Bezahlte Reservierungsrate bei 10,90 Euro je Mahlzeit
+DECISIVE
+PER_POINT
+PURCHASE_COMMITMENTDIRECT
+Mindestens 10 Prozent der qualifizierten Besucher leisten die Reservierung.
+Weniger als 5 Prozent leisten die Reservierung.
+Differenz der Reservierungsraten 9,90 vs. 10,90 Euro
+DECISIVE
+PER_POINT
+PRICE_SENSITIVITYDIRECT
+Die 10,90-Euro-Variante liegt hÃ¶chstens vier Prozentpunkte unter 9,90 Euro.
+Die Differenz betrÃ¤gt mehr als sechs Prozentpunkte.
+Anteil preisbezogener EinwÃ¤nde in der Nachbefragung
+SUPPORTING
+CUMULATIVE
+QUALITATIVE_CONTEXTSUPPORTING
+Preis ist nicht der dominante Ablehnungsgrund oder wird mit klaren Bedingungen verknÃ¼pft.
+Mehrheit nennt Preis ohne kompensierenden Nutzen als Hauptablehnung.
+5.4
+Validierungsschritt 3 â€“ Produktpilot und tatsÃ¤chlicher Wiederkauf
+Kritische Annahme
+Nach einem positiven Produkttest bestellt mindestens ein relevanter Anteil der Zielgruppe innerhalb von 21 Tagen erneut, ohne langfristiges Abonnement oder starken Rabatt.
+Strategiedimension
+OPT_VALUE_PROPOSITION / OPT_REVENUE_GROWTH
+PrÃ¼fgegenstand
+Wiederkauf und wiederkehrender Nutzwert
+Kanal
+Bezahlter regionaler Produktpilot mit 30 Kunden
+Zeitrahmen
+5 Wochen inklusive Wiederkaufsfenster
+Budgetrahmen
+ca. 2.400 Euro fÃ¼r Produktion, Verpackung, Versand, Support und Auswertung
+Laufmodus
+NACHGELAGERT nach ausreichenden Vorbestellungen
+Status
+VALIDATION Â· adopted=true Â· discardedAt=null
+Validierungsfrage: Bestellen mindestens 30 Prozent der zahlenden Pilotkunden innerhalb von 21 Tagen erneut, wenn Geschmack, ProduktqualitÃ¤t und Lieferung den angekÃ¼ndigten Standard erfÃ¼llen?
+Testdesign: 30 zahlende Kunden erhalten eine 6er-Pilotbox. Verbrauch, Geschmack, Nutzungssituation, LieferqualitÃ¤t und EinwÃ¤nde werden Ã¼ber kurze MahlzeitentagebÃ¼cher erfasst. Nach sieben Tagen wird eine regulÃ¤re 10er-Box ohne Abozwang und ohne starken Preisrabatt angeboten.
+Widerlegungsbedingung: Die Wiederkaufsannahme gilt als widerlegt, wenn hÃ¶chstens vier von 30 Kunden innerhalb von 21 Tagen erneut bestellen oder wenn QualitÃ¤tsprobleme die Interpretation systematisch verzerren.
+Marketing- und UmsetzungsaktivitÃ¤ten
+Pilotrezepte final auswÃ¤hlen und je Gericht Proteingehalt, Zutaten, Allergene und ErwÃ¤rmungshinweise prÃ¼fen.
+Produktion, Verpackung und gekÃ¼hlten Versand zunÃ¤chst mit internen Testsendungen absichern.
+30 zahlende Pilotkunden aus den Reservierungen auswÃ¤hlen und Lieferfenster verbindlich bestÃ¤tigen.
+Kurzes digitales Mahlzeitentagebuch fÃ¼r Geschmack, SÃ¤ttigung, Nutzungssituation und QualitÃ¤tsprobleme bereitstellen.
+Nach sieben Tagen eine regulÃ¤r bepreiste 10er-Box mit flexibler Wiederbestellung anbieten.
+TatsÃ¤chliche WiederkÃ¤ufe, verbrauchte Mahlzeiten, LieferqualitÃ¤t und NichtkaufgrÃ¼nde gemeinsam interpretieren.
+Messpunkte
+Metrik
+Rolle
+Auswertung
+Signal
+Erfolg
+Misserfolg
+TatsÃ¤chliche Wiederkaufsrate innerhalb von 21 Tagen
+DECISIVE
+CUMULATIVE
+REPEAT_PURCHASEDIRECT
+Mindestens 9 von 30 Kunden bestellen erneut.
+HÃ¶chstens 4 von 30 bestellen erneut.
+Anteil Kunden mit Verbrauch von mindestens fÃ¼nf der sechs Mahlzeiten
+SUPPORTING
+CUMULATIVE
+PRODUCT_USAGEDIRECT
+Mindestens 24 von 30 verbrauchen mindestens fÃ¼nf Mahlzeiten.
+Weniger als 18 von 30 erreichen diesen Wert.
+NichtkaufgrÃ¼nde bei ausbleibendem Wiederkauf
+SUPPORTING
+CUMULATIVE
+QUALITATIVE_CONTEXTSUPPORTING
+GrÃ¼nde lassen sich klar Preis, Geschmack, Menge, Lieferung oder fehlendem Bedarf zuordnen.
+QualitÃ¤tsfehler dominieren und verhindern eine faire Strategiebewertung.
+6. Umsetzungs-Cockpit
+Das Cockpit zerlegt die drei Validierungsschritte in chronologische Aufgaben, zeigt BearbeitungsstÃ¤nde, stellt eine detaillierte Task-Ausarbeitung bereit und verbindet die Messpunkte mit periodischen KPI-Werten.
+6.1 Aufgabenplan
+Schritt
+Nr.
+Aufgabe
+Hinweis / DurchfÃ¼hrung
+Erfolgskriterium
+Status
+Interviews
+1
+Zielgruppenscreener finalisieren
+Kriterien zu BerufstÃ¤tigkeit, Trainingsfrequenz, ErnÃ¤hrungsorganisation und Region festlegen.
+Nur qualifizierte Personen werden eingeladen.
+Erledigt
+Interviews
+2
+Interviewleitfaden und Stimulus erstellen
+Offene Problemfragen vor Produktdarstellung; neutraler Vergleich zu Alternativen.
+Leitfaden deckt Problem, Verhalten, Kontext, Motive und EinwÃ¤nde ab.
+Erledigt
+Interviews
+3
+18 Teilnehmer rekrutieren
+Je sechs Ã¼ber Studio, Trainer und Sport-Community gewinnen.
+18 bestÃ¤tigte Termine mit ausgewogener Geschlechterverteilung.
+Erledigt
+Interviews
+4
+Interviews durchfÃ¼hren und dokumentieren
+30â€“40 Minuten je GesprÃ¤ch, Kernaussagen wÃ¶rtlich erfassen.
+Alle 18 Interviews vollstÃ¤ndig dokumentiert.
+Erledigt
+Interviews
+5
+Aussagen kodieren
+Einheitliches Schema fÃ¼r ProblemstÃ¤rke, Nutzungssituation, Motive und EinwÃ¤nde anwenden.
+Jedes Interview ist nachvollziehbar kategorisiert.
+Erledigt
+Interviews
+6
+Ergebnisbericht erstellen
+StÃ¼tzende, widersprechende und mehrdeutige Muster zusammenfÃ¼hren.
+Entscheidende Metriken und Unsicherheiten sind dokumentiert.
+Erledigt
+Preis- und Vorbestelltest
+1
+Pilotangebot verbindlich definieren
+Gerichte, Boxumfang, Liefergebiet, Liefertermin, Preis und RÃ¼ckerstattung festlegen.
+Beide Varianten unterscheiden sich ausschlieÃŸlich im Preis.
+Erledigt
+Preis- und Vorbestelltest
+2
+Zwei Landingpages und Checkout umsetzen
+Variante 9,90 und 10,90 Euro mit realer 10-Euro-Reservierung erstellen.
+Testzahlung funktioniert auf Desktop und mobil.
+Erledigt
+Preis- und Vorbestelltest
+3
+Werbemittel und Partnertexte vorbereiten
+Drei Anzeigenmotive und kurze Partnernachrichten ohne wechselnde Preisargumente erstellen.
+Beide Varianten erhalten identische Botschaft und Visuals.
+Erledigt
+Preis- und Vorbestelltest
+4
+Traffic kontrolliert ausspielen
+Zielgruppenquellen gleichmÃ¤ÃŸig verteilen und qualifizierte Besuche prÃ¼fen.
+Mindestens 60 qualifizierte Besuche je Variante.
+Erledigt
+Preis- und Vorbestelltest
+5
+AbbrÃ¼che nachbefragen
+Freiwillige Ein-Frage-Nachbefragung zu Preis, Produkt und Liefermodell anbieten.
+Mindestens 20 verwertbare Antworten.
+Offen
+Preis- und Vorbestelltest
+6
+Reservierungsdaten auswerten
+Raten, Differenz, Abbruchpunkte und EinwÃ¤nde getrennt berechnen.
+Entscheidende Schwellenwerte sind eindeutig bewertet.
+Offen
+Produktpilot
+1
+Pilotrezepte und Kennzeichnung freigeben
+Sechs Gerichte auswÃ¤hlen und NÃ¤hrwerte, Zutaten, Allergene sowie Zubereitung prÃ¼fen.
+Alle Produktinformationen sind konsistent dokumentiert.
+Erledigt
+Produktpilot
+2
+Verpackungs- und Versandtest durchfÃ¼hren
+Mindestens fÃ¼nf interne Testsendungen mit Temperatur- und ZustellprÃ¼fung.
+Mindestens vier Sendungen erreichen QualitÃ¤tsziel ohne kritische Abweichung.
+Erledigt
+Produktpilot
+3
+30 Pilotkunden onboarden
+Lieferfenster, Lagerung, Tagebuch und Support erklÃ¤ren.
+30 zahlende Teilnehmer bestÃ¤tigen Zustellung.
+Erledigt
+Produktpilot
+4
+Mahlzeitentagebuch begleiten
+Erinnerungen nach Nutzung ausspielen und QualitÃ¤tsprobleme zeitnah bearbeiten.
+Mindestens 24 Teilnehmer dokumentieren fÃ¼nf Mahlzeiten.
+Offen
+Produktpilot
+5
+Wiederbestellangebot versenden
+Nach sieben Tagen 10er-Box ohne Abozwang und starken Rabatt anbieten.
+Alle qualifizierten Teilnehmer erhalten dasselbe Angebot.
+Offen
+Produktpilot
+6
+Wiederkauf und Lernpunkte auswerten
+Bestellungen, Verbrauch, QualitÃ¤t und NichtkaufgrÃ¼nde gemeinsam analysieren.
+Evidenzstatus und Anpassungsentscheidung sind begrÃ¼ndet.
+Offen
+6.2 Beispiel einer vollstÃ¤ndigen Task-Elaboration
+Aufgabe
+Zwei Landingpages und Checkout umsetzen
+Einleitung
+Die beiden Seiten mÃ¼ssen bis auf den Preis vollstÃ¤ndig identisch sein, damit die Reservierungsdifferenz mÃ¶glichst eindeutig auf die Preisvariation zurÃ¼ckgefÃ¼hrt werden kann.
+Targeting
+BerufstÃ¤tige im Rhein-Ruhr-Gebiet, 25â€“39 Jahre, mindestens drei Trainingseinheiten pro Woche, Interesse an Meal Prep, FitnessernÃ¤hrung oder High-Protein-Rezepten. Trafficquellen werden zwischen beiden Varianten gleich verteilt.
+Erfolgskriterium
+Beide Varianten sind technisch identisch, Zahlungen funktionieren, die Preisvariation ist die einzige relevante Abweichung und alle Events werden korrekt erfasst.
+Arbeitsschritte
+Gemeinsame Seitenstruktur mit Nutzenversprechen, sechs Beispielgerichten, Liefergebiet, Liefertermin, FAQ und RÃ¼ckerstattungsregel erstellen.
+Variante A mit 9,90 Euro und Variante B mit 10,90 Euro je Mahlzeit anlegen; beide zeigen eine 10er-Box und inkludierten Versand.
+Checkout mit realer 10-Euro-Reservierung, BestÃ¤tigungsseite und automatischer E-Mail konfigurieren.
+Tracking fÃ¼r qualifizierten Besuch, Checkout-Start, Zahlung und Abbruch einrichten.
+Desktop- und Mobile-Test einschlieÃŸlich fehlgeschlagener Zahlung und RÃ¼ckerstattung durchfÃ¼hren.
+FormulierungsvorschlÃ¤ge
+Headline: 30+ g Protein. In 4 Minuten auf dem Tisch.
+Subline: Sechs vegane High-Protein-Gerichte fÃ¼r volle Arbeits- und Trainingstage â€“ fertig gekocht, gekÃ¼hlt geliefert.
+CTA: Pilotbox mit 10 â‚¬ reservieren
+Vertrauenshinweis: Begrenzter regionaler Pilot. Die Reservierung wird bei NichtdurchfÃ¼hrung vollstÃ¤ndig erstattet.
+6.3 KPI-VerlÃ¤ufe
+Schritt
+Metrik
+Periode
+Wert
+Bewertung
+Interpretation
+Interviews
+Meal-Prep-Problem
+nach 6 Interviews
+4 von 6
+NEUTRAL
+Problem ist sichtbar, aber noch keine stabile Schwelle.
+Interviews
+Meal-Prep-Problem
+nach 12 Interviews
+8 von 12
+SUPPORTING
+Zwei Drittel nennen den Aufwand eigenstÃ¤ndig.
+Interviews
+Meal-Prep-Problem
+nach 18 Interviews
+14 von 18
+SUPPORTING
+Erfolgsschwelle von mindestens 12 wird Ã¼berschritten.
+Interviews
+Konkreter Ersatzkontext
+nach 18 Interviews
+11 von 18
+SUPPORTING
+Mehrheit nennt mindestens zwei realistische Nutzungstage pro Woche.
+Preis- und Vorbestelltest
+Reservierungsrate 9,90 Euro
+Testende
+8 / 60 = 13,3 %
+SUPPORTING
+Niedrigere Preisvariante erzeugt klare verbindliche Nachfrage.
+Preis- und Vorbestelltest
+Reservierungsrate 10,90 Euro
+Testende
+6 / 60 = 10,0 %
+SUPPORTING
+Erfolgsschwelle wird genau erreicht; Preis ist grundsÃ¤tzlich tragfÃ¤hig.
+Preis- und Vorbestelltest
+Differenz der Reservierungsraten
+Testende
+3,3 Prozentpunkte
+SUPPORTING
+Differenz liegt unter der festgelegten Vier-Prozentpunkte-Schwelle.
+Preis- und Vorbestelltest
+Preisbezogene EinwÃ¤nde
+22 Nachbefragungen
+7 von 22
+NEUTRAL
+Preis ist relevant, aber nicht dominanter Ablehnungsgrund; Versand und PortionsgrÃ¶ÃŸe werden hÃ¤ufig mitgenannt.
+Produktpilot
+Verbrauch mindestens 5/6 Mahlzeiten
+Ende Woche 1
+25 von 30
+SUPPORTING
+Produkte werden tatsÃ¤chlich in den Alltag integriert.
+Produktpilot
+Wiederkauf
+Tag 14
+5 von 30
+NEUTRAL
+FrÃ¼he WiederkÃ¤ufe vorhanden, Zielwert noch nicht erreicht.
+Produktpilot
+Wiederkauf
+Tag 21
+8 von 30 = 26,7 %
+NEUTRAL
+Knapp unter der 30-Prozent-Schwelle; Annahme nur teilweise gestÃ¼tzt.
+Produktpilot
+Kritische Lieferprobleme
+Gesamtpilot
+2 von 30
+NEUTRAL
+Zwei verspÃ¤tete Sendungen beeinflussen einzelne Bewertungen, dominieren das Ergebnis aber nicht.
+7. Phase 5 â€“ Lernen und strategische Anpassung
+Die RÃ¼ckmeldungen werden nicht allein danach bewertet, ob eine MaÃŸnahme erfolgreich wirkte. Entscheidend ist, ob die jeweils zugrunde liegende strategische Annahme gestÃ¼tzt, teilweise gestÃ¼tzt, widerlegt oder weiterhin mehrdeutig ist.
+7.1 MarktrÃ¼ckmeldungen und Evidenz-Updates
+Schritt / Annahme
+MarktrÃ¼ckmeldung
+Ergebnis
+Interpretation
+Statusvorschlag
+Problem- und NutzeninterviewsMeal-Prep-Aufwand und Nutzenrelevanz
+14 von 18 Befragten beschrieben den Meal-Prep-Aufwand eigenstÃ¤ndig als wiederkehrende Belastung; 11 nannten konkrete Situationen, in denen sie Nouriva mindestens zweimal pro Woche einsetzen wÃ¼rden. Protein, Geschmack und Zeitersparnis wurden hÃ¤ufiger genannt als Veganismus.
+SUPPORTED
+Die Problemannahme wird fÃ¼r das untersuchte Segment deutlich gestÃ¼tzt. Der Nutzen entsteht primÃ¤r aus Alltagserleichterung und verlÃ¤sslichem Protein; die vegane Rezeptur wirkt Ã¼berwiegend als positives Zusatzmerkmal. Die Stichprobe ist regional und fitnessnah.
+FACT (statusApplied=true)
+Preis- und VorbestelltestZahlungsbereitschaft bei 10,90 Euro
+Bei 60 qualifizierten Besuchen reservierten sechs Personen die 10,90-Euro-Variante und acht Personen die 9,90-Euro-Variante. Die Differenz betrug 3,3 Prozentpunkte. Preis war relevant, wurde aber hÃ¤ufig gemeinsam mit Versand, PortionsgrÃ¶ÃŸe und Geschmacksunsicherheit genannt.
+PARTIALLY_SUPPORTED
+Eine verbindliche Nachfrage bei 10,90 Euro ist vorhanden und die Erfolgsschwelle wurde knapp erreicht. Die geringe Fallzahl und die Kombination aus Preis, Versand und unbekanntem Geschmack verhindern jedoch eine Einstufung als gesicherter Fakt. GrÃ¶ÃŸere Boxen mit inkludiertem Versand erscheinen plausibel.
+ASSUMPTION beibehalten (statusApplied=true)
+ProduktpilotWiederkauf innerhalb von 21 Tagen
+25 von 30 Kunden verbrauchten mindestens fÃ¼nf Mahlzeiten. Acht Kunden bestellten innerhalb von 21 Tagen erneut; fÃ¼nf weitere nannten konkrete spÃ¤tere Kaufabsicht, lehnten aber ein Abonnement ab. HÃ¤ufigste NichtkaufgrÃ¼nde waren Preis, zu groÃŸe Mindestmenge und Wunsch nach flexiblerer Zusammenstellung.
+PARTIALLY_SUPPORTED
+Der Produktnutzen und tatsÃ¤chliche Konsum werden gestÃ¼tzt, die definierte Wiederkaufsquote von 30 Prozent wird knapp verfehlt. Flexible Wiederbestellung ist deutlich attraktiver als eine frÃ¼he Abo-Bindung. Preis- und Boxarchitektur sollten angepasst und erneut getestet werden.
+ASSUMPTION beibehalten (statusApplied=true)
+7.2 Lernerkenntnisse
+ID / Kategorie
+Aussage
+Evidenz / Herkunft
+BegrÃ¼ndung, Unsicherheit und Quelle
+P5-LEARN-01LEARNING
+Der stÃ¤rkste Nutzungskontext liegt an arbeits- und trainingsintensiven Wochentagen; Wochenenden werden deutlich hÃ¤ufiger durch eigenes Kochen abgedeckt.
+FaktKI-Ableitung
+BegrÃ¼ndung: Interviews und TagebÃ¼cher zeigen wiederholt Nutzung von Montag bis Donnerstag.Unsicherheit: Saisonale und berufliche Schwankungen sind mÃ¶glich.
+P5-LEARN-02LEARNING
+Protein, Geschmack und Zeitersparnis sind fÃ¼r die priorisierte Zielgruppe stÃ¤rkere Erstkaufmotive als eine ausschlieÃŸlich vegane Positionierung.
+FaktKI-Ableitung
+BegrÃ¼ndung: Die Rangfolge zeigt sich konsistent in Interviews, EinwÃ¤nden und Produktfeedback.Unsicherheit: FÃ¼r streng vegan lebende Segmente kann die Gewichtung anders ausfallen.
+P5-LEARN-03LEARNING
+Ein Preis von 10,90 Euro je Mahlzeit ist bei inkludiertem Versand grundsÃ¤tzlich tragfÃ¤hig, bleibt aber eng mit Portion, Geschmackssicherheit und BoxgrÃ¶ÃŸe verknÃ¼pft.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Bezahlte Reservierungen stÃ¼tzen die Preislogik, die geringe Fallzahl begrenzt die Sicherheit.Unsicherheit: Wiederholte KÃ¤ufe bei diesem Preis sind noch nicht ausreichend belegt.
+P5-LEARN-04LEARNING
+Flexible Wiederbestellung ohne langfristige Bindung wird deutlich eher akzeptiert als ein frÃ¼h kommuniziertes Abonnement.
+AnnahmeKI-Ableitung
+BegrÃ¼ndung: Mehrere NichtkÃ¤ufer lehnten Bindung, nicht aber das Produkt grundsÃ¤tzlich ab.Unsicherheit: Eine spÃ¤tere Abo-Option fÃ¼r Stammkunden bleibt mÃ¶glich.
+7.3 BestÃ¤tigte Anpassungsentscheidung
+Entscheidung
+ADAPT â€“ priorisierte Option gezielt Ã¼berarbeiten
+BestÃ¤tigt
+userConfirmed=true
+BegrÃ¼ndung
+Die Zielgruppe und das Grundproblem werden bestÃ¤tigt, wÃ¤hrend Preisarchitektur, BoxgrÃ¶ÃŸe, Botschaft und Bindungslogik angepasst werden mÃ¼ssen. Die Option wird nicht verworfen, sondern als prÃ¤zisierter Strategierahmen in Phase 2 zurÃ¼ckgefÃ¼hrt.
+ZielgruppenprÃ¤zisierung
+Aktive BerufstÃ¤tige zwischen 27 und 39 Jahren mit mindestens drei Trainingseinheiten pro Woche und wiederkehrendem Meal-Prep-Problem an Werktagen.
+Angepasstes Nutzenversprechen
+30+ Gramm Protein, Ã¼berzeugender Geschmack und eine verlÃ¤ssliche Mahlzeit fÃ¼r volle Arbeits- und Trainingstage; vegan bleibt sichtbarer QualitÃ¤ts- und Markenbestandteil, aber nicht alleinige Leitbotschaft.
+Angepasste Preislogik
+6er-Testbox zu hÃ¶herem StÃ¼ckpreis; 10er-Box bei etwa 10,49â€“10,90 Euro je Mahlzeit inklusive Versand; flexible Wiederbestellung statt Abo-Pflicht.
+Angepasster Marktzugang
+Fitnessstudio- und Trainerpartnerschaften priorisieren; Social Ads dienen ergÃ¤nzend der Skalierung und nicht als alleiniger Nachweis von Nachfrage.
+NÃ¤chste Validierung
+Erneuter 10er-Box-Test mit flexibler Zusammenstellung und Wiederbestell-Erinnerung; parallel Partnerkanal-Kosten und echte Neukundenakquisition messen.
+Interpretation der ADAPT-Entscheidung
+Die priorisierte Strategie wird nicht verworfen. Zielgruppe und Kernproblem bleiben bestehen, wÃ¤hrend Nutzenhierarchie, Preisarchitektur, BoxgrÃ¶ÃŸe, Bindungslogik und Marktzugang prÃ¤zisiert werden. Dadurch wird die Lernschleife in Phase 2 sichtbar.
+8. PhasenÃ¼bergreifende RÃ¼ckverfolgbarkeit
+Phase-1-Ausgangspunkt
+Phase 2
+Phase 3
+Phase 4 / Cockpit
+Phase 5
+PESTEL: hohe KÃ¼hlversandkosten
+Optionen: grÃ¶ÃŸere Boxen und regionaler Pilot
+Phase 3: Risiko und Ressourcenpassung
+Phase 4: Versandtest und inkludierter Versand
+Phase 5: Preis-/Boxarchitektur anpassen
+Social: Proteininteresse Ã¼ber Veganer hinaus
+Segment Fitnessorientierte BerufstÃ¤tige
+Option 1 priorisiert
+Interviews zu Kaufmotiven
+Vegan als Zusatz- statt Hauptbotschaft
+Segmentproblem: Meal-Prep-Aufwand
+OPT_CUSTOMER_PROBLEM
+Hoher Lernwert
+Probleminterviews
+Problem als gestÃ¼tzt bewertet
+Offene Frage: 9,90â€“11,90 Euro
+OPT_REVENUE_GROWTH
+Evidenzscore nur 3
+Bezahlter Preis-/Vorbestelltest
+10,90 Euro teilweise gestÃ¼tzt
+Offene Frage: Wiederkauf
+Flexible Wiederbestellung
+Wachstumsrisiko
+30-Kunden-Produktpilot
+Abo zurÃ¼cknehmen, Reorder flexibilisieren
+Ressource: Fitnesskontakte
+Marktzugang Studios/Trainer
+Ressourcenpassung 4
+Rekrutierung und Partnertraffic
+Partnerkanal weiter priorisieren
+SchwÃ¤che: KÃ¼hlkettenkompetenz
+Regionaler Pilot statt Skalierung
+Risikoscore 3
+Interne Testsendungen
+Logistikprobleme begrenzt, weiter prÃ¼fen
+Chance: D2C-Lerndaten
+Eigener Store und Reservierung
+Hoher Lernwert
+Checkout- und KPI-Erfassung
+Preis- und Nutzungssignale fortschreiben
+9. Technisches Seed-Mapping
+Die folgende Reihenfolge ist fÃ¼r ein konsistentes Fixture vorgesehen. IDs werden im Skript Ã¼ber logische SchlÃ¼ssel aufgelÃ¶st; das Dokument verwendet bewusst stabile Inhalts-IDs zur fachlichen RÃ¼ckverfolgung.
+Reihenfolge
+Modell
+Inhalt
+1
+Project
+Profilfelder, onboardingComplete=true, currentPhase=5, pestelRelevance
+2
+Statement Phase 1
+PESTEL, Segmente, Kundenprobleme, Wettbewerber, Ressourcen, SWOT, Marktpfade; Ã¼berwiegend adopted=true
+3
+PhaseInput Phase 2
+AusschlÃ¼sse, Kernangebot, eigene PrÃ¤ferenz
+4
+StrategyOption
+Drei Optionen mit title, summary, modeNote, diversityNote
+5
+Statement Phase 2 + OptionStatement
+Je Option sechs OPT-Dimensionen; alle adopted=true und verknÃ¼pft
+6
+Evaluation
+18 DatensÃ¤tze, eindeutig je Option und Kriterium
+7
+Priorisierung
+Option 1 PRIORITIZED, Optionen 2 und 3 DEFERRED, prioritizationRationale setzen
+8
+PhaseInput Phase 4
+Budget, Zeit, Zugang, KanÃ¤le, Methode, Ã–ffentlichkeit
+9
+ValidationStep
+Drei adopted Steps mit assumptionId auf kritische Optionsaussagen
+10
+Metric
+Je Schritt drei Messpunkte mit Rollen, SignalstÃ¤rke und Schwellen
+11
+Task
+Je Schritt sechs chronologische Aufgaben; eine Elaboration als JSON
+12
+KpiDataPoint
+Periodenwerte gemÃ¤ÃŸ KPI-Tabelle
+13
+MarketFeedback
+Je Schritt ein bewertetes Feedback mit interpretation und proposedNewStatus
+14
+Statement Phase 5
+Vier LEARNING-Statements
+15
+AdaptationDecision
+ADAPT, userConfirmed=true; RÃ¼ckfÃ¼hrung in Phase 2
+9.1 Empfohlene Screenshot-ZustÃ¤nde
+PrimÃ¤rer Endzustand
+currentPhase=5; alle Phasen navigierbar; Option 1 priorisiert; drei angenommene Validierungsschritte; Feedbacks bewertet; ADAPT bestÃ¤tigt.
+Phase-1-Detailaufnahme
+PESTEL, Segmentkarten, Wettbewerberprofile und SWOT jeweils als einzelne Detail-Screens statt vollstÃ¤ndiger Seite.
+Phase-3-Aufnahme
+Bewertungsmatrix plus priorisierte Option. Die flÃ¼chtige unbestÃ¤tigte KI-Empfehlung ist nicht zwingend erforderlich.
+Cockpit-Aufnahme
+FÃ¼r einen aktiven Cockpit-Screenshot kann ein separater Seed-Modus vor Phase-5-Feedbacks verwendet werden; im Endzustand erscheinen abgeschlossene Schritte kompakter.
+Phase-5-Aufnahme
+Evidenz-Updates, Lernerkenntnisse und bestÃ¤tigte ADAPT-Entscheidung gemeinsam zeigen.
+9.2 Noch technisch durch Cursor zu verifizieren
+Die exakten Enumwerte der sechs competitorAspect-Felder werden aus prisma/schema.prisma Ã¼bernommen; die sechs Inhalte je Profil sind vollstÃ¤ndig vorgegeben.
+Die logischen TestSubject- und SignalCategory-Bezeichnungen werden auf die vorhandenen Enums gemappt, ohne die fachliche Bedeutung zu verÃ¤ndern.
+Task.elaboration wird exakt an das bestehende Zod-Schema angepasst.
+Nicht persistierte Client-ZustÃ¤nde wie die unbestÃ¤tigte Phase-3-Empfehlung werden nicht durch SchemaÃ¤nderungen erzwungen.
+demo:reset lÃ¶scht ausschlieÃŸlich das eindeutig benannte Nouriva-Demo-Projekt.
+Abschluss
+Mit dieser Fallakte liegt ein vollstÃ¤ndig zusammenhÃ¤ngender Beispielfall vor. Die Inhalte sind so angelegt, dass jede spÃ¤tere Phase nachvollziehbar auf vorherigen Aussagen aufbaut. Cursor soll daraus im nÃ¤chsten Schritt ausschlieÃŸlich ein deterministisches Fixture und die notwendigen Relationen implementieren; die inhaltliche Logik ist bereits vollstÃ¤ndig vorgegeben.

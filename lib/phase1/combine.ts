@@ -1,4 +1,5 @@
 import { PESTEL_CATEGORIES } from "@/lib/schemas/phase1";
+import { SEGMENT_ASPECTS, WHO_SEGMENT_ASPECTS } from "@/lib/segmentAspects";
 import type { Phase1Statement, PestelRelevance } from "@/lib/schemas/phase1";
 import type { Phase1AnalysisAnchor, SynthesisInput } from "./types";
 
@@ -10,6 +11,9 @@ const SWOT_ORDER = [
 ] as const;
 
 const PESTEL_ORDER = [...PESTEL_CATEGORIES];
+const SEGMENT_ASPECT_ORDER = new Map<string, number>(
+  SEGMENT_ASPECTS.map((aspect, index) => [aspect, index])
+);
 
 export function sortPhase1Statements(
   statements: Phase1Statement[],
@@ -46,7 +50,10 @@ export function sortPhase1Statements(
         "de"
       );
       if (labelDiff !== 0) return labelDiff;
-      return (a.segmentAspect ?? "").localeCompare(b.segmentAspect ?? "");
+      return (
+        (SEGMENT_ASPECT_ORDER.get(a.segmentAspect ?? "") ?? 999) -
+        (SEGMENT_ASPECT_ORDER.get(b.segmentAspect ?? "") ?? 999)
+      );
     }
 
     if (a.category === "COMPETITOR" && b.category === "COMPETITOR") {
@@ -110,7 +117,11 @@ export function buildSynthesisInput(options: {
       refId: `SEG-${++segmentIndex}`,
       segmentName,
       keyCharacteristics: stmts
-        .filter((s) => s.segmentAspect === "DESCRIPTION")
+        .filter((s) =>
+          WHO_SEGMENT_ASPECTS.includes(
+            s.segmentAspect as (typeof WHO_SEGMENT_ASPECTS)[number]
+          )
+        )
         .map((s) => s.content),
       keyProblems: stmts
         .filter((s) => s.segmentAspect === "PROBLEM_NEED")

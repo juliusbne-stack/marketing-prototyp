@@ -34,6 +34,9 @@ GRUNDPRINZIPIEN:
 7. Kanal aus copyBasis.kanal beachten (z. B. Instagram Primary Text max. 125 Zeichen).
 8. Berücksichtige previousRounds: Wiederhole keine Formulierungen, die der
    Nutzer bereits verworfen hat.
+   Segmentmerkmale mit evidenzstatus ASSUMPTION oder OPEN_QUESTION in copyBasis
+   sind vorläufige Fokussierungen, keine gesicherten Fakten. Nutze sie vorsichtig
+   und nicht stereotypisierend.
 9. Wenn der Kontext dünn ist, schreibe bodenständig und vorsichtig — keine
    aufgeblähten Versprechen.
 10. Antworte AUSSCHLIESSLICH mit validem JSON: { "formulierungsvorschlaege": [...] }

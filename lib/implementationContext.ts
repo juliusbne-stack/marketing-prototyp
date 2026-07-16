@@ -27,6 +27,9 @@ function pickStatementsForCopy(
       id: statement.id,
       kategorie: statement.category,
       text: statement.content,
+      evidenzstatus: statement.evidenceStatus,
+      segmentLabel: statement.segmentLabel ?? null,
+      segmentAspect: statement.segmentAspect ?? null,
     }));
 }
 

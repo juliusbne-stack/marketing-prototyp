@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="280" viewBox="0 0 560 280" fill="none">
+  <defs>
+    <linearGradient id="waveBack" x1="20" y1="160" x2="540" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DDF6F8" stop-opacity="0"/>
+      <stop offset="22%" stop-color="#C8EEF4" stop-opacity="0.55"/>
+      <stop offset="58%" stop-color="#A9E4EE" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#D0F1F6" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="waveMid" x1="60" y1="185" x2="520" y2="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E5F9F6" stop-opacity="0"/>
+      <stop offset="28%" stop-color="#B8EFE8" stop-opacity="0.6"/>
+      <stop offset="68%" stop-color="#8FDCE8" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#C9F2F7" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="waveFront" x1="100" y1="205" x2="500" y2="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ECFBF8" stop-opacity="0"/>
+      <stop offset="32%" stop-color="#A6EBE3" stop-opacity="0.65"/>
+      <stop offset="72%" stop-color="#6FCDDD" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#B8EAF2" stop-opacity="0.12"/>
+    </linearGradient>
+    <radialGradient id="targetFace" cx="46%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#EAF8FB"/>
+      <stop offset="100%" stop-color="#B4E4EF"/>
+    </radialGradient>
+    <radialGradient id="bullseye" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#2FA3B4"/>
+      <stop offset="100%" stop-color="#0D6572"/>
+    </radialGradient>
+    <linearGradient id="arrowShaft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#56466F"/>
+      <stop offset="100%" stop-color="#2B2445"/>
+    </linearGradient>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="9"/>
+      <feOffset dx="2" dy="12" result="offset"/>
+      <feFlood flood-color="#7BB8C4" flood-opacity="0.32"/>
+      <feComposite in2="offset" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="arrowShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.2"/>
+      <feOffset dx="1" dy="2"/>
+      <feFlood flood-color="#1A1430" flood-opacity="0.22"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="198" cy="68" r="8" fill="#A8E4EC" fill-opacity="0.42"/>
+  <circle cx="168" cy="138" r="4.5" fill="#8DD5C8" fill-opacity="0.38"/>
+  <circle cx="305" cy="42" r="5.5" fill="#B5EAF2" fill-opacity="0.48"/>
+  <circle cx="470" cy="168" r="6.5" fill="#9FE0EA" fill-opacity="0.32"/>
+  <circle cx="138" cy="98" r="3.2" fill="#C5EEF2" fill-opacity="0.55"/>
+  <circle cx="400" cy="208" r="4" fill="#AEEBE3" fill-opacity="0.36"/>
+  <circle cx="508" cy="78" r="3.8" fill="#B8E8F0" fill-opacity="0.42"/>
+  <circle cx="250" cy="175" r="3" fill="#9FE0EA" fill-opacity="0.3"/>
+
+  <path
+    d="M20 168 C110 138, 175 205, 265 150 C340 108, 405 172, 478 128 C518 102, 545 118, 560 108 L560 215 C500 232, 420 242, 338 226 C248 208, 165 248, 88 228 C52 218, 24 196, 0 190 Z"
+    fill="url(#waveBack)"
+  />
+  <path
+    d="M45 186 C130 150, 195 212, 285 162 C358 124, 418 182, 490 142 C526 122, 548 138, 560 132 L560 232 C488 248, 398 252, 318 234 C238 216, 155 258, 80 238 C46 226, 20 208, 0 202 Z"
+    fill="url(#waveMid)"
+  />
+  <path
+    d="M85 202 C160 166, 218 222, 302 176 C370 142, 428 192, 492 162 C528 144, 548 156, 560 154 L560 248 C482 260, 392 262, 308 244 C228 228, 150 266, 76 246 C42 234, 18 218, 0 212 Z"
+    fill="url(#waveFront)"
+  />
+
+  <g transform="translate(368 88) rotate(-16) skewX(-8)" filter="url(#softShadow)">
+    <ellipse cx="2" cy="14" rx="82" ry="74" fill="#9FD8E4" fill-opacity="0.28"/>
+    <ellipse cx="0" cy="0" rx="76" ry="70" fill="url(#targetFace)" stroke="#C8EDF4" stroke-width="2.5"/>
+    <ellipse cx="0" cy="0" rx="60" ry="55" fill="none" stroke="#78C5D4" stroke-width="11" stroke-opacity="0.5"/>
+    <ellipse cx="0" cy="0" rx="42" ry="38" fill="none" stroke="#A6DCE8" stroke-width="10" stroke-opacity="0.72"/>
+    <ellipse cx="0" cy="0" rx="25" ry="23" fill="#D9F4F9" stroke="#86CEDC" stroke-width="3.5"/>
+    <ellipse cx="0" cy="0" rx="13" ry="12" fill="url(#bullseye)"/>
+    <ellipse cx="-2.5" cy="-3.5" rx="4.5" ry="3.8" fill="#FFFFFF" fill-opacity="0.5"/>
+  </g>
+
+  <g transform="translate(408 48) rotate(36)" filter="url(#arrowShadow)">
+    <rect x="-3.2" y="-10" width="6.4" height="86" rx="2.8" fill="url(#arrowShaft)"/>
+    <path d="M0 84 L-8.5 64 L8.5 64 Z" fill="#2B2445"/>
+    <path d="M-3.2 -8 L-15.5 -22 L-3.2 10 Z" fill="#3F345C"/>
+    <path d="M3.2 -8 L15.5 -22 L3.2 10 Z" fill="#3F345C"/>
+    <path d="M-3.2 4 L-13 -8 L-3.2 18 Z" fill="#54486F"/>
+    <path d="M3.2 4 L13 -8 L3.2 18 Z" fill="#54486F"/>
+    <rect x="-1.3" y="2" width="1.7" height="55" rx="0.85" fill="#FFFFFF" fill-opacity="0.2"/>
+  </g>
+</svg>

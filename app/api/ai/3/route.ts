@@ -53,6 +53,7 @@ export async function POST(request: Request) {
               uncertainty: true,
               adopted: true,
               supersededByStatementId: true,
+              segmentLabel: true,
             },
           },
         },
@@ -107,6 +108,29 @@ export async function POST(request: Request) {
       optionId: option.id,
       title: option.title,
       summary: option.summary,
+      addressedSegmentProfile: (() => {
+        const segmentLabel =
+          option.statements
+            .map((link) => link.statement)
+            .find((statement) => statement.category === "OPT_TARGET_GROUP")
+            ?.segmentLabel ?? null;
+        if (!segmentLabel) return null;
+        return {
+          segmentLabel,
+          aspects: adoptedAnalysis
+            .filter(
+              (statement) =>
+                statement.category === "TARGET_SEGMENT" &&
+                statement.segmentLabel === segmentLabel
+            )
+            .map((statement) => ({
+              segmentAspect: statement.segmentAspect,
+              content: statement.content,
+              evidenceStatus: statement.evidenceStatus,
+              uncertainty: statement.uncertainty,
+            })),
+        };
+      })(),
       dimensions: option.statements
         .map((link) => link.statement)
         .filter((statement) => isActiveAdopted(statement))

@@ -281,9 +281,9 @@ export function AddCompetitorForm({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+        className="inline-flex w-full items-center gap-1.5 px-4 py-3 text-left text-xs font-medium text-accent transition-colors duration-200 group-hover/add-actor:underline"
       >
-        <Plus className="h-3.5 w-3.5" aria-hidden />
+        <Plus className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/add-actor:scale-110" aria-hidden />
         Akteur hinzufügen
       </button>
     );
