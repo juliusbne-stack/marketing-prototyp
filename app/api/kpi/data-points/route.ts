@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { kpiDataPointInputSchema } from "@/lib/schemas/kpiSimulation";
 import { aggregateMetric } from "@/lib/metrics/aggregateMetric";
@@ -95,13 +96,15 @@ export async function POST(request: Request) {
     );
   }
 
-  await prisma.kpiDataPoint.create({
-    data: {
-      metricId: metric.id,
-      ...canonicalPoint,
-      assessment: aggregation.assessment,
-    },
-  });
+  const createData: Prisma.KpiDataPointUncheckedCreateInput = {
+    metricId: metric.id,
+    periodLabel: canonicalPoint.periodLabel,
+    value: canonicalPoint.value,
+    numerator: canonicalPoint.numerator,
+    denominator: canonicalPoint.denominator,
+    assessment: aggregation.assessment,
+  };
+  await prisma.kpiDataPoint.create({ data: createData });
 
   const dataPoints = await prisma.kpiDataPoint.findMany({
     where: { metricId: metric.id },
