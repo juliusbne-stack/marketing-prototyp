@@ -8,7 +8,7 @@ import { PHASE2_PROMPT } from "@/lib/prompts/phase2";
 import { phase2ResponseSchema } from "@/lib/schemas/phase2";
 import { buildPhaseInputLlmContext } from "@/lib/phaseInput/context";
 import { isDemoProject } from "@/lib/demo/identity";
-import { serveDemoPhase2 } from "@/lib/demo/fakeAi";
+import { serveDemoPhase2 } from "@/lib/demo/fakeAi/phase2";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -89,8 +89,22 @@ export async function POST(request: Request) {
   }
 
   if (isDemoProject(project)) {
-    const payload = await serveDemoPhase2(project.id);
-    return NextResponse.json(payload, { status: 201 });
+    try {
+      const payload = await serveDemoPhase2(project.id);
+      return NextResponse.json(payload, { status: 201 });
+    } catch (error) {
+      console.error("[demo] Phase 2 fixture serve failed:", error);
+      return NextResponse.json(
+        {
+          error:
+            "Die Demo-Optionen konnten nicht geladen werden. Bitte Seite neu laden und erneut versuchen.",
+          ...(process.env.NODE_ENV === "development" && error instanceof Error
+            ? { details: error.message }
+            : {}),
+        },
+        { status: 500 }
+      );
+    }
   }
 
   const phaseInputContext = await buildPhaseInputLlmContext(project.id, 2);

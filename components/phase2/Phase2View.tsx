@@ -84,9 +84,17 @@ export function Phase2View({
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
+        const detail =
+          typeof body?.details === "string" ? `\n\nTechnisch: ${body.details}` : "";
         throw new Error(
-          body?.error ??
-            "Die KI-Antwort konnte nicht verarbeitet werden. Erneut versuchen — dein Analysebild bleibt erhalten."
+          (body?.error ??
+            "Die KI-Antwort konnte nicht verarbeitet werden. Erneut versuchen — dein Analysebild bleibt erhalten.") +
+            detail
+        );
+      }
+      if (!body?.options || !Array.isArray(body.options)) {
+        throw new Error(
+          "Die Antwort enthielt keine Optionen. Erneut versuchen — dein Analysebild bleibt erhalten."
         );
       }
       setOptions(body.options);
