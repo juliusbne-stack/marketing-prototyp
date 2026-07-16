@@ -8,6 +8,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import {
+  DEMO_BACKUP_PROJECT_NAME,
   DEMO_PROJECT_NAME,
   DEMO_PROJECT_SLUG,
 } from "../lib/demo/constants";
@@ -41,9 +42,14 @@ async function main() {
 
   const projects = await prisma.project.findMany({
     where: {
-      OR: [
-        { name: DEMO_PROJECT_NAME },
-        { name: { contains: DEMO_PROJECT_SLUG, mode: "insensitive" } },
+      AND: [
+        {
+          OR: [
+            { name: DEMO_PROJECT_NAME },
+            { name: { contains: DEMO_PROJECT_SLUG, mode: "insensitive" } },
+          ],
+        },
+        { name: { not: DEMO_BACKUP_PROJECT_NAME } },
       ],
     },
   });

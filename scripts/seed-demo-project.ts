@@ -5,6 +5,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import {
+  DEMO_BACKUP_PROJECT_NAME,
   DEMO_BASE_TIME,
   DEMO_PHASE4_SCREENSHOT_CURRENT_PHASE,
   DEMO_PROJECT_NAME,
@@ -23,19 +24,32 @@ function ts(minutesAfterBase = 0): Date {
   return new Date(DEMO_BASE_TIME.getTime() + minutesAfterBase * 60_000);
 }
 
+/** Live demo only — never the backup copy. */
 async function findDemoProjects() {
   return prisma.project.findMany({
     where: {
-      OR: [
-        { name: DEMO_PROJECT_NAME },
-        { name: { contains: DEMO_PROJECT_SLUG, mode: "insensitive" } },
+      AND: [
+        {
+          OR: [
+            { name: DEMO_PROJECT_NAME },
+            { name: { contains: DEMO_PROJECT_SLUG, mode: "insensitive" } },
+          ],
+        },
+        { name: { not: DEMO_BACKUP_PROJECT_NAME } },
       ],
     },
     select: { id: true, name: true },
   });
 }
 
-async function deleteDemoProjects(projectIds: string[]) {
+async function findBackupProjects() {
+  return prisma.project.findMany({
+    where: { name: DEMO_BACKUP_PROJECT_NAME },
+    select: { id: true, name: true },
+  });
+}
+
+async function deleteProjects(projectIds: string[]) {
   if (projectIds.length === 0) return;
   await prisma.project.deleteMany({
     where: { id: { in: projectIds } },
@@ -69,6 +83,9 @@ function statementData(
 }
 
 function resolveSeedVariant(): DemoSeedVariant {
+  if (process.argv.includes("--backup")) {
+    return "backup";
+  }
   if (process.argv.includes("--start") || process.argv.includes("--demo-start")) {
     return "start";
   }
@@ -81,14 +98,26 @@ function resolveSeedVariant(): DemoSeedVariant {
   return "full";
 }
 
+/** Content depth for seeding: backup uses the same payload as full. */
+function contentVariant(
+  variant: DemoSeedVariant
+): Exclude<DemoSeedVariant, "backup"> {
+  return variant === "backup" ? "full" : variant;
+}
+
 async function seedDemoProject(
   variant: DemoSeedVariant = "full"
 ): Promise<{ projectId: string; replaced: boolean; variant: DemoSeedVariant }> {
-  const existing = await findDemoProjects();
+  const isBackup = variant === "backup";
+  const depth = contentVariant(variant);
+  const existing = isBackup
+    ? await findBackupProjects()
+    : await findDemoProjects();
   const replaced = existing.length > 0;
-  await deleteDemoProjects(existing.map((p) => p.id));
+  await deleteProjects(existing.map((p) => p.id));
 
   const { project: proj, adaptation } = DEMO_FIXTURE;
+  const projectName = isBackup ? DEMO_BACKUP_PROJECT_NAME : proj.name;
   const statementEntries = Object.values(DEMO_FIXTURE.statements);
   const optionEntries = Object.values(DEMO_FIXTURE.options);
   const evaluationEntries = Object.values(DEMO_FIXTURE.evaluations);
@@ -102,11 +131,11 @@ async function seedDemoProject(
     async (tx) => {
     const project = await tx.project.create({
       data: {
-        name: proj.name,
+        name: projectName,
         currentPhase:
-          variant === "start"
+          depth === "start"
             ? 1
-            : variant === "phase4"
+            : depth === "phase4"
               ? DEMO_PHASE4_SCREENSHOT_CURRENT_PHASE
               : proj.currentPhase,
         businessIdea: proj.businessIdea,
@@ -124,7 +153,7 @@ async function seedDemoProject(
         profileOnboardingComplete: proj.profileOnboardingComplete,
         profileOnboardingStep: proj.profileOnboardingStep,
         // Start: noch keine Analyse — PESTEL-Relevanz kommt erst mit der Fake-KI.
-        pestelRelevance: variant === "start" ? undefined : proj.pestelRelevance,
+        pestelRelevance: depth === "start" ? undefined : proj.pestelRelevance,
         createdAt: ts(0),
         updatedAt: ts(0),
       },
@@ -155,7 +184,7 @@ async function seedDemoProject(
     });
 
     // Live-Demo: nur Profil + Phase-Inputs. Artefakte entstehen über Fake-KI.
-    if (variant === "start") {
+    if (depth === "start") {
       return project.id;
     }
 
@@ -347,7 +376,7 @@ async function seedDemoProject(
       });
     }
 
-    if (variant === "full") {
+    if (depth === "full") {
       let feedbackMinute = 700;
       for (const fixture of feedbackEntries) {
         await tx.marketFeedback.create({
@@ -409,13 +438,18 @@ async function seedDemoProject(
 async function main() {
   const variant = resolveSeedVariant();
   const { projectId, replaced } = await seedDemoProject(variant);
+  const label =
+    variant === "backup" ? "Nouriva demo backup project" : "Nouriva demo project";
   console.log(
-    replaced
-      ? `Replaced Nouriva demo project: ${projectId}`
-      : `Created Nouriva demo project: ${projectId}`
+    replaced ? `Replaced ${label}: ${projectId}` : `Created ${label}: ${projectId}`
   );
   console.log(`DEMO_SEED_VARIANT=${variant}`);
   console.log(`DEMO_PROJECT_ID=${projectId}`);
+  if (variant === "backup") {
+    console.log(
+      `Open: /project/${projectId}/phase/5 — Backup (vollständiger Durchlauf); unberührt von demo:reset`
+    );
+  }
   if (variant === "start") {
     console.log(
       `Open: /project/${projectId}/phase/1 — Startpunkt; Phasen noch offen, KI liefert Demo-Fixtures`

@@ -12,3 +12,4 @@ export {
   demoFeedbackContentForStepTitle,
   DemoAiConflictError,
 } from "./tasks";
+export { serveDemoKpiSimulation } from "./kpiSimulate";

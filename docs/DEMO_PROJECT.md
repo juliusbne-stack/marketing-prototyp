@@ -31,6 +31,10 @@ npm run demo:seed:phase4
 # Einstieg Phase 5 (Cockpit mit KPIs, noch keine Marktrückmeldungen)
 npm run demo:seed:phase5
 npm run demo:validate:phase5
+
+# Backup-Kopie des vollständigen Endzustands (eigener Projektname, überlebt demo:reset)
+npm run demo:seed:backup
+npm run demo:reset:backup
 ```
 
 ## Live-Demo (`demo:seed:start` / `demo:reset:start`)
@@ -54,12 +58,13 @@ npm run demo:validate:phase5
 | `POST /api/ai/4` | 3 ValidationSteps + Metriken (nicht übernommen) |
 | `POST /api/ai/tasks` | 6 Aufgaben je Step |
 | `POST /api/ai/5` | Feedback-Auswertung, LEARNING, ADAPT-Vorschlag |
+| `POST /api/kpi/simulate` | Deterministische Kennzahlen je Szenario (Stützend/Gemischt/Widersprechend) |
 | Task-Elaboration | vorbereitete Ausarbeitung für die passende Aufgabe |
 
 **Tipps für Phase 5 / Cockpit**
 
 - Marktrückmeldung: kurzer Text (unter 80 Zeichen) reicht — das Demo ersetzt ihn durch den Fixture-Text des jeweiligen Schritts.
-- KPIs: Werte aus dem Masterdokument / `demo-fixture-data.ts` eintragen (z. B. Interview-Wellen 4/6, 4/6, 6/6).
+- KPIs: „Kennzahlen simulieren“ nutzt die Fake-KI (ohne OpenAI). Alternativ Werte aus dem Masterdokument / `demo-fixture-data.ts` manuell eintragen (z. B. Interview-Wellen 4/6, 4/6, 6/6).
 
 ## Enthaltene Phasen (Fixture-Inhalt)
 
@@ -86,7 +91,8 @@ npm run demo:validate:phase5
 
 ## Reset-Verhalten
 
-- Alle `demo:seed*` / `demo:reset*` Befehle löschen **ausschließlich** Projekte mit dem Namen `Nouriva Meals – Vegane High-Protein-Fertigmahlzeiten` bzw. Slug `nouriva-meals`.
+- `demo:seed` / `demo:reset` (inkl. `:start`, `:phase4`, `:phase5`) löschen **ausschließlich** das Live-Demo mit Namen `Nouriva Meals – Vegane High-Protein-Fertigmahlzeiten` bzw. Slug `nouriva-meals`.
+- `demo:seed:backup` / `demo:reset:backup` ersetzen nur das Backup `Nouriva Meals – Backup (Vollständiger Durchlauf)` (gleicher Fixture-Inhalt wie `full`). Das Live-Demo bleibt unberührt — und umgekehrt.
 - Normale Nutzerprojekte werden **niemals** gelöscht.
 - Der Seed läuft in einer Prisma-Transaktion; bei Fehlern bleibt kein halb befülltes Demo-Projekt zurück.
 

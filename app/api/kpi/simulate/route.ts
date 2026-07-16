@@ -11,6 +11,8 @@ import {
   kpiScenarioSchema,
   kpiSimulationResponseSchema,
 } from "@/lib/schemas/kpiSimulation";
+import { isDemoProject } from "@/lib/demo/identity";
+import { serveDemoKpiSimulation } from "@/lib/demo/fakeAi/kpiSimulate";
 
 const requestSchema = z.object({
   stepId: z.string().min(1),
@@ -120,11 +122,19 @@ export async function POST(request: Request) {
 
   let result;
   try {
-    result = await callLLM(
-      KPI_SIMULATION_PROMPT,
-      context,
-      kpiSimulationResponseSchema
-    );
+    if (isDemoProject(project)) {
+      result = await serveDemoKpiSimulation(
+        step.metrics,
+        parsed.data.scenario,
+        context.existingPeriodLabelsByMetric
+      );
+    } else {
+      result = await callLLM(
+        KPI_SIMULATION_PROMPT,
+        context,
+        kpiSimulationResponseSchema
+      );
+    }
   } catch (error) {
     if (error instanceof LlmValidationError) {
       return NextResponse.json(

@@ -108,6 +108,37 @@ function adjustScalarSeries(
   return adjusted;
 }
 
+function adjustLatestRatioSeries(
+  points: KpiDataPointInput[],
+  config: MetricEvaluationConfig,
+  scenario: KpiScenario
+): KpiDataPointInput[] {
+  if (points.length === 0) return points;
+  const adjusted = points.map((point) => ({ ...point }));
+  const lastIndex = adjusted.length - 1;
+  const currentLast = adjusted[lastIndex]!;
+  const denominator = Math.max(
+    config.requiredDenominator ?? currentLast.denominator ?? 1,
+    1
+  );
+  const target = scenarioTarget(config, scenario, denominator);
+  if (target === null) return adjusted;
+  adjusted[lastIndex] = {
+    periodLabel: currentLast.periodLabel,
+    numerator: Math.min(denominator, Math.max(0, Math.round(target))),
+    denominator,
+    assessment: "NEUTRAL",
+  };
+  return adjusted;
+}
+
+function expectsRatioAdjust(metric: MetricAggregationInput): boolean {
+  return (
+    metric.aggregationStrategy === "RATE_FROM_SUMS" ||
+    metric.valueType === "COUNT_OF_TOTAL"
+  );
+}
+
 /** Align generated values with structured rules. Free-text criteria are never parsed. */
 export function adjustSimulationForScenario(
   metric: MetricAggregationInput,
@@ -116,7 +147,10 @@ export function adjustSimulationForScenario(
 ): KpiDataPointInput[] {
   const parsed = metricEvaluationConfigSchema.safeParse(metric.evaluationConfig);
   if (!parsed.success) return points;
+  if (!expectsRatioAdjust(metric)) {
+    return adjustScalarSeries(metric, points, parsed.data, scenario);
+  }
   return metric.aggregationStrategy === "RATE_FROM_SUMS"
     ? adjustRatioSeries(points, parsed.data, scenario)
-    : adjustScalarSeries(metric, points, parsed.data, scenario);
+    : adjustLatestRatioSeries(points, parsed.data, scenario);
 }

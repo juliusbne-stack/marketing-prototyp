@@ -49,17 +49,18 @@ Kontext, unverändert übernehmen):
       "metricId": "string",
       "points": [
         {
-          "periodLabel": "string (z. B. Woche 1)",
+          "periodLabel": "Woche 1",
           "value": 12.5,
-          "numerator": null,
-          "denominator": null,
-          "assessment": "SUPPORTING | NEUTRAL | CONTRADICTING"
+          "assessment": "NEUTRAL"
         }
       ]
     }
   ]
 }
 
-Für RATE_FROM_SUMS lasse value vollständig weg und setze numerator und
-denominator als Zahlen. Für alle anderen Strategien lasse numerator und
-denominator vollständig weg.}`;
+Für RATE_FROM_SUMS und COUNT_OF_TOTAL: lasse den Key "value" komplett weg und
+setze numerator sowie denominator als Zahlen (Beispielpunkt:
+{"periodLabel":"Welle 1","numerator":4,"denominator":6,"assessment":"NEUTRAL"}).
+Für alle anderen Strategien: lasse die Keys "numerator" und "denominator"
+komplett weg und setze value als Zahl. Gib niemals JSON-null für weggelassene
+Felder aus — fehlende Keys weglassen, nicht null setzen.}`

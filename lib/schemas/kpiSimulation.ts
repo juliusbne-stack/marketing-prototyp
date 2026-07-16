@@ -9,12 +9,26 @@ export const kpiScenarioSchema = z.enum([
 
 export type KpiScenario = z.infer<typeof kpiScenarioSchema>;
 
+/** LLMs often emit JSON null for omitted fields — treat null like undefined. */
+const optionalFiniteNumber = z.preprocess(
+  (value) => (value === null ? undefined : value),
+  z.number().finite().optional()
+);
+const optionalNonNegativeNumber = z.preprocess(
+  (value) => (value === null ? undefined : value),
+  z.number().finite().nonnegative().optional()
+);
+const optionalPositiveNumber = z.preprocess(
+  (value) => (value === null ? undefined : value),
+  z.number().finite().positive().optional()
+);
+
 export const kpiDataPointInputSchema = z
   .object({
     periodLabel: z.string().trim().min(1),
-    value: z.number().finite().optional(),
-    numerator: z.number().finite().nonnegative().optional(),
-    denominator: z.number().finite().positive().optional(),
+    value: optionalFiniteNumber,
+    numerator: optionalNonNegativeNumber,
+    denominator: optionalPositiveNumber,
     assessment: z.enum(["SUPPORTING", "NEUTRAL", "CONTRADICTING"]),
   })
   .superRefine((point, ctx) => {

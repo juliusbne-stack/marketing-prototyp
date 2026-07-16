@@ -5,6 +5,14 @@ export const DEMO_PROJECT_NAME =
 /** Stable slug used to find or reset the demo project (name substring match). */
 export const DEMO_PROJECT_SLUG = "nouriva-meals";
 
+/**
+ * Separate full-run backup. Survives `demo:seed` / `demo:reset` because the
+ * name does not equal DEMO_PROJECT_NAME and does not contain DEMO_PROJECT_SLUG.
+ * Still matched by `isDemoProject()` (contains "nouriva") so Fake-KI works.
+ */
+export const DEMO_BACKUP_PROJECT_NAME =
+  "Nouriva Meals – Backup (Vollständiger Durchlauf)";
+
 /** Fixed base timestamp for deterministic createdAt/updatedAt in demo seeds. */
 export const DEMO_BASE_TIME = new Date("2026-03-15T10:00:00.000Z");
 
@@ -13,8 +21,9 @@ export const DEMO_BASE_TIME = new Date("2026-03-15T10:00:00.000Z");
  * phase4 = Screenshot-Zustand Phase 4;
  * phase5 = Einstieg Phase 5 ohne Rückmeldungen;
  * start = Profil + Phase-Inputs, currentPhase=1, keine Analyseartefakte (Live-Demo mit Fake-KI).
+ * backup = wie full, aber als separates Backup-Projekt (eigener Name).
  */
-export type DemoSeedVariant = "full" | "phase4" | "phase5" | "start";
+export type DemoSeedVariant = "full" | "phase4" | "phase5" | "start" | "backup";
 
 export const DEMO_PHASE4_SCREENSHOT_CURRENT_PHASE = 4;
 
