@@ -64,7 +64,7 @@ npm run demo:reset:backup
 **Tipps für Phase 5 / Cockpit**
 
 - Marktrückmeldung: kurzer Text (unter 80 Zeichen) reicht — das Demo ersetzt ihn durch den Fixture-Text des jeweiligen Schritts.
-- KPIs: „Kennzahlen simulieren“ nutzt die Fake-KI (ohne OpenAI). Alternativ Werte aus dem Masterdokument / `demo-fixture-data.ts` manuell eintragen (z. B. Interview-Wellen 4/6, 4/6, 6/6).
+- KPIs: „Kennzahlen simulieren“ nutzt die Fake-KI (ohne OpenAI).
 
 ## Enthaltene Phasen (Fixture-Inhalt)
 

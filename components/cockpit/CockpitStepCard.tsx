@@ -22,7 +22,6 @@ import {
 } from "@/lib/cockpitPeriod";
 import { StepReadinessChip } from "./StepReadinessChip";
 import { CockpitTaskRow } from "./CockpitTaskRow";
-import { KpiDataPointForm } from "./KpiDataPointForm";
 import { RESULT_CONFIG } from "@/components/phase5/types";
 import type { KpiScenario } from "@/lib/schemas/kpiSimulation";
 import { LAUFMODUS_LABELS } from "@/lib/crossImplementation";
@@ -502,26 +501,6 @@ export function CockpitStepCard({
                       </p>
                     )}
                   </div>
-                )}
-                {!readOnly && (
-                  <KpiDataPointForm
-                    metric={metric}
-                    onSaved={(dataPoints) =>
-                      setMetrics((current) =>
-                        current.map((entry) =>
-                          entry.id === metric.id
-                            ? {
-                                ...entry,
-                                dataPoints: reassessDataPoints(
-                                  entry,
-                                  dataPoints
-                                ),
-                              }
-                            : entry
-                        )
-                      )
-                    }
-                  />
                 )}
               </div>
             );

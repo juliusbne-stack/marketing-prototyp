@@ -104,7 +104,7 @@ Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Ak
 - Kopf: priorisierte Option + Evidenzbilanz ihrer Dimensionen („x Fakten · y Annahmen · z offene Fragen").
 - Je übernommenem Schritt eine Karte mit drei Bereichen:
   - **Aufgaben:** Checkbox-Liste (KI-generiert über „Aufgaben mit KI erstellen", 3–7 chronologische Aufgaben mit Praxistipp), Fortschritts-Chip „3/6", Häkchen persistieren sofort.
-  - **Kennzahlen (fiktiv):** je Metric der letzte KpiDataPoint als Wert-Chip, darunter die Historie als kleine Punktreihe. Simulation über Szenario-Chips (Stützend/Gemischt/Widersprechend) + „Kennzahlen simulieren"; neue Punkte werden angehängt.
+  - **Kennzahlen (fiktiv):** je Metric der letzte KpiDataPoint als Wert-Chip, darunter die Historie als kleine Punktreihe. Eingabe nur über Szenario-Chips (Stützend/Gemischt/Widersprechend) + „Kennzahlen simulieren"; neue Punkte werden angehängt.
   - **Fußzeile:** „Kennzahlen als Rückmeldung übernehmen" (nur aktiv mit Datenpunkten) — legt LLM-frei per Template ein MarketFeedback als Entwurf für Phase 5 an; die Auswertung bleibt beim Nutzer.
 - **KPI-Farben (eigene Tokens, NICHT die reservierten Evidenzfarben):** stützend Text `#2F6B33` / BG `#EAF4E5`, widersprechend Text `#9A3B1F` / BG `#FDEEE6`, neutral über `border`/`background`/`text-muted`.
 - Statusanzeigen: Phase 4 zeigt auf ValidationStepCards einen dezenten Chip „Aufgaben 3/6"; Phase 5 bietet am FeedbackForm den Hinweis-Link „Kennzahlen aus dem Cockpit übernehmen", falls Datenpunkte existieren.
