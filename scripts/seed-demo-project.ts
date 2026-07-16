@@ -69,6 +69,9 @@ function statementData(
 }
 
 function resolveSeedVariant(): DemoSeedVariant {
+  if (process.argv.includes("--start") || process.argv.includes("--demo-start")) {
+    return "start";
+  }
   if (process.argv.includes("--phase4-screenshot")) {
     return "phase4";
   }
@@ -101,9 +104,11 @@ async function seedDemoProject(
       data: {
         name: proj.name,
         currentPhase:
-          variant === "phase4"
-            ? DEMO_PHASE4_SCREENSHOT_CURRENT_PHASE
-            : proj.currentPhase,
+          variant === "start"
+            ? 1
+            : variant === "phase4"
+              ? DEMO_PHASE4_SCREENSHOT_CURRENT_PHASE
+              : proj.currentPhase,
         businessIdea: proj.businessIdea,
         productStatus: proj.productStatus,
         assumedTarget: proj.assumedTarget,
@@ -118,7 +123,8 @@ async function seedDemoProject(
         existingInsights: proj.existingInsights,
         profileOnboardingComplete: proj.profileOnboardingComplete,
         profileOnboardingStep: proj.profileOnboardingStep,
-        pestelRelevance: proj.pestelRelevance,
+        // Start: noch keine Analyse — PESTEL-Relevanz kommt erst mit der Fake-KI.
+        pestelRelevance: variant === "start" ? undefined : proj.pestelRelevance,
         createdAt: ts(0),
         updatedAt: ts(0),
       },
@@ -147,6 +153,11 @@ async function seedDemoProject(
     await tx.phaseInput.createMany({
       data: [...phase2InputEntries, ...phase4InputEntries],
     });
+
+    // Live-Demo: nur Profil + Phase-Inputs. Artefakte entstehen über Fake-KI.
+    if (variant === "start") {
+      return project.id;
+    }
 
     const statementIds: IdMap = {};
     let minute = 20;
@@ -405,6 +416,11 @@ async function main() {
   );
   console.log(`DEMO_SEED_VARIANT=${variant}`);
   console.log(`DEMO_PROJECT_ID=${projectId}`);
+  if (variant === "start") {
+    console.log(
+      `Open: /project/${projectId}/phase/1 — Startpunkt; Phasen noch offen, KI liefert Demo-Fixtures`
+    );
+  }
   if (variant === "phase4") {
     console.log(
       `Open: /project/${projectId}/phase/4 — Offene Validierung mit 3 kritischen Annahmen`

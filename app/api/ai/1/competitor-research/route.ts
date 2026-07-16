@@ -6,6 +6,7 @@ import { callLLM, LlmValidationError } from "@/lib/openai";
 import { COMPETITOR_ASPECTS } from "@/lib/competitorAspects";
 import { COMPETITOR_RESEARCH_PROMPT } from "@/lib/prompts/competitorResearch";
 import { competitorResearchResponseSchema } from "@/lib/schemas/competitorResearch";
+import { isDemoProject } from "@/lib/demo/identity";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -50,6 +51,16 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Das Projekt wurde nicht gefunden." },
       { status: 404 }
+    );
+  }
+
+  if (isDemoProject(project)) {
+    return NextResponse.json(
+      {
+        error:
+          "Im Demo-Projekt sind Wettbewerber bereits in der vorbereiteten Analyse enthalten. Bitte die Phase-1-Analyse nutzen.",
+      },
+      { status: 400 }
     );
   }
 

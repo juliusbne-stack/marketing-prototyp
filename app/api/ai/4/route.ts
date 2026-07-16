@@ -25,6 +25,11 @@ import { PHASE4_PROMPT } from "@/lib/prompts/phase4";
 import { phase4ResponseSchema } from "@/lib/schemas/phase4";
 import { buildPhaseInputLlmContext, loadPhaseInputsForPage } from "@/lib/phaseInput/context";
 import { enrichStepsWithPhaseInputContext } from "@/lib/phaseInput/enrichPhase4";
+import { isDemoProject } from "@/lib/demo/identity";
+import {
+  DemoAiPreconditionError,
+  serveDemoPhase4,
+} from "@/lib/demo/fakeAi";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -60,6 +65,18 @@ export async function POST(request: Request) {
       { error: "Das Projekt wurde nicht gefunden." },
       { status: 404 }
     );
+  }
+
+  if (isDemoProject(project)) {
+    try {
+      const payload = await serveDemoPhase4(projectId);
+      return NextResponse.json(payload, { status: 201 });
+    } catch (error) {
+      if (error instanceof DemoAiPreconditionError) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      throw error;
+    }
   }
 
   const option = await prisma.strategyOption.findFirst({

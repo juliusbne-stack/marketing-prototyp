@@ -19,6 +19,12 @@ import { buildStartupProfile } from "@/lib/implementationContext";
 import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { taskSelect } from "@/lib/tasks";
 import { activeValidationStepWhere } from "@/lib/validationStep";
+import { isDemoProject } from "@/lib/demo/identity";
+import {
+  DemoAiConflictError,
+  DemoAiPreconditionError,
+  serveDemoTasks,
+} from "@/lib/demo/fakeAi";
 
 const requestSchema = z.object({
   stepId: z.string().min(1),
@@ -125,6 +131,21 @@ export async function POST(request: Request) {
       { error: "Der Umsetzungsschritt wurde nicht gefunden." },
       { status: 404 }
     );
+  }
+
+  if (isDemoProject(step.project)) {
+    try {
+      const payload = await serveDemoTasks(step.id);
+      return NextResponse.json(payload, { status: 201 });
+    } catch (error) {
+      if (error instanceof DemoAiPreconditionError) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      if (error instanceof DemoAiConflictError) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
   }
 
   if (!step.adopted) {

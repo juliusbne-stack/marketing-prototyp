@@ -2,30 +2,66 @@
 
 ## Zweck
 
-Das Demo-Projekt **Nouriva Meals – Vegane High-Protein-Fertigmahlzeiten** ist eine vollständig vorbefüllte, deterministische Demonstrationsinstanz für Screenshots, qualitative Artefakt-Demonstration (Kapitel 5.4) und reproduzierbare Tests.
+Das Demo-Projekt **Nouriva Meals – Vegane High-Protein-Fertigmahlzeiten** ist eine deterministische Demonstrationsinstanz für:
 
-Alle Inhalte stammen aus `Nouriva_Meals_Demo_Masterdokument.docx` und werden **ohne OpenAI- oder andere KI-API-Aufrufe** direkt über Prisma in dieselben Modelle geschrieben, die der reguläre Nutzerfluss verwendet.
+1. **Live-Durchlauf** (`start`): Profil ist gesetzt, Phasen sind noch offen. Beim Klick auf „KI erzeugen“ erscheinen die vorbereiteten Fixture-Ergebnisse (ohne OpenAI) — mit Streaming/Delay, damit es wie eine echte Analyse wirkt.
+2. **Screenshots / Kapitel 5.4** (`full`, `phase4`, `phase5`): fertig befüllte End- bzw. Zwischenzustände.
+
+Andere Projekte nutzen weiterhin die echte KI. Die Fake-KI greift **nur**, wenn der Projektname dem Nouriva-Demo entspricht.
 
 ## Ausführungsbefehle
 
 ```bash
-# Demo-Projekt anlegen oder ersetzen (nur das Nouriva-Demo-Projekt)
+# Empfohlen für Vorführungen: Startpunkt (Phase 1, keine Artefakte)
+npm run demo:seed:start
+# identisch — jederzeit zurücksetzen
+npm run demo:reset:start
+
+# Startpunkt prüfen
+npm run demo:validate:start
+
+# Vollständiger Endzustand (Phasen 1–5 inkl. Cockpit)
 npm run demo:seed
-
-# Identisch zu demo:seed — löscht ausschließlich das Demo-Projekt und legt es neu an
 npm run demo:reset
-
-# Relationen, Statuswerte und Mindestmengen prüfen (Exit-Code 1 bei Fehlern)
 npm run demo:validate
 
-# Screenshot-Zustand Phase 4: kritische Annahmen, ohne Phase-5-Rückmeldungen
+# Screenshot-Zustand Phase 4
 npm run demo:seed:phase4
 
-# Einstieg Phase 5: Cockpit mit KPIs, Marktrückmeldungen noch nicht erfasst
+# Einstieg Phase 5 (Cockpit mit KPIs, noch keine Marktrückmeldungen)
 npm run demo:seed:phase5
+npm run demo:validate:phase5
 ```
 
-## Enthaltene Phasen
+## Live-Demo (`demo:seed:start` / `demo:reset:start`)
+
+| Aspekt | Verhalten |
+|--------|-----------|
+| `currentPhase` | `1` |
+| Profil & Onboarding | vollständig (wie Masterdokument) |
+| Phase-2-/Phase-4-Inputs | vorbefüllt (für reibungslosen Durchlauf) |
+| Statements, Optionen, Steps, Feedback, Adaptation | **leer** |
+| KI-Aufrufe | liefern Fixture-Inhalte als Entwürfe (`adopted: false` / `DRAFT`) |
+| Nutzerfluss | Übernehmen, priorisieren, Phasen wechseln — wie bei normalen Projekten |
+
+### Fake-KI (nur Nouriva)
+
+| Endpoint | Fixture-Quelle |
+|----------|----------------|
+| `POST /api/ai/1` | Phase-1-Statements + PESTEL-Relevanz (NDJSON-Stream) |
+| `POST /api/ai/2` | 3 Strategieoptionen (DRAFT) |
+| `POST /api/ai/3` | Bewertungsmatrix + Empfehlung Option 1 |
+| `POST /api/ai/4` | 3 ValidationSteps + Metriken (nicht übernommen) |
+| `POST /api/ai/tasks` | 6 Aufgaben je Step |
+| `POST /api/ai/5` | Feedback-Auswertung, LEARNING, ADAPT-Vorschlag |
+| Task-Elaboration | vorbereitete Ausarbeitung für die passende Aufgabe |
+
+**Tipps für Phase 5 / Cockpit**
+
+- Marktrückmeldung: kurzer Text (unter 80 Zeichen) reicht — das Demo ersetzt ihn durch den Fixture-Text des jeweiligen Schritts.
+- KPIs: Werte aus dem Masterdokument / `demo-fixture-data.ts` eintragen (z. B. Interview-Wellen 4/6, 4/6, 6/6).
+
+## Enthaltene Phasen (Fixture-Inhalt)
 
 | Phase | Inhalt |
 |-------|--------|
@@ -42,24 +78,25 @@ npm run demo:seed:phase5
 - **Kaufmotive & Nichtkaufgründe:** Als `COUNT_OF_TOTAL` mit `evaluationConfig` bewertbar; Nichtkaufgründe beziehen sich auf **Nicht-Wiederkäufer** (Nenner 22), nicht auf alle Pilotkunden.
 - **Revenue-Annahme:** Formulierung entspricht dem getesteten WTP-Teilaspekt; Boxarchitektur (6er/14er, Abo) bleibt Folgehypothese in Uncertainty/Adaption.
 
-**Endzustand (vollständig):** `currentPhase = 5`, `profileOnboardingComplete = true`, `profileOnboardingStep = 12`
+**Endzustand (`demo:seed`):** `currentPhase = 5`, `profileOnboardingComplete = true`, `profileOnboardingStep = 12`
 
-**Screenshot Phase 4 (`demo:seed:phase4`):** `currentPhase = 4`, drei übernommene ValidationSteps in „Offene Validierung“, keine Marktrückmeldungen. Beim Öffnen des Projekts von der Startseite landet man direkt in Phase 4.
+**Screenshot Phase 4 (`demo:seed:phase4`):** `currentPhase = 4`, drei übernommene ValidationSteps in „Offene Validierung“, keine Marktrückmeldungen.
 
-**Einstieg Phase 5 (`demo:seed:phase5`):** `currentPhase = 5`, drei übernommene Umsetzungsschritte mit Cockpit-KPIs, aber **keine** Marktrückmeldungen, keine KI-Auswertung, keine LEARNING-Statements und keine Adaptationsentscheidung. Entspricht dem Zustand direkt nach dem Wechsel vom Umsetzungs-Cockpit zu Phase 5.
+**Einstieg Phase 5 (`demo:seed:phase5`):** `currentPhase = 5`, drei übernommene Umsetzungsschritte mit Cockpit-KPIs, aber **keine** Marktrückmeldungen.
 
 ## Reset-Verhalten
 
-- `demo:seed` und `demo:reset` löschen **ausschließlich** Projekte mit dem Namen `Nouriva Meals – Vegane High-Protein-Fertigmahlzeiten` bzw. Slug `nouriva-meals`.
+- Alle `demo:seed*` / `demo:reset*` Befehle löschen **ausschließlich** Projekte mit dem Namen `Nouriva Meals – Vegane High-Protein-Fertigmahlzeiten` bzw. Slug `nouriva-meals`.
 - Normale Nutzerprojekte werden **niemals** gelöscht.
-- Kein globales `deleteMany` ohne Filter.
 - Der Seed läuft in einer Prisma-Transaktion; bei Fehlern bleibt kein halb befülltes Demo-Projekt zurück.
 
 ## Dateien
 
 | Datei | Rolle |
 |-------|-------|
-| `lib/demo/constants.ts` | `DEMO_PROJECT_NAME`, `DEMO_PROJECT_SLUG`, `DEMO_BASE_TIME` |
+| `lib/demo/constants.ts` | Name, Slug, Seed-Varianten |
+| `lib/demo/identity.ts` | `isDemoProject()` |
+| `lib/demo/fakeAi/*` | Fixture-Auslieferung statt OpenAI |
 | `scripts/demo-fixture-data.ts` | Alle deterministischen Fixture-Daten |
 | `scripts/seed-demo-project.ts` | Anlegen/Ersetzen des Demo-Projekts |
 | `scripts/validate-demo-project.ts` | Post-Seed-Validierung |
@@ -68,25 +105,16 @@ npm run demo:seed:phase5
 
 ### Phase 3 — Unbestätigte KI-Empfehlung
 
-Die KI-Priorisierungsempfehlung vor Nutzerbestätigung liegt nur im **Client-State** und ist nicht in der Datenbank gespeichert. Das Demo-Projekt zeigt den stabilen **Endzustand nach Priorisierung**:
-
-- vollständige Bewertungsmatrix
-- priorisierte Option 1 („Performance ohne Meal Prep“)
-- vollständige `prioritizationRationale`
+Die KI-Priorisierungsempfehlung vor Nutzerbestätigung liegt nur im **Client-State**. Nach Bestätigung: priorisierte Option 1 inkl. `prioritizationRationale`.
 
 ### Phase 5 — Unbestätigter KI-Anpassungsvorschlag
 
-Der KI-Anpassungsvorschlag und die clientseitige `evidenceBalance` sind nicht dauerhaft persistiert. Das Demo-Projekt zeigt den stabilen **bestätigten Endzustand**:
-
-- ausgewertete Marktrückmeldungen mit `statusApplied = true`
-- aktualisierte Evidenzstatus der geprüften Annahmen
-- LEARNING-Statements
-- bestätigte `AdaptationDecision` mit `decision = ADAPT` und `userConfirmed = true`
+Der Anpassungsvorschlag wird erst nach Nutzerbestätigung als `AdaptationDecision` gespeichert.
 
 ## Technische Zuordnung (Auszug)
 
-| Masterdokument-Abschnitt | Prisma-Modell | Erwartete Anzahl |
-|---------------------------|---------------|------------------|
+| Masterdokument-Abschnitt | Prisma-Modell | Erwartete Anzahl (full) |
+|---------------------------|---------------|-------------------------|
 | Projektprofil | `Project` | 1 |
 | PESTEL + Analyse | `Statement` (phase 1) | 129 |
 | Phase-2-Inputs | `PhaseInput` (phase 2) | 3 |
@@ -101,7 +129,3 @@ Der KI-Anpassungsvorschlag und die clientseitige `evidenceBalance` sind nicht da
 | Marktrückmeldungen | `MarketFeedback` | 3 |
 | Lernerkenntnisse | `Statement` (LEARNING) | 4 |
 | Anpassung | `AdaptationDecision` | 1 |
-
-## Supersession
-
-Im Masterdokument ist keine Statement-Supersession vorgesehen. Alle relevanten Statements haben `adopted = true` und `supersededByStatementId = null`.

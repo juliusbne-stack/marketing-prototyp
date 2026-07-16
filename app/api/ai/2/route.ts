@@ -7,6 +7,8 @@ import { callLLM, LlmValidationError } from "@/lib/openai";
 import { PHASE2_PROMPT } from "@/lib/prompts/phase2";
 import { phase2ResponseSchema } from "@/lib/schemas/phase2";
 import { buildPhaseInputLlmContext } from "@/lib/phaseInput/context";
+import { isDemoProject } from "@/lib/demo/identity";
+import { serveDemoPhase2 } from "@/lib/demo/fakeAi";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -84,6 +86,11 @@ export async function POST(request: Request) {
       },
       { status: 400 }
     );
+  }
+
+  if (isDemoProject(project)) {
+    const payload = await serveDemoPhase2(project.id);
+    return NextResponse.json(payload, { status: 201 });
   }
 
   const phaseInputContext = await buildPhaseInputLlmContext(project.id, 2);

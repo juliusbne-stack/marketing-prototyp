@@ -6,6 +6,11 @@ import { callLLM, LlmValidationError } from "@/lib/openai";
 import { dampenProxyResults, wasProxyDamped } from "@/lib/phase5/guards";
 import { PHASE5_PROMPT } from "@/lib/prompts/phase5";
 import { phase5ResponseSchema } from "@/lib/schemas/phase5";
+import { isDemoProject } from "@/lib/demo/identity";
+import {
+  DemoAiPreconditionError,
+  serveDemoPhase5,
+} from "@/lib/demo/fakeAi";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -60,6 +65,18 @@ export async function POST(request: Request) {
       { error: "Das Projekt wurde nicht gefunden." },
       { status: 404 }
     );
+  }
+
+  if (isDemoProject(project)) {
+    try {
+      const payload = await serveDemoPhase5(project.id);
+      return NextResponse.json(payload, { status: 201 });
+    } catch (error) {
+      if (error instanceof DemoAiPreconditionError) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      throw error;
+    }
   }
 
   const option = await prisma.strategyOption.findFirst({

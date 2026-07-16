@@ -5,6 +5,11 @@ import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { LlmValidationError } from "@/lib/openai";
 import { runPhase1Analysis, Phase1RunConflictError } from "@/lib/phase1/orchestrator";
 import type { Phase1StreamEvent } from "@/lib/phase1/events";
+import { isDemoProject } from "@/lib/demo/identity";
+import {
+  serveDemoPhase1Json,
+  serveDemoPhase1Stream,
+} from "@/lib/demo/fakeAi";
 
 /** Phase 1 can return 100+ statements — allow long runs locally and on Vercel. */
 export const maxDuration = 300;
@@ -67,6 +72,17 @@ export async function POST(request: Request) {
       },
       { status: 400 }
     );
+  }
+
+  if (isDemoProject(project)) {
+    const adoptedCount = await prisma.statement.count({
+      where: { projectId: project.id, phase: 1, ...ACTIVE_ADOPTED_WHERE },
+    });
+    if (adoptedCount > 0) {
+      const payload = await serveDemoPhase1Json(project.id);
+      return NextResponse.json(payload, { status: 201 });
+    }
+    return serveDemoPhase1Stream(project.id);
   }
 
   const adoptedCount = await prisma.statement.count({

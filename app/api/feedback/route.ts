@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { isDemoProject } from "@/lib/demo/identity";
+import { demoFeedbackContentForStepTitle } from "@/lib/demo/fakeAi";
 
 const feedbackSelect = {
   id: true,
@@ -37,7 +39,12 @@ export async function POST(request: Request) {
 
   const step = await prisma.validationStep.findFirst({
     where: { id: parsed.data.stepId, projectId: parsed.data.projectId },
-    select: { id: true, assumptionId: true },
+    select: {
+      id: true,
+      assumptionId: true,
+      title: true,
+      project: { select: { name: true } },
+    },
   });
 
   if (!step) {
@@ -47,12 +54,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // Demo: kurze Eingaben durch die vorbereiteten Marktrückmeldungen ersetzen.
+  let content = parsed.data.content;
+  if (isDemoProject(step.project)) {
+    const fixtureContent = demoFeedbackContentForStepTitle(step.title);
+    if (fixtureContent && content.trim().length < 80) {
+      content = fixtureContent;
+    }
+  }
+
   const feedback = await prisma.marketFeedback.create({
     data: {
       projectId: parsed.data.projectId,
       stepId: step.id,
       statementId: step.assumptionId,
-      content: parsed.data.content,
+      content,
       result: "AMBIGUOUS",
     },
     select: feedbackSelect,

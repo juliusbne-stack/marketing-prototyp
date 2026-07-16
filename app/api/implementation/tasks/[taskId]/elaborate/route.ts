@@ -16,6 +16,11 @@ import {
 import { formatImplementationGoals } from "@/lib/formatImplementationGoals";
 import { ACTIVE_ADOPTED_WHERE } from "@/lib/statementFilters";
 import { taskSelect } from "@/lib/tasks";
+import { isDemoProject } from "@/lib/demo/identity";
+import {
+  DemoAiPreconditionError,
+  serveDemoTaskElaboration,
+} from "@/lib/demo/fakeAi";
 
 const MODEL = "gpt-4o";
 
@@ -109,6 +114,18 @@ export async function POST(
         model: task.elaborationModel,
         cached: true,
       });
+    }
+  }
+
+  if (isDemoProject(task.step.project)) {
+    try {
+      const payload = await serveDemoTaskElaboration(taskId);
+      return NextResponse.json(payload, { status: 201 });
+    } catch (error) {
+      if (error instanceof DemoAiPreconditionError) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      throw error;
     }
   }
 

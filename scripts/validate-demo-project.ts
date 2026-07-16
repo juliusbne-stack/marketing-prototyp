@@ -31,11 +31,13 @@ function ok(condition: boolean, message: string) {
 }
 
 async function main() {
-  const variant = process.argv.includes("--phase4-screenshot")
-    ? "phase4"
-    : process.argv.includes("--phase5-entry")
-      ? "phase5"
-      : "full";
+  const variant = process.argv.includes("--start")
+    ? "start"
+    : process.argv.includes("--phase4-screenshot")
+      ? "phase4"
+      : process.argv.includes("--phase5-entry")
+        ? "phase5"
+        : "full";
 
   const projects = await prisma.project.findMany({
     where: {
@@ -55,10 +57,6 @@ async function main() {
   const project = projects[0]!;
   const projectId = project.id;
 
-  ok(
-    project.currentPhase === (variant === "phase4" ? 4 : 5),
-    `currentPhase should be ${variant === "phase4" ? 4 : 5}, got ${project.currentPhase}`
-  );
   ok(project.profileOnboardingComplete === true, "profileOnboardingComplete should be true");
   ok(project.profileOnboardingStep === 12, `profileOnboardingStep should be 12, got ${project.profileOnboardingStep}`);
 
@@ -78,6 +76,53 @@ async function main() {
   ] as const) {
     ok(Boolean(project[field]), `Profile field ${field} is missing`);
   }
+
+  if (variant === "start") {
+    ok(project.currentPhase === 1, `currentPhase should be 1, got ${project.currentPhase}`);
+    ok(
+      project.pestelRelevance == null ||
+        (Array.isArray(project.pestelRelevance) &&
+          (project.pestelRelevance as unknown[]).length === 0),
+      "start variant should not have pestelRelevance yet"
+    );
+
+    const statementCount = await prisma.statement.count({ where: { projectId } });
+    const optionCount = await prisma.strategyOption.count({ where: { projectId } });
+    const stepCount = await prisma.validationStep.count({ where: { projectId } });
+    const feedbackCount = await prisma.marketFeedback.count({ where: { projectId } });
+    const adaptationCount = await prisma.adaptationDecision.count({
+      where: { projectId },
+    });
+    const phase2Inputs = await prisma.phaseInput.count({
+      where: { projectId, phase: 2 },
+    });
+    const phase4Inputs = await prisma.phaseInput.count({
+      where: { projectId, phase: 4 },
+    });
+
+    ok(statementCount === 0, `start should have 0 statements, got ${statementCount}`);
+    ok(optionCount === 0, `start should have 0 options, got ${optionCount}`);
+    ok(stepCount === 0, `start should have 0 steps, got ${stepCount}`);
+    ok(feedbackCount === 0, `start should have 0 feedbacks, got ${feedbackCount}`);
+    ok(
+      adaptationCount === 0,
+      `start should have 0 adaptations, got ${adaptationCount}`
+    );
+    ok(phase2Inputs === 3, `start should have 3 phase-2 inputs, got ${phase2Inputs}`);
+    ok(phase4Inputs === 6, `start should have 6 phase-4 inputs, got ${phase4Inputs}`);
+
+    report();
+    if (errors.length === 0) {
+      console.log(`DEMO_PROJECT_ID=${projectId}`);
+      console.log("DEMO_SEED_VARIANT=start — OK");
+    }
+    return;
+  }
+
+  ok(
+    project.currentPhase === (variant === "phase4" ? 4 : 5),
+    `currentPhase should be ${variant === "phase4" ? 4 : 5}, got ${project.currentPhase}`
+  );
 
   const phase1Active = await prisma.statement.count({
     where: { projectId, phase: 1, ...ACTIVE_ADOPTED_WHERE },

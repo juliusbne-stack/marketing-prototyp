@@ -5,6 +5,11 @@ import { ACTIVE_ADOPTED_WHERE, isActiveAdopted } from "@/lib/statementFilters";
 import { callLLM, LlmValidationError } from "@/lib/openai";
 import { PHASE3_PROMPT } from "@/lib/prompts/phase3";
 import { phase3ResponseSchema } from "@/lib/schemas/phase3";
+import { isDemoProject } from "@/lib/demo/identity";
+import {
+  DemoAiPreconditionError,
+  serveDemoPhase3,
+} from "@/lib/demo/fakeAi";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
@@ -69,6 +74,18 @@ export async function POST(request: Request) {
       },
       { status: 400 }
     );
+  }
+
+  if (isDemoProject(project)) {
+    try {
+      const payload = await serveDemoPhase3(project.id);
+      return NextResponse.json(payload, { status: 201 });
+    } catch (error) {
+      if (error instanceof DemoAiPreconditionError) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      throw error;
+    }
   }
 
   // Context rule: profile + ONLY adopted statements (phase 1 analysis + option dimensions).
