@@ -2,7 +2,7 @@ import { HeaderIllustration } from "./HeaderIllustration";
 
 export function DashboardHeader() {
   return (
-    <header className="relative h-[148px] overflow-hidden rounded-3xl bg-linear-to-br from-brand-dark via-brand-dark to-accent-deep/45 sm:h-[160px] md:h-[172px] lg:h-[180px]">
+    <header className="dashboard-hero relative h-[148px] overflow-hidden rounded-3xl bg-linear-to-br from-brand-dark via-brand-dark to-accent-deep/45 sm:h-[160px] md:h-[172px] lg:h-[180px]">
       {/* Decorative illustration — bottom-aligned so waves meet the project card */}
       <div
         aria-hidden="true"

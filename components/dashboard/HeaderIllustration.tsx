@@ -1,6 +1,6 @@
 /**
  * Decorative target + wave motif for the dashboard hero.
- * Purely visual — pointer-events none, aria-hidden on the host.
+ * Hover is driven by `.dashboard-hero` on the header (see globals.css).
  *
  * Layout within viewBox:
  * - target in the upper area (profile lives in the global banner)
@@ -162,61 +162,63 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
         transform="translate(388 64) rotate(-15) skewX(-7)"
         filter="url(#hw-shadow)"
       >
-        <ellipse
-          cx="3"
-          cy="12"
-          rx="70"
-          ry="64"
-          fill="#14B394"
-          fillOpacity="0.26"
-        />
-        <ellipse
-          cx="0"
-          cy="0"
-          rx="64"
-          ry="59"
-          fill="url(#hw-face)"
-          stroke="#BFE3D8"
-          strokeWidth="2"
-        />
-        <ellipse
-          cx="0"
-          cy="0"
-          rx="51"
-          ry="46"
-          fill="none"
-          stroke="#0F8C74"
-          strokeWidth="9.5"
-          strokeOpacity="0.45"
-        />
-        <ellipse
-          cx="0"
-          cy="0"
-          rx="35"
-          ry="32"
-          fill="none"
-          stroke="#7FE0C9"
-          strokeWidth="8.5"
-          strokeOpacity="0.72"
-        />
-        <ellipse
-          cx="0"
-          cy="0"
-          rx="21"
-          ry="19"
-          fill="#E3F2EC"
-          stroke="#14B394"
-          strokeWidth="3"
-        />
-        <ellipse cx="0" cy="0" rx="11" ry="10" fill="url(#hw-bull)" />
-        <ellipse
-          cx="-2"
-          cy="-2.8"
-          rx="3.8"
-          ry="3.2"
-          fill="#FFFFFF"
-          fillOpacity="0.5"
-        />
+        <g className="header-target-motion">
+          <ellipse
+            cx="3"
+            cy="12"
+            rx="70"
+            ry="64"
+            fill="#14B394"
+            fillOpacity="0.26"
+          />
+          <ellipse
+            cx="0"
+            cy="0"
+            rx="64"
+            ry="59"
+            fill="url(#hw-face)"
+            stroke="#BFE3D8"
+            strokeWidth="2"
+          />
+          <ellipse
+            cx="0"
+            cy="0"
+            rx="51"
+            ry="46"
+            fill="none"
+            stroke="#0F8C74"
+            strokeWidth="9.5"
+            strokeOpacity="0.45"
+          />
+          <ellipse
+            cx="0"
+            cy="0"
+            rx="35"
+            ry="32"
+            fill="none"
+            stroke="#7FE0C9"
+            strokeWidth="8.5"
+            strokeOpacity="0.72"
+          />
+          <ellipse
+            cx="0"
+            cy="0"
+            rx="21"
+            ry="19"
+            fill="#E3F2EC"
+            stroke="#14B394"
+            strokeWidth="3"
+          />
+          <ellipse cx="0" cy="0" rx="11" ry="10" fill="url(#hw-bull)" />
+          <ellipse
+            cx="-2"
+            cy="-2.8"
+            rx="3.8"
+            ry="3.2"
+            fill="#FFFFFF"
+            fillOpacity="0.5"
+          />
+        </g>
       </g>
 
       {/*
@@ -225,28 +227,30 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
         and rotate(38) places them top-right of the center.
       */}
       <g transform="translate(388 64) rotate(38)" filter="url(#hw-arrow-shadow)">
-        <rect
-          x="-2.8"
-          y="-70"
-          width="5.6"
-          height="58"
-          rx="2.4"
-          fill="url(#hw-arrow)"
-        />
-        <path d="M0 0 L-7.2 -18 L7.2 -18 Z" fill="#14231E" />
-        <path d="M-2.8 -68 L-13 -80 L-2.8 -55 Z" fill="#0B6E5B" />
-        <path d="M2.8 -68 L13 -80 L2.8 -55 Z" fill="#0B6E5B" />
-        <path d="M-2.8 -60 L-11 -70 L-2.8 -49 Z" fill="#14B394" />
-        <path d="M2.8 -60 L11 -70 L2.8 -49 Z" fill="#14B394" />
-        <rect
-          x="-1.1"
-          y="-62"
-          width="1.5"
-          height="46"
-          rx="0.75"
-          fill="#FFFFFF"
-          fillOpacity="0.2"
-        />
+        <g className="header-arrow-motion">
+          <rect
+            x="-2.8"
+            y="-70"
+            width="5.6"
+            height="58"
+            rx="2.4"
+            fill="url(#hw-arrow)"
+          />
+          <path d="M0 0 L-7.2 -18 L7.2 -18 Z" fill="#14231E" />
+          <path d="M-2.8 -68 L-13 -80 L-2.8 -55 Z" fill="#0B6E5B" />
+          <path d="M2.8 -68 L13 -80 L2.8 -55 Z" fill="#0B6E5B" />
+          <path d="M-2.8 -60 L-11 -70 L-2.8 -49 Z" fill="#14B394" />
+          <path d="M2.8 -60 L11 -70 L2.8 -49 Z" fill="#14B394" />
+          <rect
+            x="-1.1"
+            y="-62"
+            width="1.5"
+            height="46"
+            rx="0.75"
+            fill="#FFFFFF"
+            fillOpacity="0.2"
+          />
+        </g>
       </g>
     </svg>
   );

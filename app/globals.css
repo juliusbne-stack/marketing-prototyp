@@ -135,6 +135,32 @@ body {
   animation: loading-dot-bounce 1.2s ease-in-out infinite;
 }
 
+/* Dashboard hero: arrow + target hold while hovered, ease back on leave */
+.header-arrow-motion,
+.header-target-motion {
+  transform-box: fill-box;
+  will-change: transform;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-arrow-motion {
+  transform-origin: 50% 100%;
+  transform: translateY(0);
+}
+
+.header-target-motion {
+  transform-origin: center;
+  transform: scale(1);
+}
+
+.dashboard-hero:hover .header-arrow-motion {
+  transform: translateY(5px);
+}
+
+.dashboard-hero:hover .header-target-motion {
+  transform: scale(1.045);
+}
+
 /* Primary CTA: diagonal green gradient + lift/glow hover */
 .btn-primary {
   display: inline-flex;
@@ -196,6 +222,16 @@ body {
 
   .btn-primary:hover:not(:disabled):not([aria-busy="true"]),
   .btn-primary:active:not(:disabled):not([aria-busy="true"]) {
+    transform: none;
+  }
+
+  .header-arrow-motion,
+  .header-target-motion {
+    transition: none;
+  }
+
+  .dashboard-hero:hover .header-arrow-motion,
+  .dashboard-hero:hover .header-target-motion {
     transform: none;
   }
 }
