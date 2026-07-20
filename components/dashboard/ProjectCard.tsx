@@ -43,6 +43,7 @@ export function ProjectCard({
 
   const accent = getProjectAccent(id);
   const phaseStyle = getPhaseBadgeStyle(currentPhase);
+  const initial = (name.trim().charAt(0) || "?").toUpperCase();
   const created =
     typeof createdAt === "string" ? new Date(createdAt) : createdAt;
   const href = `/project/${id}/phase/${currentPhase}`;
@@ -104,9 +105,18 @@ export function ProjectCard({
       >
         <div className="mb-3 flex items-start justify-between gap-2">
           <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accent.iconBg}`}
+            className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accent.iconBg}`}
+            aria-hidden
           >
-            <Folder className={`h-5 w-5 ${accent.iconColor}`} aria-hidden />
+            <Folder
+              className={`h-7 w-7 ${accent.iconColor}`}
+              strokeWidth={1.5}
+            />
+            <span
+              className={`absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 font-heading text-[11px] font-bold leading-none ${accent.iconColor}`}
+            >
+              {initial}
+            </span>
           </div>
           {/* spacer for absolute star button */}
           <span className="h-8 w-8 shrink-0" aria-hidden />
