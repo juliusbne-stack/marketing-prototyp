@@ -50,7 +50,7 @@ export function FictionalProfile({
           className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white"
           aria-hidden
         >
-          CB
+          AT
         </span>
         <span
           className={
@@ -59,7 +59,7 @@ export function FictionalProfile({
               : "hidden text-sm font-medium text-text lg:inline"
           }
         >
-          Christoph B.
+          André T.
         </span>
         <ChevronDown className="h-3.5 w-3.5 text-text-muted" aria-hidden />
       </button>

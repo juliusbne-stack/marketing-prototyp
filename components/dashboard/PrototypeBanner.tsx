@@ -20,7 +20,7 @@ export function PrototypeBanner() {
     <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-2.5 sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
         <p className="shrink-0 font-heading text-sm font-semibold text-text sm:text-[15px]">
-          {greeting}, Christoph{" "}
+          {greeting}, André{" "}
           <span aria-hidden="true">👋</span>
         </p>
         <p
