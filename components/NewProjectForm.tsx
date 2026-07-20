@@ -68,7 +68,7 @@ export function NewProjectForm() {
           loadingPhase="save"
           disabled={!name.trim()}
           loadingLabel="Wird angelegt …"
-          className="h-10 shrink-0 rounded-xl px-4 shadow-none"
+          className="h-10 shrink-0"
         >
           <Plus className="h-4 w-4" aria-hidden />
           Projekt anlegen

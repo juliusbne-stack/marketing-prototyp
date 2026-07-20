@@ -23,7 +23,7 @@ export function CockpitNavigateButton({
       {enabled ? (
         <Link
           href={`/project/${projectId}/cockpit`}
-          className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
+          className="btn-primary"
         >
           <Gauge className="h-4 w-4" aria-hidden />
           Zum Umsetzungs-Cockpit
@@ -32,7 +32,7 @@ export function CockpitNavigateButton({
       ) : (
         <span
           aria-disabled="true"
-          className="inline-flex cursor-not-allowed items-center gap-2 rounded-md bg-accent/50 px-4 py-2 text-sm font-medium text-white"
+          className="btn-primary pointer-events-none opacity-50"
         >
           <Gauge className="h-4 w-4" aria-hidden />
           Zum Umsetzungs-Cockpit

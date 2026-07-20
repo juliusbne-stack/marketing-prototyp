@@ -154,7 +154,7 @@ export function ValidationStepCard({
                 type="button"
                 onClick={handleSaveEdit}
                 disabled={isBusy || !draftTitle.trim() || !draftDescription.trim()}
-                className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+                className="btn-primary btn-primary--sm"
               >
                 Speichern
               </button>
@@ -346,7 +346,7 @@ export function ValidationStepCard({
               type="button"
               onClick={() => void handleAdopt()}
               disabled={isBusy}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+              className="btn-primary btn-primary--sm"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               In Projektstand übernehmen

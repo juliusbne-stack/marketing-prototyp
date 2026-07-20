@@ -288,7 +288,7 @@ export function Phase2View({
               </p>
               <Link
                 href={`/project/${projectId}/phase/4`}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
+                className="mt-3 btn-primary"
               >
                 Zu Phase 4: Validierende Umsetzung
                 <ArrowRight className="h-4 w-4" aria-hidden />

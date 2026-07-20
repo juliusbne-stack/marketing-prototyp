@@ -133,11 +133,11 @@ function SystemDialogOverlay({
             ref={confirmRef}
             type="button"
             onClick={onConfirm}
-            className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors ${
+            className={
               isDanger
-                ? "bg-danger-text hover:bg-danger-text/90"
-                : "bg-accent hover:bg-accent-bright active:bg-brand-dark"
-            }`}
+                ? "rounded-[12px] bg-danger-text px-[22px] py-[11px] text-sm font-semibold text-white transition-colors hover:bg-danger-text/90"
+                : "btn-primary"
+            }
           >
             {confirmLabel}
           </button>

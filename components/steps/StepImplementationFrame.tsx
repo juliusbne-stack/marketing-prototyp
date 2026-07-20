@@ -67,7 +67,7 @@ export function StepImplementationFrame({
             type="button"
             onClick={handleSave}
             disabled={isBusy}
-            className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+            className="btn-primary btn-primary--sm"
           >
             Speichern
           </button>

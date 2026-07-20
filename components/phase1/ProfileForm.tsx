@@ -1,24 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  BadgeEuro,
-  CircleHelp,
-  Clock,
-  HandHeart,
-  Lightbulb,
-  MapPin,
-  MessageCircle,
-  PackageCheck,
-  Rocket,
-  Sparkles,
-  Target,
-  UserRound,
-  UsersRound,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { Rocket, Sparkles } from "lucide-react";
 import { ProgressButton } from "@/components/ui/ProgressButton";
 import {
   BUDGET_OPTIONS,
@@ -34,23 +18,14 @@ import { inputClasses, textareaClasses } from "@/lib/profileFieldStyles";
 
 export type { ProfileData } from "@/lib/profileQuestions";
 
-const fieldIcons: Record<ProfileFieldKey, LucideIcon> = {
-  businessIdea: Lightbulb,
-  productStatus: PackageCheck,
-  region: MapPin,
-  assumedTarget: UsersRound,
-  assumedProblem: CircleHelp,
-  valuePropDraft: HandHeart,
-  revenueIdea: BadgeEuro,
-  teamSize: UserRound,
-  budgetMonthly: Wallet,
-  timePerWeek: Clock,
-  skills: Target,
-  existingInsights: MessageCircle,
-};
+const profileInputClasses = `${inputClasses} min-h-10 rounded-[10px] border-[#dfe7ef] bg-white px-3 text-[13px] shadow-[0_1px_2px_rgba(15,31,51,0.03)] focus:border-accent focus:bg-white`;
+const profileTextareaClasses = `${textareaClasses} rounded-[10px] border-[#dfe7ef] bg-white px-3 text-[13px] leading-relaxed shadow-[0_1px_2px_rgba(15,31,51,0.03)] focus:border-accent focus:bg-white`;
 
-const profileInputClasses = `${inputClasses} min-h-10 rounded-[10px] border-[#dfe7ef] bg-white/95 px-3 text-[13px] shadow-[0_1px_2px_rgba(15,31,51,0.03)] focus:border-accent focus:bg-white`;
-const profileTextareaClasses = `${textareaClasses} rounded-[10px] border-[#dfe7ef] bg-white/95 px-3 text-[13px] leading-relaxed shadow-[0_1px_2px_rgba(15,31,51,0.03)] focus:border-accent focus:bg-white`;
+/** Kurzlabels für die kompakte Profilkarte (Screenshot-Layout). */
+const FORM_LABELS: Partial<Record<ProfileFieldKey, string>> = {
+  budgetMonthly: "Budget / Monat",
+  timePerWeek: "Zeit / Woche fürs Marketing",
+};
 
 function ProfileFieldLabel({
   field,
@@ -65,20 +40,55 @@ function ProfileFieldLabel({
   className?: string;
   children: React.ReactNode;
 }) {
-  const Icon = fieldIcons[field];
-
   return (
     <label className={`flex min-w-0 flex-col gap-1.5 ${className ?? ""}`}>
-      <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-[#132033]">
-        <Icon className="h-3.5 w-3.5 shrink-0 text-[#95a8ba]" aria-hidden />
-        <span className="truncate">
-          {label}
-          {required ? " *" : ""}
-        </span>
+      <span className="text-[11px] font-semibold text-[#132033]">
+        {FORM_LABELS[field] ?? label}
+        {required ? (
+          <span className="text-danger-text" aria-hidden>
+            {" "}
+            *
+          </span>
+        ) : null}
       </span>
       {children}
     </label>
   );
+}
+
+function SectionCard({
+  number,
+  title,
+  badge,
+  className,
+  children,
+}: {
+  number: number;
+  title: string;
+  badge?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      className={`relative rounded-[10px] border border-[#e8eef4] bg-[#fbfcfd] p-4 sm:p-5 ${className ?? ""}`}
+    >
+      <div className="mb-4 flex items-center gap-2.5 pr-24">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-soft text-[11px] font-bold text-accent-deep">
+          {number}
+        </span>
+        <h4 className="font-heading text-sm font-semibold text-[#132033]">
+          {title}
+        </h4>
+      </div>
+      {badge}
+      {children}
+    </section>
+  );
+}
+
+function isFieldFilled(value: string): boolean {
+  return Boolean(value.trim());
 }
 
 /**
@@ -107,6 +117,17 @@ export function ProfileForm({
   const labelByField = Object.fromEntries(
     PROFILE_QUESTIONS.map((question) => [question.field, question.label])
   ) as Record<(typeof PROFILE_QUESTIONS)[number]["field"], string>;
+
+  const { filledCount, totalFields, fillPercent } = useMemo(() => {
+    const values = Object.values(form);
+    const filled = values.filter(isFieldFilled).length;
+    const total = PROFILE_QUESTIONS.length;
+    return {
+      filledCount: filled,
+      totalFields: total,
+      fillPercent: Math.round((filled / total) * 100),
+    };
+  }, [form]);
 
   function set(field: keyof typeof form) {
     return (
@@ -159,200 +180,260 @@ export function ProfileForm({
       onSubmit={handleSubmit}
       className="rounded-[10px] border border-white/80 bg-white p-5 shadow-[0_18px_45px_rgba(31,36,33,0.08)] sm:p-6"
     >
-      <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent-soft text-accent-deep">
-          <Rocket className="h-4 w-4" aria-hidden />
-        </span>
-        <div className="min-w-0 pt-0.5">
-          <h3 className="font-heading text-base font-semibold text-[#132033]">
-            Start-up-Profil
-          </h3>
-          <p className="mt-1 text-xs leading-relaxed text-[#607086]">
-            Nur die Geschäftsidee ist Pflicht. Je mehr du angibst, desto passgenauer
-            wird der Analyse-Entwurf.
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent-soft text-accent-deep">
+            <Rocket className="h-4 w-4" aria-hidden />
+          </span>
+          <div className="min-w-0 pt-0.5">
+            <h3 className="font-heading text-base font-semibold text-[#132033]">
+              Start-up-Profil
+            </h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#607086]">
+              Nur die Geschäftsidee ist Pflicht. Je mehr du angibst, desto
+              passgenauer wird der Analyse-Entwurf.
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="w-full shrink-0 sm:w-[168px]"
+          aria-label={`Profilfortschritt: ${filledCount} von ${totalFields} Feldern`}
+        >
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-[12px] font-semibold text-[#132033]">
+              {fillPercent}% ausgefüllt
+            </span>
+            <span className="text-[11px] text-[#607086]">
+              {filledCount}/{totalFields} Felder
+            </span>
+          </div>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#e8eef4]">
+            <div
+              className="h-full rounded-full bg-accent transition-[width] duration-300 ease-out"
+              style={{ width: `${fillPercent}%` }}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="mt-7 grid gap-x-6 gap-y-5 sm:grid-cols-2">
-        <ProfileFieldLabel
-          field="businessIdea"
-          label={labelByField.businessIdea}
-          required
-          className="sm:col-span-2"
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <SectionCard
+          number={1}
+          title="Idee & Angebot"
+          className="lg:col-span-2"
+          badge={
+            <span className="absolute right-4 top-4 rounded-md bg-[#fde8e4] px-2 py-0.5 text-[10px] font-semibold text-[#c45b4a] sm:right-5 sm:top-5">
+              Geschäftsidee = Pflicht
+            </span>
+          }
         >
-          <textarea
-            value={form.businessIdea}
-            onChange={set("businessIdea")}
-            rows={4}
-            required
-            placeholder="Was bietest du an, für wen, und was ist daran besonders?"
-            className={`${profileTextareaClasses} min-h-[92px]`}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
+          <div className="grid gap-4 md:grid-cols-2">
+            <ProfileFieldLabel
+              field="businessIdea"
+              label={labelByField.businessIdea}
+              required
+            >
+              <textarea
+                value={form.businessIdea}
+                onChange={set("businessIdea")}
+                rows={8}
+                required
+                placeholder="Was bietest du an, für wen, und was ist daran besonders?"
+                className={`${profileTextareaClasses} min-h-[168px]`}
+                disabled={busy}
+              />
+            </ProfileFieldLabel>
 
-        <ProfileFieldLabel
-          field="productStatus"
-          label={labelByField.productStatus}
-        >
-          <select
-            value={form.productStatus}
-            onChange={set("productStatus")}
-            className={profileInputClasses}
-            disabled={busy}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ProfileFieldLabel
+                field="productStatus"
+                label={labelByField.productStatus}
+              >
+                <select
+                  value={form.productStatus}
+                  onChange={set("productStatus")}
+                  className={profileInputClasses}
+                  disabled={busy}
+                >
+                  <option value="">Bitte wählen</option>
+                  {PRODUCT_STATUS_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </ProfileFieldLabel>
+
+              <ProfileFieldLabel field="teamSize" label={labelByField.teamSize}>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.teamSize}
+                  onChange={set("teamSize")}
+                  placeholder="z. B. 2"
+                  className={profileInputClasses}
+                  disabled={busy}
+                />
+              </ProfileFieldLabel>
+
+              <ProfileFieldLabel
+                field="region"
+                label={labelByField.region}
+                className="sm:col-span-2"
+              >
+                <input
+                  type="text"
+                  value={form.region}
+                  onChange={set("region")}
+                  placeholder="z. B. DACH, Köln, EU"
+                  className={profileInputClasses}
+                  disabled={busy}
+                />
+              </ProfileFieldLabel>
+
+              <ProfileFieldLabel
+                field="budgetMonthly"
+                label={labelByField.budgetMonthly}
+                className="sm:col-span-2"
+              >
+                <select
+                  value={form.budgetMonthly}
+                  onChange={set("budgetMonthly")}
+                  className={profileInputClasses}
+                  disabled={busy}
+                >
+                  <option value="">Bitte wählen</option>
+                  {BUDGET_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </ProfileFieldLabel>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard number={2} title="Markt & Zielgruppe">
+          <div className="flex flex-col gap-4">
+            <ProfileFieldLabel
+              field="assumedTarget"
+              label={labelByField.assumedTarget}
+            >
+              <textarea
+                value={form.assumedTarget}
+                onChange={set("assumedTarget")}
+                rows={4}
+                placeholder="Leer lassen, wenn noch unklar — die KI schlägt Zielgruppenhypothesen vor"
+                className={`${profileTextareaClasses} min-h-[96px]`}
+                disabled={busy}
+              />
+            </ProfileFieldLabel>
+
+            <ProfileFieldLabel
+              field="assumedProblem"
+              label={labelByField.assumedProblem}
+            >
+              <textarea
+                value={form.assumedProblem}
+                onChange={set("assumedProblem")}
+                rows={4}
+                placeholder="Welches Problem löst dein Angebot?"
+                className={`${profileTextareaClasses} min-h-[96px]`}
+                disabled={busy}
+              />
+            </ProfileFieldLabel>
+          </div>
+        </SectionCard>
+
+        <SectionCard number={3} title="Nutzen & Erlös">
+          <div className="flex flex-col gap-4">
+            <ProfileFieldLabel
+              field="valuePropDraft"
+              label={labelByField.valuePropDraft}
+            >
+              <textarea
+                value={form.valuePropDraft}
+                onChange={set("valuePropDraft")}
+                rows={4}
+                placeholder="Warum sollten Kunden zu dir kommen?"
+                className={`${profileTextareaClasses} min-h-[96px]`}
+                disabled={busy}
+              />
+            </ProfileFieldLabel>
+
+            <ProfileFieldLabel
+              field="revenueIdea"
+              label={labelByField.revenueIdea}
+            >
+              <textarea
+                value={form.revenueIdea}
+                onChange={set("revenueIdea")}
+                rows={4}
+                placeholder="Wie soll Geld verdient werden? (z. B. Abo, Kursgebühr)"
+                className={`${profileTextareaClasses} min-h-[96px]`}
+                disabled={busy}
+              />
+            </ProfileFieldLabel>
+          </div>
+        </SectionCard>
+
+        <SectionCard number={4} title="Ressourcen & Kanäle">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+              <ProfileFieldLabel
+                field="timePerWeek"
+                label={labelByField.timePerWeek}
+                className="sm:min-w-0 sm:flex-1"
+              >
+                <select
+                  value={form.timePerWeek}
+                  onChange={set("timePerWeek")}
+                  className={profileInputClasses}
+                  disabled={busy}
+                >
+                  <option value="">Bitte wählen</option>
+                  {TIME_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </ProfileFieldLabel>
+              <p className="pb-2 text-[11px] leading-snug text-[#8a9aab] sm:max-w-[140px]">
+                Team &amp; Budget oben in Sektion 1.
+              </p>
+            </div>
+
+            <ProfileFieldLabel field="skills" label={labelByField.skills}>
+              <textarea
+                value={form.skills}
+                onChange={set("skills")}
+                rows={4}
+                placeholder="Was kannst du gut, welche Kanäle oder Netzwerke hast du schon?"
+                className={`${profileTextareaClasses} min-h-[96px]`}
+                disabled={busy}
+              />
+            </ProfileFieldLabel>
+          </div>
+        </SectionCard>
+
+        <SectionCard number={5} title="Erkenntnisse">
+          <ProfileFieldLabel
+            field="existingInsights"
+            label={labelByField.existingInsights}
           >
-            <option value="">Bitte wählen</option>
-            {PRODUCT_STATUS_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel field="region" label={labelByField.region}>
-          <input
-            type="text"
-            value={form.region}
-            onChange={set("region")}
-            placeholder="z. B. Köln und Umgebung, DACH, online"
-            className={profileInputClasses}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel
-          field="assumedTarget"
-          label={labelByField.assumedTarget}
-        >
-          <textarea
-            value={form.assumedTarget}
-            onChange={set("assumedTarget")}
-            rows={3}
-            placeholder="Leer lassen, wenn noch unklar — die KI schlägt Zielgruppenhypothesen vor"
-            className={`${profileTextareaClasses} min-h-[78px]`}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel
-          field="assumedProblem"
-          label={labelByField.assumedProblem}
-        >
-          <textarea
-            value={form.assumedProblem}
-            onChange={set("assumedProblem")}
-            rows={3}
-            placeholder="Welches Problem löst dein Angebot?"
-            className={`${profileTextareaClasses} min-h-[78px]`}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel
-          field="valuePropDraft"
-          label={labelByField.valuePropDraft}
-        >
-          <textarea
-            value={form.valuePropDraft}
-            onChange={set("valuePropDraft")}
-            rows={3}
-            placeholder="Warum sollten Kunden zu dir kommen?"
-            className={`${profileTextareaClasses} min-h-[78px]`}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel
-          field="revenueIdea"
-          label={labelByField.revenueIdea}
-        >
-          <textarea
-            value={form.revenueIdea}
-            onChange={set("revenueIdea")}
-            rows={3}
-            placeholder="Wie soll Geld verdient werden? (z. B. Abo, Kursgebühr)"
-            className={`${profileTextareaClasses} min-h-[78px]`}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel field="teamSize" label={labelByField.teamSize}>
-          <input
-            type="number"
-            min={1}
-            value={form.teamSize}
-            onChange={set("teamSize")}
-            placeholder="z. B. 2"
-            className={profileInputClasses}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel
-          field="budgetMonthly"
-          label={labelByField.budgetMonthly}
-        >
-          <select
-            value={form.budgetMonthly}
-            onChange={set("budgetMonthly")}
-            className={profileInputClasses}
-            disabled={busy}
-          >
-            <option value="">Bitte wählen</option>
-            {BUDGET_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel
-          field="timePerWeek"
-          label={labelByField.timePerWeek}
-        >
-          <select
-            value={form.timePerWeek}
-            onChange={set("timePerWeek")}
-            className={profileInputClasses}
-            disabled={busy}
-          >
-            <option value="">Bitte wählen</option>
-            {TIME_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel field="skills" label={labelByField.skills}>
-          <textarea
-            value={form.skills}
-            onChange={set("skills")}
-            rows={3}
-            placeholder="Was kannst du gut, welche Kanäle oder Netzwerke hast du schon?"
-            className={`${profileTextareaClasses} min-h-[78px]`}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
-
-        <ProfileFieldLabel
-          field="existingInsights"
-          label={labelByField.existingInsights}
-          className="sm:col-span-2"
-        >
-          <textarea
-            value={form.existingInsights}
-            onChange={set("existingInsights")}
-            rows={3}
-            placeholder="Rückmeldungen, Gespräche, erste Verkäufe — falls vorhanden"
-            className={`${profileTextareaClasses} min-h-[62px]`}
-            disabled={busy}
-          />
-        </ProfileFieldLabel>
+            <textarea
+              value={form.existingInsights}
+              onChange={set("existingInsights")}
+              rows={8}
+              placeholder="Rückmeldungen, Gespräche, erste Verkäufe — falls vorhanden"
+              className={`${profileTextareaClasses} min-h-[168px]`}
+              disabled={busy}
+            />
+          </ProfileFieldLabel>
+        </SectionCard>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[#edf1f5] pt-4">

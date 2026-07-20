@@ -138,7 +138,7 @@ export function PrioritizationPanel({
           type="button"
           onClick={handleConfirmOverride}
           disabled={isBusy || !overrideOptionId || !overrideRationale.trim()}
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+          className="btn-primary btn-primary--sm"
         >
           Priorisierung bestätigen
         </button>
@@ -230,7 +230,7 @@ export function PrioritizationPanel({
                 type="button"
                 onClick={handleAdoptProposal}
                 disabled={isBusy}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+                className="btn-primary"
               >
                 <Check className="h-4 w-4" aria-hidden />
                 Vorschlag übernehmen

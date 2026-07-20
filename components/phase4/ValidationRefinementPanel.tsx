@@ -306,7 +306,7 @@ export function ValidationRefinementPanel({
               type="button"
               onClick={handleAdopt}
               disabled={isAdopting}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+              className="btn-primary btn-primary--sm"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               Überarbeitung übernehmen
@@ -354,7 +354,7 @@ export function ValidationRefinementPanel({
               type="button"
               onClick={handleRefine}
               disabled={!userInstruction.trim()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+              className="btn-primary btn-primary--sm"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
               Überarbeiten

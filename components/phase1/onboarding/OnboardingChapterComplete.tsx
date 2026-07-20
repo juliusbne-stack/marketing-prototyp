@@ -36,7 +36,7 @@ export function OnboardingChapterComplete({
       <button
         type="button"
         onClick={onContinue}
-        className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
+        className="btn-primary"
       >
         Weiter
       </button>

@@ -173,7 +173,7 @@ export function PhaseInputForm({
                     type="button"
                     onClick={() => void handleSaveAnswer(question.key)}
                     disabled={isSaving}
-                    className="ml-auto rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                    className="ml-auto btn-primary btn-primary--sm"
                   >
                     {isSaving ? "Speichern …" : "Speichern"}
                   </button>

@@ -418,7 +418,7 @@ export function AddCompetitorForm({
             <button
               type="button"
               onClick={adoptAllResearchSuggestions}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
+              className="mt-3 btn-primary btn-primary--sm"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               Alle übernehmen
@@ -496,7 +496,7 @@ export function AddCompetitorForm({
             !aspectFields.ENTITY_TYPE.content.trim() ||
             !aspectFields.OFFERING.content.trim()
           }
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
+          className="btn-primary btn-primary--sm"
         >
           {isSubmitting ? "Wird angelegt …" : "Hinzufügen"}
         </button>

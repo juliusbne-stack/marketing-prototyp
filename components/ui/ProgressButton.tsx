@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BTN_PRIMARY } from "@/lib/buttonStyles";
 
 export type ProgressLoadingPhase = "save" | "generate";
 
@@ -97,15 +98,14 @@ export function ProgressButton({
       {...props}
       disabled={isDisabled}
       aria-busy={loading}
-      className={`inline-flex items-center gap-1.5 overflow-hidden rounded-md border border-accent bg-accent px-4 py-2 text-sm font-medium text-white shadow-none transition-[background-color,border-color,opacity] appearance-none hover:border-accent-bright hover:bg-accent-bright active:border-brand-dark active:bg-brand-dark disabled:cursor-not-allowed ${
-        loading ? "" : "disabled:opacity-50"
+      className={`${BTN_PRIMARY} ${
+        showProgress || loading ? "btn-primary--loading" : ""
       } ${className}`}
       style={
         showProgress
           ? {
               backgroundImage: `linear-gradient(90deg, var(--accent-bright) ${progress}%, var(--accent) ${progress}%)`,
               backgroundColor: "var(--accent)",
-              borderColor: "var(--accent)",
             }
           : undefined
       }
