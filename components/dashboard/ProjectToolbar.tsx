@@ -50,7 +50,7 @@ export function ProjectToolbar({
           <button
             type="button"
             onClick={() => showNotice()}
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-sm text-text-muted transition-colors hover:border-accent/40 hover:text-text"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-sm text-text-muted transition-colors hover:border-accent-border hover:text-text"
           >
             <Filter className="h-3.5 w-3.5" aria-hidden />
             Filter
@@ -59,7 +59,7 @@ export function ProjectToolbar({
           <button
             type="button"
             onClick={() => showNotice()}
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-sm text-text-muted transition-colors hover:border-accent/40 hover:text-text"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-sm text-text-muted transition-colors hover:border-accent-border hover:text-text"
           >
             Sortieren: Neueste
           </button>
@@ -73,7 +73,7 @@ export function ProjectToolbar({
               type="button"
               aria-pressed="true"
               aria-label="Rasteransicht"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-accent-soft text-accent"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-accent-soft text-accent-deep"
             >
               <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
             </button>

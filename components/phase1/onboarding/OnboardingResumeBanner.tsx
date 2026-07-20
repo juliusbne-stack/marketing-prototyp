@@ -16,7 +16,7 @@ export function OnboardingResumeBanner({
       <button
         type="button"
         onClick={onDismiss}
-        className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90"
+        className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
       >
         Weiter
       </button>

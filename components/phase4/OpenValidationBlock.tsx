@@ -137,7 +137,7 @@ export function OpenValidationBlock({
             aria-expanded={assistantOpen}
             className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
               assistantOpen
-                ? "border-accent bg-accent-soft text-accent"
+                ? "border-accent bg-accent-soft text-accent-deep"
                 : "border-border bg-surface text-text-muted hover:border-accent hover:text-accent"
             }`}
           >

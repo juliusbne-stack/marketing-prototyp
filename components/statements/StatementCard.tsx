@@ -127,7 +127,7 @@ export function StatementCard({
   );
   const metaCollapsible = metaLength > META_COLLAPSE_THRESHOLD;
 
-  // Draft (adopted=false): dashed border + very light petrol background.
+  // Draft (adopted=false): dashed border + very light mint background.
   // Adopted (adopted=true): solid border, white background. (F10/NF5)
   const cardClasses = statement.adopted
     ? "border border-border bg-surface"
@@ -175,7 +175,7 @@ export function StatementCard({
           type="button"
           onClick={handleSaveContent}
           disabled={isBusy || !draftContent.trim()}
-          className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
         >
           Speichern
         </button>
@@ -281,7 +281,7 @@ export function StatementCard({
             type="button"
             onClick={() => patch({ adopted: true })}
             disabled={isBusy}
-            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
           >
             <Check className="h-3.5 w-3.5" aria-hidden />
             In Projektstand übernehmen

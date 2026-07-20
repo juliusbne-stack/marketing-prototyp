@@ -160,7 +160,7 @@ export function ProfileForm({
       className="rounded-[10px] border border-white/80 bg-white p-5 shadow-[0_18px_45px_rgba(31,36,33,0.08)] sm:p-6"
     >
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#d9f8ed] text-[#128763]">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent-soft text-accent-deep">
           <Rocket className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 pt-0.5">

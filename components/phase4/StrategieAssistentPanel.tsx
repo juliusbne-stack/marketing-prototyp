@@ -438,7 +438,7 @@ export function StrategieAssistentPanel({
           type="button"
           onClick={() => setRefinementOpen(true)}
           disabled={istLaden}
-          className="inline-flex items-center gap-1 rounded-full border border-accent/50 bg-accent-soft/40 px-2.5 py-0.5 text-xs font-medium text-accent transition-colors hover:bg-accent-soft disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded-full border border-accent/50 bg-accent-soft/40 px-2.5 py-0.5 text-xs font-medium text-accent-deep transition-colors hover:bg-accent-soft disabled:opacity-50"
         >
           <Sparkles className="h-3 w-3" aria-hidden />
           {REFINEMENT_CHIP}

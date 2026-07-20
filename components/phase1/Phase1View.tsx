@@ -37,7 +37,7 @@ const SUMMARY_ITEMS = [
   {
     key: "facts",
     label: "Fakten",
-    tone: "border-[#28b7a4] bg-[#e7f8f5] text-[#08796c]",
+    tone: "border-accent-border bg-accent-soft text-accent-deep",
   },
   {
     key: "assumptions",
@@ -505,7 +505,7 @@ export function Phase1View({
                     type="button"
                     onClick={handleAdoptAll}
                     disabled={isAdoptingAll}
-                    className="inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-accent px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-accent/90 disabled:opacity-50"
+                    className="inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-accent px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
                   >
                     <CheckCheck className="h-3.5 w-3.5" aria-hidden />
                     <span className="leading-tight">

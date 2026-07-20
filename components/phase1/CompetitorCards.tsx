@@ -54,7 +54,7 @@ type EntityTypeKind =
 
 /** Soft type chips — readable at a glance, never louder than the card header. */
 const ENTITY_TYPE_BADGE: Record<EntityTypeKind, string> = {
-  direct: "bg-[#e7f8f5] text-[#08796c] ring-[#28b7a4]/35",
+  direct: "bg-accent-soft text-accent-deep ring-accent-border/80",
   indirect: "bg-[#eef7ff] text-[#1d67a6] ring-[#5aa7e8]/35",
   substitute: "bg-[#fff5e8] text-[#a55b00] ring-[#f3a536]/35",
   status_quo: "bg-[#f4f1f5] text-[#6b5b72] ring-[#b9a9c0]/40",
@@ -218,7 +218,7 @@ function CompetitorProfileCard({
         >
           <div className="min-w-0">
             <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent-deep">
                 <Building2 className="h-3.5 w-3.5" aria-hidden />
                 Akteur
               </span>
@@ -230,7 +230,7 @@ function CompetitorProfileCard({
                 </span>
               )}
               {hasDraft && (
-                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
+                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent-deep">
                   Entwurf
                 </span>
               )}
@@ -297,7 +297,7 @@ function CompetitorProfileCard({
               type="button"
               onClick={adoptProfile}
               disabled={isAdopting}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               {isAdopting ? "Wird übernommen …" : "Profil übernehmen"}
@@ -399,7 +399,7 @@ function LandscapeCard({
                 Übergreifend
               </span>
               {hasDraft && (
-                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
+                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent-deep">
                   Entwurf
                 </span>
               )}

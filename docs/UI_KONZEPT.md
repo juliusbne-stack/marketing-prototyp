@@ -12,14 +12,19 @@ Gestaltungsleitfaden für den Prototyp. Ziel: ein ruhiges, vertrauenswürdiges A
 | `--border` | `#E4E2DC` | Standard-Rahmen |
 | `--text` | `#1F2421` | Primärtext |
 | `--text-muted` | `#6B7069` | Sekundärtext, Begründungen |
-| `--accent` | `#0E5A63` | Primäraktionen, aktive Phase, Links (tiefes Petrol) |
-| `--accent-soft` | `#E3F0F1` | Hintergrund aktiver Elemente |
+| `--brand-dark` | `#14231E` | Sidebar, Hero-Panel, Buttons aktiv (dunkles Tannengrün) |
+| `--accent` | `#0F8C74` | Primärgrün: Buttons, Links, Fortschrittsbalken, aktive Phase |
+| `--accent-bright` | `#14B394` | Helles Smaragdgrün (Gradient-Endpunkt) |
+| `--accent-deep` | `#0B6E5B` | Dunkles Grün: Text auf hellen Badges, Phasen-Label |
+| `--accent-mint` | `#7FE0C9` | Mintgrün: Akzente auf dunklem Grund, „Mehr erfahren“ |
+| `--accent-soft` | `#E3F2EC` | Helles Mint: Badge-Hintergründe, aktive Elemente |
+| `--accent-border` | `#BFE3D8` | Zartes Mint: Karten-Border bei Hover |
 | **Evidenz: Fakt** | Text `#0F6E56`, BG `#E1F5EE`, Border `#1D9E75` | grün |
 | **Evidenz: Annahme** | Text `#854F0B`, BG `#FAEEDA`, Border `#BA7517` | amber |
 | **Evidenz: Offene Frage** | Text `#3C3489`, BG `#EEEDFE`, Border `#7F77DD` | violett |
 | Gefahr/Widerlegt | Text `#A32D2D`, BG `#FCEBEB` | nur Phase 5 (widerlegte Annahmen) |
 
-Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Akzent kollidiert bewusst mit keiner davon.
+Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Marken-Grünakzent kollidiert bewusst mit keiner davon.
 
 ### Typografie (via `next/font/google`)
 - **Headings:** Space Grotesk (500/600) — Projektname, Phasentitel, Kartentitel
@@ -49,7 +54,7 @@ Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Ak
 └────────────┴─────────────────────────────────────────────────┘
 ```
 
-- **Stepper (Sidebar, 240px):** 5 Einträge mit Nummer, deutschem Titel, Status-Punkt (● aktiv = Petrol, ✓ abgeschlossen = grün-gefüllt, ○ offen = grau). Abgeschlossene Phasen sind klickbar (Rücksprung, F11). Offene Phasen sind gesperrt, bis die Vorphase mindestens einen übernommenen Arbeitsstand hat. Mobil: Stepper als horizontale Leiste oben.
+- **Stepper (Sidebar, 240px):** 5 Einträge mit Nummer, deutschem Titel, Status-Punkt (● aktiv = Primärgrün, ✓ abgeschlossen = grün-gefüllt, ○ offen = grau). Abgeschlossene Phasen sind klickbar (Rücksprung, F11). Offene Phasen sind gesperrt, bis die Vorphase mindestens einen übernommenen Arbeitsstand hat. Mobil: Stepper als horizontale Leiste oben.
 - **Prototyp-Banner:** dünner amber Balken ganz oben, Text: „Prototyp — alle Recherche- und Marktdaten werden zu Demonstrationszwecken von der KI simuliert und sind fiktiv." Nicht schließbar (NF9/Transparenz).
 - Hauptbereich: `max-width: 960px`, zentriert.
 
@@ -70,7 +75,7 @@ Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Ak
 - **EvidenceBadge:** Pille mit Punkt + Label („Fakt" / „Annahme" / „Offene Frage") in den Evidenzfarben. Klick öffnet kleines Dropdown zum Umstufen (F5/NF2 — die manuelle Änderbarkeit ist Kernfeature, kein Nice-to-have).
 - **OriginTag:** dezentes Icon + Label rechts oben: `User`-Icon „Nutzer", `Search`-Icon „Recherche (fiktiv)", `Sparkles`-Icon „KI-Ableitung" (lucide-react).
 - **Begründung/Quelle/Unsicherheit:** eingeklappt auf eine Zeile mit „Mehr"-Toggle, wenn lang.
-- **Entwurfszustand (adopted=false):** gestrichelter Rahmen + sehr heller Petrol-Hintergrund + kleines Label „Entwurf" + Button „Übernehmen" (Häkchen). **Übernommen (adopted=true):** solider Rahmen, weißer Hintergrund. Dieser sichtbare Zustandswechsel IST das Übernahme-Prinzip (F10/NF5) — bitte exakt so umsetzen.
+- **Entwurfszustand (adopted=false):** gestrichelter Rahmen + sehr heller Mint-Hintergrund (`accent-soft`) + kleines Label „Entwurf" + Button „Übernehmen" (Häkchen). **Übernommen (adopted=true):** solider Rahmen, weißer Hintergrund. Dieser sichtbare Zustandswechsel IST das Übernahme-Prinzip (F10/NF5) — bitte exakt so umsetzen.
 - Inline-Bearbeitung des Inhalts über ✎ (Textarea in der Karte, Speichern/Abbrechen).
 
 ## 4. Phasenansichten
@@ -93,7 +98,7 @@ Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Ak
 
 ### Phase 3 — Bewertung & Priorisierung
 - **EvaluationMatrix:** Tabelle, Zeilen = 6 Kriterien (deutsche Labels: Attraktivität, Ressourcenpassung, Tragbares Risiko, Prüfaufwand, Lernwert, Evidenzstärke), Spalten = Optionen. Zelle: Score als 5-Punkte-Leiste + Info-Icon mit Begründung (Popover/Details).
-- Darunter **PrioritizationPanel:** Petrol-umrandete Karte „Priorisierungsvorschlag der KI" mit Begründung UND „Was dagegen sprechen könnte" (eigener Absatz — NF5!). Zwei Aktionen: **„Vorschlag übernehmen"** und **„Andere Option priorisieren"** (Auswahl + Pflichtfeld eigene Begründung). Zurückgestellte Optionen erscheinen darunter ausgegraut mit Label „Zurückgestellt — bleibt verfügbar".
+- Darunter **PrioritizationPanel:** Primärgrün-umrandete Karte „Priorisierungsvorschlag der KI" mit Begründung UND „Was dagegen sprechen könnte" (eigener Absatz — NF5!). Zwei Aktionen: **„Vorschlag übernehmen"** und **„Andere Option priorisieren"** (Auswahl + Pflichtfeld eigene Begründung). Zurückgestellte Optionen erscheinen darunter ausgegraut mit Label „Zurückgestellt — bleibt verfügbar".
 
 ### Phase 4 — Validierende Umsetzung
 - Kopf: die priorisierte Option kompakt zusammengefasst.
@@ -122,4 +127,4 @@ Regel: Die drei Evidenzfarben sind für nichts anderes reserviert. Der Petrol-Ak
 - Durchgängig: Wo simulierte Recherche einfließt, steht „(fiktiv)" direkt an der Quelle — zusätzlich zum globalen Banner.
 
 ## 6. Qualitätsfloor
-Responsiv bis Mobil (Stepper wird horizontale Leiste, Options-Grid bricht um), sichtbarer Tastaturfokus (Petrol-Ring), Kontraste AA (die angegebenen Text-auf-BG-Paare erfüllen das), `prefers-reduced-motion` respektieren (ohnehin kaum Animation — nur sanfte Übergänge beim Entwurf→Übernommen-Wechsel).
+Responsiv bis Mobil (Stepper wird horizontale Leiste, Options-Grid bricht um), sichtbarer Tastaturfokus (Primärgrün-Ring), Kontraste AA (die angegebenen Text-auf-BG-Paare erfüllen das), `prefers-reduced-motion` respektieren (ohnehin kaum Animation — nur sanfte Übergänge beim Entwurf→Übernommen-Wechsel).

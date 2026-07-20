@@ -340,7 +340,7 @@ export function CockpitStepCard({
         </h4>
         {readiness && <StepReadinessChip readiness={readiness} />}
         {step.channel && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-deep">
             <Radio className="h-3 w-3" aria-hidden />
             {step.channel}
           </span>

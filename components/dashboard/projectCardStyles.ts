@@ -57,18 +57,18 @@ export const PHASE_BADGE_STYLES: Record<
   number,
   { badgeBg: string; badgeText: string }
 > = {
-  1: { badgeBg: "bg-sky-100", badgeText: "text-sky-800" },
-  2: { badgeBg: "bg-teal-100", badgeText: "text-teal-800" },
-  3: { badgeBg: "bg-amber-100", badgeText: "text-amber-800" },
-  4: { badgeBg: "bg-emerald-100", badgeText: "text-emerald-800" },
-  5: { badgeBg: "bg-violet-100", badgeText: "text-violet-800" },
+  1: { badgeBg: "bg-accent-soft", badgeText: "text-accent-deep" },
+  2: { badgeBg: "bg-accent-soft", badgeText: "text-accent-deep" },
+  3: { badgeBg: "bg-accent-soft", badgeText: "text-accent-deep" },
+  4: { badgeBg: "bg-accent-soft", badgeText: "text-accent-deep" },
+  5: { badgeBg: "bg-accent-soft", badgeText: "text-accent-deep" },
 };
 
 export function getPhaseBadgeStyle(phase: number) {
   return (
     PHASE_BADGE_STYLES[phase] ?? {
       badgeBg: "bg-accent-soft",
-      badgeText: "text-accent",
+      badgeText: "text-accent-deep",
     }
   );
 }

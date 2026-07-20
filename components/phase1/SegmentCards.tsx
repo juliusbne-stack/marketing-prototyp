@@ -145,7 +145,7 @@ function SegmentProfileCard({
           className="group flex min-w-0 flex-1 items-start justify-between gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-accent-soft/55"
         >
           <div className="min-w-0">
-            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent">
+            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent-deep">
               <Users className="h-3.5 w-3.5" aria-hidden />
               Zielgruppe
             </div>
@@ -211,7 +211,7 @@ function SegmentProfileCard({
               type="button"
               onClick={adoptProfile}
               disabled={isAdopting}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               {isAdopting ? "Wird übernommen …" : "Profil übernehmen"}

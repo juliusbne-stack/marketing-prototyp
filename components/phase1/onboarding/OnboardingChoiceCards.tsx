@@ -48,8 +48,8 @@ export function OnboardingChoiceCards({
             onClick={() => onChange(option)}
             className={`rounded-md border px-4 py-3 text-left text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent-soft disabled:opacity-50 ${
               selected
-                ? "border-accent bg-accent-soft font-medium text-accent"
-                : "border-border bg-surface text-text hover:border-accent/40"
+                ? "border-accent bg-accent-soft font-medium text-accent-deep"
+                : "border-border bg-surface text-text hover:border-accent-border"
             }`}
           >
             {option}

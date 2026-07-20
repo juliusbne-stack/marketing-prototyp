@@ -36,7 +36,7 @@ export function PhaseStepper({
 
     const rowClasses = `group grid min-h-[58px] grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border px-3 py-3 text-left transition-all ${
       isActive
-        ? "min-h-[86px] border-accent bg-[#f8ffff] text-accent shadow-[0_10px_24px_rgba(14,90,99,0.08)]"
+        ? "min-h-[86px] border-accent bg-accent-soft text-accent-deep shadow-[0_10px_24px_rgba(15,140,116,0.1)]"
         : isLocked
           ? "border-transparent bg-surface/45 text-text-muted/55"
           : "border-transparent bg-surface/75 text-text-muted shadow-[0_1px_0_rgba(31,36,33,0.02)]"
@@ -105,7 +105,7 @@ export function PhaseStepper({
           className={`${rowClasses} ${
             isActive
               ? ""
-              : "hover:border-accent/20 hover:bg-surface hover:text-accent hover:shadow-[0_8px_18px_rgba(14,90,99,0.06)]"
+              : "hover:border-accent-border hover:bg-surface hover:text-accent hover:shadow-[0_8px_18px_rgba(15,140,116,0.06)]"
           }`}
         >
           {marker}
@@ -131,7 +131,7 @@ export function PhaseStepper({
   function renderCockpitEntry() {
     const cockpitRowClasses = `grid min-h-[52px] grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-all md:ml-4 ${
       isCockpitActive
-        ? "border-accent bg-[#f8ffff] text-accent shadow-[0_10px_24px_rgba(14,90,99,0.08)]"
+        ? "border-accent bg-accent-soft text-accent-deep shadow-[0_10px_24px_rgba(15,140,116,0.1)]"
         : cockpitUnlocked
           ? "border-transparent bg-surface/65 text-text-muted"
           : "border-transparent bg-surface/35 text-text-muted/55"
@@ -176,7 +176,7 @@ export function PhaseStepper({
           className={`${cockpitRowClasses} ${
             isCockpitActive
               ? ""
-              : "hover:border-accent/20 hover:bg-surface hover:text-accent hover:shadow-[0_8px_18px_rgba(14,90,99,0.06)]"
+              : "hover:border-accent-border hover:bg-surface hover:text-accent hover:shadow-[0_8px_18px_rgba(15,140,116,0.06)]"
           }`}
         >
           {cockpitMarker}

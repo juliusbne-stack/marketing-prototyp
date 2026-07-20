@@ -5,6 +5,7 @@
  * Layout within viewBox:
  * - target in the upper area (profile lives in the global banner)
  * - waves anchored to bottom edge
+ * Palette: brand greens (#0F8C74 → #14B394 → #7FE0C9) on dark hero.
  */
 export function HeaderIllustration({ className = "" }: { className?: string }) {
   return (
@@ -18,7 +19,7 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
       preserveAspectRatio="xMaxYMax meet"
     >
       <defs>
-        {/* Wave fills — logo mark palette (dark teal → mid teal → mint) */}
+        {/* Wave fills — brand green palette on dark ground */}
         <linearGradient
           id="hw-back"
           x1="0"
@@ -27,12 +28,12 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           y2="80"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0%" stopColor="#E3F0F1" stopOpacity="0" />
-          <stop offset="16%" stopColor="#C5E8E5" stopOpacity="0.22" />
-          <stop offset="52%" stopColor="#A3DEDD" stopOpacity="0.28" />
-          <stop offset="82%" stopColor="#7BC4C0" stopOpacity="0.2" />
-          <stop offset="94%" stopColor="#E0F4F2" stopOpacity="0.1" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+          <stop offset="0%" stopColor="#E3F2EC" stopOpacity="0" />
+          <stop offset="16%" stopColor="#7FE0C9" stopOpacity="0.18" />
+          <stop offset="52%" stopColor="#14B394" stopOpacity="0.26" />
+          <stop offset="82%" stopColor="#0F8C74" stopOpacity="0.18" />
+          <stop offset="94%" stopColor="#BFE3D8" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#14231E" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="hw-mid"
@@ -42,12 +43,12 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           y2="95"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0%" stopColor="#E0F4F2" stopOpacity="0" />
-          <stop offset="20%" stopColor="#A3DEDD" stopOpacity="0.32" />
-          <stop offset="58%" stopColor="#48A1A4" stopOpacity="0.34" />
-          <stop offset="84%" stopColor="#6FB8B4" stopOpacity="0.26" />
-          <stop offset="95%" stopColor="#C5E8E5" stopOpacity="0.1" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+          <stop offset="0%" stopColor="#E3F2EC" stopOpacity="0" />
+          <stop offset="20%" stopColor="#7FE0C9" stopOpacity="0.28" />
+          <stop offset="58%" stopColor="#14B394" stopOpacity="0.34" />
+          <stop offset="84%" stopColor="#0F8C74" stopOpacity="0.24" />
+          <stop offset="95%" stopColor="#BFE3D8" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#14231E" stopOpacity="0" />
         </linearGradient>
         <linearGradient
           id="hw-front"
@@ -57,12 +58,12 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           y2="115"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0%" stopColor="#E3F0F1" stopOpacity="0" />
-          <stop offset="26%" stopColor="#7BC4C0" stopOpacity="0.36" />
-          <stop offset="62%" stopColor="#2A6A74" stopOpacity="0.4" />
-          <stop offset="86%" stopColor="#48A1A4" stopOpacity="0.28" />
-          <stop offset="95%" stopColor="#A3DEDD" stopOpacity="0.1" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+          <stop offset="0%" stopColor="#E3F2EC" stopOpacity="0" />
+          <stop offset="26%" stopColor="#7FE0C9" stopOpacity="0.32" />
+          <stop offset="62%" stopColor="#0B6E5B" stopOpacity="0.4" />
+          <stop offset="86%" stopColor="#14B394" stopOpacity="0.26" />
+          <stop offset="95%" stopColor="#7FE0C9" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#14231E" stopOpacity="0" />
         </linearGradient>
         {/* Mask: waves extend well past the target, soft fade only near the edge */}
         <linearGradient
@@ -96,21 +97,21 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
         </mask>
         <radialGradient id="hw-face" cx="44%" cy="36%" r="64%">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="48%" stopColor="#E0F4F2" />
-          <stop offset="100%" stopColor="#A3DEDD" />
+          <stop offset="48%" stopColor="#E3F2EC" />
+          <stop offset="100%" stopColor="#7FE0C9" />
         </radialGradient>
         <radialGradient id="hw-bull" cx="40%" cy="36%" r="68%">
-          <stop offset="0%" stopColor="#48A1A4" />
-          <stop offset="100%" stopColor="#0E5A63" />
+          <stop offset="0%" stopColor="#14B394" />
+          <stop offset="100%" stopColor="#0F8C74" />
         </radialGradient>
         <linearGradient id="hw-arrow" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#5A4A72" />
-          <stop offset="100%" stopColor="#2B2445" />
+          <stop offset="0%" stopColor="#BFE3D8" />
+          <stop offset="100%" stopColor="#14231E" />
         </linearGradient>
         <filter id="hw-shadow" x="-45%" y="-45%" width="190%" height="190%">
           <feGaussianBlur in="SourceAlpha" stdDeviation="7" />
           <feOffset dx="1" dy="10" result="o" />
-          <feFlood floodColor="#48A1A4" floodOpacity="0.28" />
+          <feFlood floodColor="#0F8C74" floodOpacity="0.28" />
           <feComposite in2="o" operator="in" />
           <feMerge>
             <feMergeNode />
@@ -126,7 +127,7 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
         >
           <feGaussianBlur in="SourceAlpha" stdDeviation="1.8" />
           <feOffset dx="1" dy="1.5" />
-          <feFlood floodColor="#1A1430" floodOpacity="0.2" />
+          <feFlood floodColor="#0A1612" floodOpacity="0.35" />
           <feComposite in2="SourceAlpha" operator="in" />
           <feMerge>
             <feMergeNode />
@@ -135,10 +136,10 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
         </filter>
       </defs>
 
-      <circle cx="88" cy="92" r="5" fill="#A3DEDD" fillOpacity="0.34" />
-      <circle cx="138" cy="118" r="3.2" fill="#48A1A4" fillOpacity="0.28" />
-      <circle cx="200" cy="78" r="4" fill="#7BC4C0" fillOpacity="0.34" />
-      <circle cx="62" cy="128" r="2.5" fill="#C5E8E5" fillOpacity="0.4" />
+      <circle cx="88" cy="92" r="5" fill="#7FE0C9" fillOpacity="0.34" />
+      <circle cx="138" cy="118" r="3.2" fill="#14B394" fillOpacity="0.28" />
+      <circle cx="200" cy="78" r="4" fill="#0F8C74" fillOpacity="0.34" />
+      <circle cx="62" cy="128" r="2.5" fill="#BFE3D8" fillOpacity="0.4" />
 
       {/* Waves — bottom-anchored, wide S-curves; right edge soft-masked */}
       <g mask="url(#hw-wave-mask)">
@@ -166,7 +167,7 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           cy="12"
           rx="70"
           ry="64"
-          fill="#7BC4C0"
+          fill="#14B394"
           fillOpacity="0.26"
         />
         <ellipse
@@ -175,7 +176,7 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           rx="64"
           ry="59"
           fill="url(#hw-face)"
-          stroke="#C5E8E5"
+          stroke="#BFE3D8"
           strokeWidth="2"
         />
         <ellipse
@@ -184,7 +185,7 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           rx="51"
           ry="46"
           fill="none"
-          stroke="#48A1A4"
+          stroke="#0F8C74"
           strokeWidth="9.5"
           strokeOpacity="0.45"
         />
@@ -194,7 +195,7 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           rx="35"
           ry="32"
           fill="none"
-          stroke="#A3DEDD"
+          stroke="#7FE0C9"
           strokeWidth="8.5"
           strokeOpacity="0.72"
         />
@@ -203,8 +204,8 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           cy="0"
           rx="21"
           ry="19"
-          fill="#E0F4F2"
-          stroke="#6FB8B4"
+          fill="#E3F2EC"
+          stroke="#14B394"
           strokeWidth="3"
         />
         <ellipse cx="0" cy="0" rx="11" ry="10" fill="url(#hw-bull)" />
@@ -232,11 +233,11 @@ export function HeaderIllustration({ className = "" }: { className?: string }) {
           rx="2.4"
           fill="url(#hw-arrow)"
         />
-        <path d="M0 0 L-7.2 -18 L7.2 -18 Z" fill="#2B2445" />
-        <path d="M-2.8 -68 L-13 -80 L-2.8 -55 Z" fill="#3F345C" />
-        <path d="M2.8 -68 L13 -80 L2.8 -55 Z" fill="#3F345C" />
-        <path d="M-2.8 -60 L-11 -70 L-2.8 -49 Z" fill="#54486F" />
-        <path d="M2.8 -60 L11 -70 L2.8 -49 Z" fill="#54486F" />
+        <path d="M0 0 L-7.2 -18 L7.2 -18 Z" fill="#14231E" />
+        <path d="M-2.8 -68 L-13 -80 L-2.8 -55 Z" fill="#0B6E5B" />
+        <path d="M2.8 -68 L13 -80 L2.8 -55 Z" fill="#0B6E5B" />
+        <path d="M-2.8 -60 L-11 -70 L-2.8 -49 Z" fill="#14B394" />
+        <path d="M2.8 -60 L11 -70 L2.8 -49 Z" fill="#14B394" />
         <rect
           x="-1.1"
           y="-62"

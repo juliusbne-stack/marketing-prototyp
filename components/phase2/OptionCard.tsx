@@ -143,7 +143,7 @@ export function OptionCard({
                 type="button"
                 onClick={handleSaveHeader}
                 disabled={isBusy || !draftTitle.trim() || !draftSummary.trim()}
-                className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+                className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
               >
                 Speichern
               </button>
@@ -170,7 +170,7 @@ export function OptionCard({
                   Option {toneIndex + 1}
                 </span>
                 {isDraft && (
-                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
+                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent-deep">
                     Entwurf
                   </span>
                 )}
@@ -270,7 +270,7 @@ export function OptionCard({
               type="button"
               onClick={() => patch({ adopt: true })}
               disabled={isBusy}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               In Projektstand übernehmen

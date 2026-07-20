@@ -282,7 +282,7 @@ export function PhaseInputWizard({
                   type="button"
                   onClick={handleNext}
                   disabled={busy}
-                  className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+                  className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
                 >
                   {busy ? "Wird gespeichert …" : "Weiter"}
                   <ArrowRight className="h-4 w-4" aria-hidden />

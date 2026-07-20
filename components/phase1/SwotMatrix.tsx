@@ -65,7 +65,7 @@ function MarketPathsCard({
             Synthese
           </span>
           {hasDraft && (
-            <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
+            <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent-deep">
               Entwurf
             </span>
           )}

@@ -142,7 +142,7 @@ export function AddStatementForm({
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="inline-flex min-h-8 items-center rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          className="inline-flex min-h-8 items-center rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
         >
           {isSubmitting ? "Wird angelegt …" : "Hinzufügen"}
         </button>

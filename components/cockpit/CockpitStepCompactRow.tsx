@@ -75,7 +75,7 @@ export function CockpitStepCompactRow({
 
         <span className="flex flex-wrap items-center gap-2 pl-6 sm:pl-0">
           {step.channel && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-deep">
               <Radio className="h-3 w-3" aria-hidden />
               {step.channel}
             </span>

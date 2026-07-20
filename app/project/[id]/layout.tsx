@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { PrototypeNoticeStrip } from "@/components/dashboard/PrototypeBanner";
 import { PhaseStepper } from "@/components/wizard/PhaseStepper";
 import { PhaseIndicator } from "@/components/wizard/PhaseIndicator";
 
@@ -31,7 +32,12 @@ export default async function ProjectLayout({
   }
 
   if (stepDetailView) {
-    return <div className="validation-step-detail-shell flex flex-1 flex-col">{children}</div>;
+    return (
+      <div className="validation-step-detail-shell flex flex-1 flex-col">
+        <PrototypeNoticeStrip />
+        {children}
+      </div>
+    );
   }
 
   const adoptedStepCount = await prisma.validationStep.count({
@@ -40,6 +46,7 @@ export default async function ProjectLayout({
 
   return (
     <div className="flex flex-1 flex-col">
+      <PrototypeNoticeStrip />
       <header className="sticky top-0 z-40 bg-background/85 px-6 py-3 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1240px] items-center gap-4 rounded-2xl border border-border/70 bg-surface px-5 py-3 shadow-[0_14px_36px_rgba(31,36,33,0.08)]">
           <Link

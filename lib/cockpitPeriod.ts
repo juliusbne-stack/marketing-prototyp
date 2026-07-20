@@ -23,7 +23,7 @@ export const STEP_READINESS_CONFIG: Record<
   },
   READY_FOR_FEEDBACK: {
     label: "Bereit für Rückmeldung",
-    className: "bg-accent-soft text-accent",
+    className: "bg-accent-soft text-accent-deep",
   },
   EARLY_SIGNALS: {
     label: "Eindeutige Signale — früh auswerten möglich",

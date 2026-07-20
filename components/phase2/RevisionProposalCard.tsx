@@ -133,7 +133,7 @@ export function RevisionProposalCard({
           type="button"
           onClick={handleAdopt}
           disabled={isBusy}
-          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
         >
           <Check className="h-3.5 w-3.5" aria-hidden />
           Übernehmen

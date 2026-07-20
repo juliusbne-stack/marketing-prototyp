@@ -102,7 +102,7 @@ function FeedbackContent({ content }: { content: string }) {
           ? "border-kpi-supporting-text/20 bg-kpi-supporting-bg text-kpi-supporting-text"
           : assessment?.startsWith("Widerlegend")
             ? "border-kpi-contradicting-text/20 bg-kpi-contradicting-bg text-kpi-contradicting-text"
-            : "border-accent/20 bg-accent-soft text-accent";
+            : "border-accent/20 bg-accent-soft text-accent-deep";
 
         return (
           <section
@@ -111,7 +111,7 @@ function FeedbackContent({ content }: { content: string }) {
           >
             <div className="border-b border-border bg-background/70 px-3.5 py-3">
               <div className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-deep">
                   <BarChart3 className="h-3.5 w-3.5" aria-hidden />
                 </span>
                 <div className="min-w-0">
@@ -135,7 +135,7 @@ function FeedbackContent({ content }: { content: string }) {
                         className="overflow-hidden rounded-lg border border-border bg-background/55"
                       >
                         <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-2">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-soft text-[10px] font-semibold tabular-nums text-accent">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-soft text-[10px] font-semibold tabular-nums text-accent-deep">
                             {periodIndex + 1}
                           </span>
                           <p className="text-xs font-semibold text-text">
@@ -282,7 +282,7 @@ export function FeedbackForm({
             {step.title}
           </h4>
           {step.channel && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-deep">
               <Radio className="h-3 w-3" aria-hidden />
               {step.channel}
             </span>
@@ -359,7 +359,7 @@ export function FeedbackForm({
               type="button"
               onClick={handleSave}
               disabled={isBusy || !draft.trim()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <MessageSquareText className="h-3.5 w-3.5" aria-hidden />
               Rückmeldung speichern
@@ -384,7 +384,7 @@ export function FeedbackForm({
           <div className="bg-background/40 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent-soft text-accent">
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent-soft text-accent-deep">
                   <MessageSquareText className="h-3.5 w-3.5" aria-hidden />
                 </span>
                 Erfasste Rückmeldung
@@ -396,7 +396,7 @@ export function FeedbackForm({
                   setIsEditing(true);
                 }}
                 disabled={isBusy}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-text-muted transition-colors hover:border-accent/40 hover:text-accent"
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-text-muted transition-colors hover:border-accent-border hover:text-accent"
               >
                 <Pencil className="h-3 w-3" aria-hidden />
                 Bearbeiten

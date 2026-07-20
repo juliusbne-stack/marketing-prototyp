@@ -326,7 +326,7 @@ export function AddCompetitorForm({
               ? "Simulierte Websuche zu diesem Akteur (fiktive Ergebnisse)"
               : "Zuerst den Akteursnamen eingeben"
           }
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-accent/50 bg-accent-soft/40 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-accent/50 bg-accent-soft/40 px-3 py-1.5 text-xs font-medium text-accent-deep transition-colors hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isResearching ? (
             <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -394,7 +394,7 @@ export function AddCompetitorForm({
                       )}
                     </div>
                     {adopted ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent-deep">
                         <Check className="h-3 w-3" aria-hidden />
                         Übernommen
                       </span>
@@ -418,7 +418,7 @@ export function AddCompetitorForm({
             <button
               type="button"
               onClick={adoptAllResearchSuggestions}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               Alle übernehmen
@@ -496,7 +496,7 @@ export function AddCompetitorForm({
             !aspectFields.ENTITY_TYPE.content.trim() ||
             !aspectFields.OFFERING.content.trim()
           }
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
         >
           {isSubmitting ? "Wird angelegt …" : "Hinzufügen"}
         </button>

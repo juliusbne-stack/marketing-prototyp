@@ -173,7 +173,7 @@ export function ElaborationRefinementSection({
       ) : proposal && previewContent ? (
         <div className="mt-3 flex flex-col gap-3">
           <div className="rounded-[10px] border border-dashed border-accent/50 bg-surface p-4">
-            <p className="mb-3 rounded-md bg-accent-soft p-2.5 text-xs leading-relaxed text-accent">
+            <p className="mb-3 rounded-md bg-accent-soft p-2.5 text-xs leading-relaxed text-accent-deep">
               <span className="font-semibold">Änderung:</span>{" "}
               {proposal.changeSummary}
             </p>
@@ -189,7 +189,7 @@ export function ElaborationRefinementSection({
               type="button"
               onClick={handleAdopt}
               disabled={isAdopting}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               So übernehmen
@@ -248,7 +248,7 @@ export function ElaborationRefinementSection({
               type="button"
               onClick={handleRefine}
               disabled={!feedback.trim()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
               Vorschlag überarbeiten

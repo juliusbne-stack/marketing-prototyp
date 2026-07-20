@@ -169,7 +169,7 @@ export function AdaptationPanel({
             {decision.decision === "LOOP_BACK" && decision.loopBackToPhase && (
               <Link
                 href={`/project/${projectId}/phase/${decision.loopBackToPhase}`}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden />
                 Zu Phase {decision.loopBackToPhase} springen
@@ -178,7 +178,7 @@ export function AdaptationPanel({
             {nextStep && (
               <Link
                 href={`/project/${projectId}/phase/${nextStep.targetPhase}`}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
               >
                 {decision.decision === "CONTINUE" ? (
                   <ArrowRight className="h-4 w-4" aria-hidden />
@@ -313,7 +313,7 @@ export function AdaptationPanel({
             type="button"
             onClick={handleConfirm}
             disabled={isBusy || !selected || !rationale.trim()}
-            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
           >
             <Check className="h-4 w-4" aria-hidden />
             Entscheidung bestätigen

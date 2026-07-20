@@ -136,7 +136,7 @@ function SystemDialogOverlay({
             className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors ${
               isDanger
                 ? "bg-danger-text hover:bg-danger-text/90"
-                : "bg-accent hover:bg-accent/90"
+                : "bg-accent hover:bg-accent-bright active:bg-brand-dark"
             }`}
           >
             {confirmLabel}

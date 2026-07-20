@@ -1,14 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  /* Design tokens from docs/UI_KONZEPT.md */
+  /* Design tokens from docs/UI_KONZEPT.md — brand green palette */
   --background: #fafaf7;
   --surface: #ffffff;
   --border: #e4e2dc;
   --text: #1f2421;
   --text-muted: #6b7069;
-  --accent: #0e5a63;
-  --accent-soft: #e3f0f1;
+
+  /* Brand greens */
+  --brand-dark: #14231e; /* Sidebar, Hero-Panel, Buttons active */
+  --accent: #0f8c74; /* Primary: buttons, links, progress */
+  --accent-bright: #14b394; /* Gradient end */
+  --accent-deep: #0b6e5b; /* Text on light badges, phase labels */
+  --accent-mint: #7fe0c9; /* Accents on dark ground, “Mehr erfahren” */
+  --accent-soft: #e3f2ec; /* Badge backgrounds */
+  --accent-border: #bfe3d8; /* Card border on hover */
 
   /* Evidence colors — reserved exclusively for evidence badges */
   --evidence-fact-text: #0f6e56;
@@ -43,8 +50,14 @@
   --color-border: var(--border);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+
+  --color-brand-dark: var(--brand-dark);
   --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-mint: var(--accent-mint);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
 
   --color-evidence-fact-text: var(--evidence-fact-text);
   --color-evidence-fact-bg: var(--evidence-fact-bg);
@@ -99,7 +112,7 @@ body {
   }
 }
 
-/* Visible keyboard focus: petrol ring (UI_KONZEPT §6) */
+/* Visible keyboard focus: primary green ring (UI_KONZEPT §6) */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

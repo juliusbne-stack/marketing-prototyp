@@ -143,7 +143,7 @@ export function CockpitTaskRow({
           type="checkbox"
           checked={task.done}
           onChange={onToggleDone}
-          className="mt-0.5 h-4 w-4 shrink-0 accent-[#0e5a63]"
+          className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
           aria-label={`Aufgabe erledigt: ${task.title}`}
         />
         <div className="min-w-0 flex-1">

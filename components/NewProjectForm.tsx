@@ -47,7 +47,7 @@ export function NewProjectForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-2">
-      <div className="flex items-center gap-2 rounded-2xl border border-[#B7D5DA] bg-surface p-1.5 shadow-[0_0_0_3px_rgba(183,213,218,0.28)] focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(14,90,99,0.16)] sm:gap-0">
+      <div className="flex items-center gap-2 rounded-2xl border border-accent-border bg-surface p-1.5 shadow-[0_0_0_3px_rgba(191,227,216,0.35)] focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(15,140,116,0.18)] sm:gap-0">
         <input
           id="new-project-name"
           type="text"

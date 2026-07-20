@@ -100,7 +100,7 @@ export function ProjectCard({
     >
       <Link
         href={href}
-        className="flex h-full flex-col rounded-2xl border border-border bg-surface p-4 shadow-sm outline-offset-4 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-md"
+        className="flex h-full flex-col rounded-2xl border border-border bg-surface p-4 shadow-sm outline-offset-4 transition-[border-color,box-shadow] hover:border-accent-border hover:shadow-md"
       >
         <div className="mb-3 flex items-start justify-between gap-2">
           <div

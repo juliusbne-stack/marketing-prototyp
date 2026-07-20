@@ -229,7 +229,7 @@ export function ValidationRefinementPanel({
               readOnly
             />
             {proposal.revisedValidationStep.channel && (
-              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
+              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-deep">
                 <Radio className="h-3 w-3" aria-hidden />
                 {proposal.revisedValidationStep.channel}
               </span>
@@ -290,7 +290,7 @@ export function ValidationRefinementPanel({
               ))}
             </div>
 
-            <p className="mt-3 rounded-md bg-accent-soft p-2.5 text-xs leading-relaxed text-accent">
+            <p className="mt-3 rounded-md bg-accent-soft p-2.5 text-xs leading-relaxed text-accent-deep">
               <span className="font-semibold">Begründung:</span> {proposal.rationale}
             </p>
             {proposal.strategyAdjustmentHint && (
@@ -306,7 +306,7 @@ export function ValidationRefinementPanel({
               type="button"
               onClick={handleAdopt}
               disabled={isAdopting}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <Check className="h-3.5 w-3.5" aria-hidden />
               Überarbeitung übernehmen
@@ -354,7 +354,7 @@ export function ValidationRefinementPanel({
               type="button"
               onClick={handleRefine}
               disabled={!userInstruction.trim()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark disabled:opacity-50"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
               Überarbeiten

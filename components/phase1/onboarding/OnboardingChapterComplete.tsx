@@ -24,7 +24,7 @@ export function OnboardingChapterComplete({
       transition={{ duration: 0.3 }}
       className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-[10px] border border-border bg-surface px-6 py-12 text-center"
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-deep">
         <Check className="h-6 w-6" aria-hidden />
       </div>
       <div>
@@ -36,7 +36,7 @@ export function OnboardingChapterComplete({
       <button
         type="button"
         onClick={onContinue}
-        className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+        className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-bright active:bg-brand-dark"
       >
         Weiter
       </button>

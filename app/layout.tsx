@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
-import { PrototypeBanner } from "@/components/dashboard/PrototypeBanner";
 import { AppProviders } from "./providers";
 import "./globals.css";
 
@@ -33,7 +32,6 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <AppProviders>
-          <PrototypeBanner />
           <div className="flex flex-1 flex-col">{children}</div>
         </AppProviders>
       </body>

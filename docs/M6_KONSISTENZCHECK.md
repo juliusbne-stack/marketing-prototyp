@@ -52,5 +52,5 @@ Nachfolgende Phasen dürfen als LLM-Kontext **nur** übernommene Aussagen (`adop
 
 - `PhaseStepper`: `isUnlocked = phase.number <= project.currentPhase` — Rücksprünge ohne Datenverlust (ein Projektstand, keine Versionierung).
 - Abgeschlossen: grüner Haken (`evidence-fact-*` Tokens).
-- Aktiv: Petrol (`accent` / `accent-soft`).
+- Aktiv: Primärgrün (`accent` / `accent-soft` / `accent-deep`).
 - Gesperrt: `opacity-60`, `cursor-not-allowed`, kein Link.

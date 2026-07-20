@@ -1,9 +1,8 @@
-import { ChartNoAxesCombined } from "lucide-react";
 import { HeaderIllustration } from "./HeaderIllustration";
 
 export function DashboardHeader() {
   return (
-    <header className="relative h-[148px] sm:h-[160px] md:h-[172px] lg:h-[180px]">
+    <header className="relative h-[148px] overflow-hidden rounded-3xl bg-linear-to-br from-brand-dark via-brand-dark to-accent-deep/45 sm:h-[160px] md:h-[172px] lg:h-[180px]">
       {/* Decorative illustration — bottom-aligned so waves meet the project card */}
       <div
         aria-hidden="true"
@@ -20,25 +19,18 @@ export function DashboardHeader() {
         <HeaderIllustration className="h-full w-full" />
       </div>
 
-      {/* Title block — more top room free now that profile lives in the banner */}
-      <div className="relative z-10 max-w-[520px] pt-2 pr-3 sm:max-w-[560px] sm:pt-3 lg:max-w-[600px] lg:pr-6">
-        <div className="flex items-start gap-3 sm:gap-3.5">
-          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-soft sm:h-11 sm:w-11">
-            <ChartNoAxesCombined
-              className="h-5 w-5 text-accent sm:h-[22px] sm:w-[22px]"
-              aria-hidden
-            />
-          </div>
-          <div className="min-w-0">
-            <h1 className="font-heading text-[22px] font-semibold leading-tight text-text sm:text-[25px]">
-              Marketingstrategie-Prototyp
-            </h1>
-            <p className="mt-1.5 max-w-md text-sm leading-relaxed text-text-muted">
-              Entwickle in fünf Phasen eine hypothesen- und evidenzbasierte
-              Marketingstrategie für dein Start-up.
-            </p>
-          </div>
-        </div>
+      {/* Title block — eyebrow + headline + supporting line */}
+      <div className="relative z-10 max-w-[520px] px-5 pt-5 pr-3 sm:max-w-[560px] sm:px-6 sm:pt-6 lg:max-w-[600px] lg:pr-6">
+        <p className="font-heading text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-mint sm:text-xs">
+          Marketingstrategie-Prototyp
+        </p>
+        <h1 className="mt-1.5 font-heading text-[22px] font-bold leading-tight text-white sm:mt-2 sm:text-[25px] lg:text-[28px]">
+          Deine Strategie, in fünf klaren Phasen.
+        </h1>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65 sm:mt-2.5">
+          Entwickle hypothesen- und evidenzbasiert eine Marketingstrategie für
+          dein Start-up — von der Analyse bis zur Roadmap.
+        </p>
       </div>
     </header>
   );
