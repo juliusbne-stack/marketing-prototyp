@@ -32,7 +32,7 @@ export function CreateProjectCard() {
 
   function dismissFocus() {
     const input = document.getElementById("new-project-name");
-    if (input === document.activeElement) {
+    if (input && input === document.activeElement) {
       input.blur();
     }
     setIsFocused(false);
