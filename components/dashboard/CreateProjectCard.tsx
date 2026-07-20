@@ -52,7 +52,7 @@ export function CreateProjectCard() {
           document.body
         )}
 
-      <div className={`relative mt-4 ${isFocused ? "z-50" : "z-10"}`}>
+      <div className={`relative mt-4 mb-10 ${isFocused ? "z-50" : "z-10"}`}>
         <section
           className={`rounded-3xl border border-border bg-surface px-5 py-4 sm:px-6 sm:py-5 ${
             isFocused
