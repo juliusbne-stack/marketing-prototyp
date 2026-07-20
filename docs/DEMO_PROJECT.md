@@ -42,11 +42,11 @@ npm run demo:reset:backup
 | Aspekt | Verhalten |
 |--------|-----------|
 | `currentPhase` | `1` |
-| Profil & Onboarding | vollständig (wie Masterdokument) |
-| Phase-2-/Phase-4-Inputs | vorbefüllt (für reibungslosen Durchlauf) |
+| Profil & Onboarding | Angaben vorausgefüllt, `profileOnboardingComplete=false` — Nutzer klickt den Fragebogen mit „Weiter“ durch, dann Analyse |
+| Phase-2-/Phase-4-Inputs | vorbefüllt, Onboarding noch offen (ebenfalls nur „Weiter“) |
 | Statements, Optionen, Steps, Feedback, Adaptation | **leer** |
 | KI-Aufrufe | liefern Fixture-Inhalte als Entwürfe (`adopted: false` / `DRAFT`) |
-| Nutzerfluss | Übernehmen, priorisieren, Phasen wechseln — wie bei normalen Projekten |
+| Nutzerfluss | Fragebögen durchklicken → Analyse → Übernehmen, priorisieren, Phasen wechseln |
 
 ### Fake-KI (nur Nouriva)
 
@@ -82,6 +82,8 @@ npm run demo:reset:backup
 - **Preis-/Vorbestelltest:** Entscheidende Messgröße ist nur die Reservierungsrate bei **10,90 Euro**. Die 9,90-Euro-Rate erscheint nicht als Periode dieser Metrik, sondern nur im Sensitivitätsvergleich (Differenzmetrik / Feedback).
 - **Kaufmotive & Nichtkaufgründe:** Als `COUNT_OF_TOTAL` mit `evaluationConfig` bewertbar; Nichtkaufgründe beziehen sich auf **Nicht-Wiederkäufer** (Nenner 22), nicht auf alle Pilotkunden.
 - **Revenue-Annahme:** Formulierung entspricht dem getesteten WTP-Teilaspekt; Boxarchitektur (6er/14er, Abo) bleibt Folgehypothese in Uncertainty/Adaption.
+
+**Live-Start (`demo:seed:start`):** `currentPhase = 1`, `profileOnboardingComplete = false`, `profileOnboardingStep = 0`, Profilfelder vorausgefüllt (Choice-Felder als gültige Optionen).
 
 **Endzustand (`demo:seed`):** `currentPhase = 5`, `profileOnboardingComplete = true`, `profileOnboardingStep = 12`
 

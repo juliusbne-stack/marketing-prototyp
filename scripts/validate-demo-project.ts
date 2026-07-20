@@ -63,8 +63,34 @@ async function main() {
   const project = projects[0]!;
   const projectId = project.id;
 
-  ok(project.profileOnboardingComplete === true, "profileOnboardingComplete should be true");
-  ok(project.profileOnboardingStep === 12, `profileOnboardingStep should be 12, got ${project.profileOnboardingStep}`);
+  if (variant === "start") {
+    ok(
+      project.profileOnboardingComplete === false,
+      "start: profileOnboardingComplete should be false (Fragebogen durchklicken)"
+    );
+    ok(
+      project.profileOnboardingStep === 0,
+      `start: profileOnboardingStep should be 0, got ${project.profileOnboardingStep}`
+    );
+    ok(project.productStatus === "MVP", "start: productStatus should be MVP");
+    ok(
+      project.budgetMonthly === "über 2000 €",
+      "start: budgetMonthly should match choice option"
+    );
+    ok(
+      project.timePerWeek === "über 20 Stunden",
+      "start: timePerWeek should match choice option"
+    );
+  } else {
+    ok(
+      project.profileOnboardingComplete === true,
+      "profileOnboardingComplete should be true"
+    );
+    ok(
+      project.profileOnboardingStep === 12,
+      `profileOnboardingStep should be 12, got ${project.profileOnboardingStep}`
+    );
+  }
 
   for (const field of [
     "businessIdea",

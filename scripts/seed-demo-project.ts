@@ -139,19 +139,23 @@ async function seedDemoProject(
               ? DEMO_PHASE4_SCREENSHOT_CURRENT_PHASE
               : proj.currentPhase,
         businessIdea: proj.businessIdea,
-        productStatus: proj.productStatus,
+        // Start: Choice-Felder auf gültige Optionen, damit der Fragebogen
+        // vorausgewählt ist und der Nutzer nur „Weiter“ klicken muss.
+        productStatus: depth === "start" ? "MVP" : proj.productStatus,
         assumedTarget: proj.assumedTarget,
         assumedProblem: proj.assumedProblem,
         valuePropDraft: proj.valuePropDraft,
         revenueIdea: proj.revenueIdea,
         region: proj.region,
         teamSize: proj.teamSize,
-        budgetMonthly: proj.budgetMonthly,
-        timePerWeek: proj.timePerWeek,
+        budgetMonthly: depth === "start" ? "über 2000 €" : proj.budgetMonthly,
+        timePerWeek: depth === "start" ? "über 20 Stunden" : proj.timePerWeek,
         skills: proj.skills,
         existingInsights: proj.existingInsights,
-        profileOnboardingComplete: proj.profileOnboardingComplete,
-        profileOnboardingStep: proj.profileOnboardingStep,
+        // Live-Demo: Fragebogen durchklicken, Angaben sind vorausgefüllt.
+        profileOnboardingComplete:
+          depth === "start" ? false : proj.profileOnboardingComplete,
+        profileOnboardingStep: depth === "start" ? 0 : proj.profileOnboardingStep,
         // Start: noch keine Analyse — PESTEL-Relevanz kommt erst mit der Fake-KI.
         pestelRelevance: depth === "start" ? undefined : proj.pestelRelevance,
         createdAt: ts(0),
